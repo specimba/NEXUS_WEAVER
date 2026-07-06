@@ -1,0 +1,1052 @@
+     1→// NEXUS Visual Weaver v4 — Curated LoRA Library (expanded 20h curation)
+     2→// ---------------------------------------------------------------------------
+     3→// Structured, searchable index of LoRA adapters curated from the user's
+     4→// HuggingFace + Civitai + GitHub research. Each entry is tagged with the
+     5→// engine(s) it targets, its category, recommended weight, source URL, and a
+     6→// mature (18+) flag.
+     7→//
+     8→// NSFW-gated entries are HIDDEN by default. They render only after the user
+     9→// (a) passes the 18+ consent gate AND (b) enables mature content in Policy.
+    10→// The hard blocklist (csam, nonconsensual, real-person, etc.) ALWAYS applies.
+    11→//
+    12→// Sources are real URLs from the curated guides. The dashboard references
+    13→// them; the end user must verify each model's license before use.
+    14→// ---------------------------------------------------------------------------
+    15→
+    16→export type LoraSource = "huggingface" | "civitai" | "github" | "arxiv";
+    17→
+    18→export type LoraCategory =
+    19→  | "garment"
+    20→  | "face"
+    21→  | "style"
+    22→  | "light"
+    23→  | "control"
+    24→  | "detailer"
+    25→  | "video"
+    26→  | "ocr-tool"
+    27→  | "safety"
+    28→  | "mature";
+    29→
+    30→// Which engine families this LoRA is compatible with. Empty = universal.
+    31→export type EngineFamily =
+    32→  | "FLUX.1"
+    33→  | "FLUX.2"
+    34→  | "Krea 2"
+    35→  | "Z-Image"
+    36→  | "Ideogram"
+    37→  | "Qwen-Image"
+    38→  | "Wan"
+    39→  | "LTX"
+    40→  | "LongCat"
+    41→  | "JoyAI"
+    42→  | "Sulphur"
+    43→  | "Hunyuan"
+    44→  | "SDXL";
+    45→
+    46→export interface LoraEntry {
+    47→  id: string;
+    48→  name: string;
+    49→  category: LoraCategory;
+    50→  source: LoraSource;
+    51→  url: string;
+    52→  // which engine families this LoRA targets
+    53→  engineFamilies: EngineFamily[];
+    54→  purpose: string;
+    55→  recommendedWeight: number; // 0..1
+    56→  tags: string[];
+    57→  mature: boolean;
+    58→  license: string;
+    59→  isControl: boolean;
+    60→  // curation priority (NO8D focus = high)
+    61→  priority?: "high" | "normal";
+    62→}
+    63→
+    64→export const LORA_CATEGORIES: { id: LoraCategory; label: string; description: string }[] = [
+    65→  { id: "garment", label: "Garment & Wardrobe", description: "Outfit transfer, virtual try-on/try-off, fashion consistency." },
+    66→  { id: "face", label: "Face & Identity", description: "Identity control, expression, face-swap, character swap." },
+    67→  { id: "style", label: "Style", description: "Cinematic, anime, analog, 3D, realism, retro." },
+    68→  { id: "light", label: "Lighting & Lens", description: "Light control, focal-length sliders, film grain." },
+    69→  { id: "control", label: "Control & Reference", description: "Pose/depth/canny reference, body control, sliders." },
+    70→  { id: "detailer", label: "Detailer & Upscale", description: "Detail recovery, upscale, soft enhance, consistency." },
+    71→  { id: "video", label: "Video (I2V/T2V)", description: "Motion, lightning distill, transition, audio LoRAs for Wan/LTX." },
+    72→  { id: "ocr-tool", label: "OCR & Utility", description: "OCR + utility adapters (Baidu Unlimited-OCR reference)." },
+    73→  { id: "safety", label: "Safety", description: "Safety checker / classifier references for governance." },
+    74→  { id: "mature", label: "Mature (18+)", description: "NSFW-gated adapters. Hidden unless consent + mature unlocked." },
+    75→];
+    76→
+    77→export const LORA_LIBRARY: LoraEntry[] = [
+    78→  // ════════════════════════════════════════════════════════════════════════
+    79→  // NO8D COLLECTION — extra focus per Canberk's spec. These are the flagship
+    80→  // control LoRAs for FLUX.2 Klein 9B.
+    81→  // ════════════════════════════════════════════════════════════════════════
+    82→  {
+    83→    id: "no8d-facecontrol",
+    84→    name: "NO8D FaceControl",
+    85→    category: "face",
+    86→    source: "huggingface",
+    87→    url: "https://huggingface.co/NO8D/FaceControl",
+    88→    engineFamilies: ["FLUX.2"],
+    89→    purpose: "Regional face-identity control. Locks subject identity across generations. NO8D flagship.",
+    90→    recommendedWeight: 0.8,
+    91→    tags: ["NO8D", "identity", "face", "control", "regional"],
+    92→    mature: false,
+    93→    license: "verify",
+    94→    isControl: true,
+    95→    priority: "high",
+    96→  },
+    97→  {
+    98→    id: "no8d-expressioncontrol",
+    99→    name: "NO8D ExpressionControl",
+   100→    category: "face",
+   101→    source: "huggingface",
+   102→    url: "https://huggingface.co/NO8D/ExpressionControl",
+   103→    engineFamilies: ["FLUX.2"],
+   104→    purpose: "Drive facial expressions independently of identity. Pairs with FaceControl.",
+   105→    recommendedWeight: 0.75,
+   106→    tags: ["NO8D", "expression", "face"],
+   107→    mature: false,
+   108→    license: "verify",
+   109→    isControl: true,
+   110→    priority: "high",
+   111→  },
+   112→  {
+   113→    id: "no8d-bodycontrol",
+   114→    name: "NO8D BodyControl",
+   115→    category: "control",
+   116→    source: "huggingface",
+   117→    url: "https://huggingface.co/NO8D/BodyControl",
+   118→    engineFamilies: ["FLUX.2"],
+   119→    purpose: "Regional body-pose / proportion control. The go-to pose LoRA for FLUX.2 9B.",
+   120→    recommendedWeight: 0.76,
+   121→    tags: ["NO8D", "body", "pose", "control"],
+   122→    mature: false,
+   123→    license: "verify",
+   124→    isControl: true,
+   125→    priority: "high",
+   126→  },
+   127→  {
+   128→    id: "no8d-lightcontrol",
+   129→    name: "NO8D LightControl",
+   130→    category: "light",
+   131→    source: "huggingface",
+   132→    url: "https://huggingface.co/NO8D/LightControl",
+   133→    engineFamilies: ["FLUX.2"],
+   134→    purpose: "Regional lighting control — place key/fill/rim lights precisely. Studio lighting without re-prompting.",
+   135→    recommendedWeight: 0.74,
+   136→    tags: ["NO8D", "lighting", "control", "regional"],
+   137→    mature: false,
+   138→    license: "verify",
+   139→    isControl: true,
+   140→    priority: "high",
+   141→  },
+   142→  {
+   143→    id: "no8d-photostyle",
+   144→    name: "NO8D PhotoStyle",
+   145→    category: "style",
+   146→    source: "huggingface",
+   147→    url: "https://huggingface.co/NO8D/PhotoStyle",
+   148→    engineFamilies: ["FLUX.2"],
+   149→    purpose: "Photographic style transfer for consistent look across a set. NO8D's style anchor.",
+   150→    recommendedWeight: 0.7,
+   151→    tags: ["NO8D", "photo", "style", "transfer"],
+   152→    mature: false,
+   153→    license: "verify",
+   154→    isControl: false,
+   155→    priority: "high",
+   156→  },
+   157→  {
+   158→    id: "no8d-imagingcontrol",
+   159→    name: "NO8D ImagingControl",
+   160→    category: "control",
+   161→    source: "huggingface",
+   162→    url: "https://huggingface.co/NO8D/ImagingControl",
+   163→    engineFamilies: ["FLUX.2"],
+   164→    purpose: "General imaging control — composition + framing sliders. Completes the NO8D suite.",
+   165→    recommendedWeight: 0.68,
+   166→    tags: ["NO8D", "composition", "control"],
+   167→    mature: false,
+   168→    license: "verify",
+   169→    isControl: true,
+   170→    priority: "high",
+   171→  },
+   172→  {
+   173→    id: "no8d-slider-toolkit",
+   174→    name: "NO8D Slider Toolkit (Klein 4B)",
+   175→    category: "control",
+   176→    source: "huggingface",
+   177→    url: "https://huggingface.co/NO8D/Slider-toolkit-Klein4B",
+   178→    engineFamilies: ["FLUX.2"],
+   179→    purpose: "General-purpose slider toolkit for fine attribute control on the 4B klein base.",
+   180→    recommendedWeight: 0.55,
+   181→    tags: ["NO8D", "slider", "toolkit", "attribute"],
+   182→    mature: false,
+   183→    license: "verify",
+   184→    isControl: true,
+   185→    priority: "high",
+   186→  },
+   187→
+   188→  // ════════════════════════════════════════════════════════════════════════
+   189→  // REFCONTROL (thedeoxen) — reference-based control for FLUX.2 Klein 9B
+   190→  // ════════════════════════════════════════════════════════════════════════
+   191→  {
+   192→    id: "refcontrol-pose",
+   193→    name: "refcontrol FLUX.2 Klein 9B — Reference Pose",
+   194→    category: "control",
+   195→    source: "huggingface",
+   196→    url: "https://huggingface.co/thedeoxen/refcontrol-FLUX.2-klein-9b-reference-pose-lora",
+   197→    engineFamilies: ["FLUX.2"],
+   198→    purpose: "Reference-pose control: drive subject pose from a reference image.",
+   199→    recommendedWeight: 0.78,
+   200→    tags: ["refcontrol", "pose", "reference", "FLUX.2"],
+   201→    mature: false,
+   202→    license: "verify",
+   203→    isControl: true,
+   204→    priority: "high",
+   205→  },
+   206→  {
+   207→    id: "refcontrol-depth",
+   208→    name: "refcontrol FLUX.2 Klein 9B — Reference Depth",
+   209→    category: "control",
+   210→    source: "huggingface",
+   211→    url: "https://huggingface.co/thedeoxen/refcontrol-FLUX.2-klein-9b-reference-depth-lora",
+   212→    engineFamilies: ["FLUX.2"],
+   213→    purpose: "Reference-depth control: structure transfer from a depth map.",
+   214→    recommendedWeight: 0.76,
+   215→    tags: ["refcontrol", "depth", "reference", "FLUX.2"],
+   216→    mature: false,
+   217→    license: "verify",
+   218→    isControl: true,
+   219→    priority: "high",
+   220→  },
+   221→  {
+   222→    id: "refcontrol-canny",
+   223→    name: "refcontrol FLUX.2 Klein 9B — Reference Canny",
+   224→    category: "control",
+   225→    source: "huggingface",
+   226→    url: "https://huggingface.co/thedeoxen/refcontrol-FLUX.2-klein-9b-reference-canny-lora",
+   227→    engineFamilies: ["FLUX.2"],
+   228→    purpose: "Reference-canny edge control: precise outline/structure transfer.",
+   229→    recommendedWeight: 0.76,
+   230→    tags: ["refcontrol", "canny", "edge", "reference", "FLUX.2"],
+   231→    mature: false,
+   232→    license: "verify",
+   233→    isControl: true,
+   234→    priority: "high",
+   235→  },
+   236→
+   237→  // ════════════════════════════════════════════════════════════════════════
+   238→  // GARMENT & WARDROBE
+   239→  // ════════════════════════════════════════════════════════════════════════
+   240→  {
+   241→    id: "fal-virtual-tryoff",
+   242→    name: "fal Virtual Try-Off",
+   243→    category: "garment",
+   244→    source: "huggingface",
+   245→    url: "https://huggingface.co/fal/virtual-tryoff-lora",
+   246→    engineFamilies: ["FLUX.1", "FLUX.2"],
+   247→    purpose: "Remove clothing to a clean garment flat-lay — inverse of try-on. E-commerce ready.",
+   248→    recommendedWeight: 0.85,
+   249→    tags: ["fashion", "tryoff", "e-commerce"],
+   250→    mature: false,
+   251→    license: "fal.ai (verify)",
+   252→    isControl: false,
+   253→  },
+   254→  {
+   255→    id: "tryoffdiff",
+   256→    name: "TryOffDiff",
+   257→    category: "garment",
+   258→    source: "huggingface",
+   259→    url: "https://huggingface.co/rizavelioglu/tryoffdiff",
+   260→    engineFamilies: ["FLUX.1"],
+   261→    purpose: "Diffusion-based garment reconstruction from a worn image. FashionFail dataset paired.",
+   262→    recommendedWeight: 0.8,
+   263→    tags: ["fashion", "reconstruction"],
+   264→    mature: false,
+   265→    license: "Apache-2.0 (verify)",
+   266→    isControl: false,
+   267→  },
+   268→  {
+   269→    id: "ilkerzgi-embroidery",
+   270→    name: "Embroidery Patch (Kontext)",
+   271→    category: "garment",
+   272→    source: "huggingface",
+   273→    url: "https://huggingface.co/ilkerzgi/embroidery-patch-kontext-dev-lora",
+   274→    engineFamilies: ["FLUX.1"],
+   275→    purpose: "Raised embroidery/patch detail on garments. Merch + streetwear.",
+   276→    recommendedWeight: 0.75,
+   277→    tags: ["embroidery", "texture", "apparel", "kontext"],
+   278→    mature: false,
+   279→    license: "verify",
+   280→    isControl: false,
+   281→  },
+   282→  {
+   283→    id: "ilkerzgi-overlay",
+   284→    name: "Overlay Texture (Kontext)",
+   285→    category: "garment",
+   286→    source: "huggingface",
+   287→    url: "https://huggingface.co/ilkerzgi/Overlay-Kontext-Dev-LoRA",
+   288→    engineFamilies: ["FLUX.1"],
+   289→    purpose: "Graphic overlay / print texture for apparel and posters.",
+   290→    recommendedWeight: 0.7,
+   291→    tags: ["overlay", "print", "graphic", "kontext"],
+   292→    mature: false,
+   293→    license: "verify",
+   294→    isControl: false,
+   295→  },
+   296→
+   297→  // ════════════════════════════════════════════════════════════════════════
+   298→  // FACE & IDENTITY
+   299→  // ════════════════════════════════════════════════════════════════════════
+   300→  {
+   301→    id: "bfs-face-swap",
+   302→    name: "BFS Best Face Swap",
+   303→    category: "face",
+   304→    source: "huggingface",
+   305→    url: "https://huggingface.co/Alissonerdx/BFS-Best-Face-Swap",
+   306→    engineFamilies: ["FLUX.1", "FLUX.2"],
+   307→    purpose: "High-quality face swap. Use only with consented source identities.",
+   308→    recommendedWeight: 0.72,
+   309→    tags: ["face-swap", "identity", "consent-required"],
+   310→    mature: false,
+   311→    license: "verify · consent required",
+   312→    isControl: true,
+   313→  },
+   314→  {
+   315→    id: "ilkerzgi-face-swap",
+   316→    name: "ilkerzgi Face Swap",
+   317→    category: "face",
+   318→    source: "huggingface",
+   319→    url: "https://huggingface.co/ilkerzgi/face-swap",
+   320→    engineFamilies: ["FLUX.1"],
+   321→    purpose: "Identity-preserving face swap pipeline.",
+   322→    recommendedWeight: 0.7,
+   323→    tags: ["face-swap", "identity"],
+   324→    mature: false,
+   325→    license: "verify · consent required",
+   326→    isControl: true,
+   327→  },
+   328→  {
+   329→    id: "nhathoang-char-swap",
+   330→    name: "Smart Character Swap (Klein 9B)",
+   331→    category: "face",
+   332→    source: "huggingface",
+   333→    url: "https://huggingface.co/nhathoangfoto/Flux.2-Klein-9B-SmartCharacterSwap",
+   334→    engineFamilies: ["FLUX.2"],
+   335→    purpose: "Character identity transfer with preserved lighting/composition.",
+   336→    recommendedWeight: 0.78,
+   337→    tags: ["character", "swap", "identity", "FLUX.2"],
+   338→    mature: false,
+   339→    license: "verify",
+   340→    isControl: true,
+   341→  },
+   342→  {
+   343→    id: "kotyar-jpfresh",
+   344→    name: "Jpfresh Portrait",
+   345→    category: "face",
+   346→    source: "huggingface",
+   347→    url: "https://huggingface.co/Kotyar/Flux-Jpfresh-Portrait-LoRA",
+   348→    engineFamilies: ["FLUX.1"],
+   349→    purpose: "Fresh high-clarity portrait aesthetic. Pairs with Photoreal Portrait preset.",
+   350→    recommendedWeight: 0.72,
+   351→    tags: ["portrait", "fresh", "clarity"],
+   352→    mature: false,
+   353→    license: "verify",
+   354→    isControl: false,
+   355→  },
+   356→  {
+   357→    id: "anypose",
+   358→    name: "AnyPose",
+   359→    category: "control",
+   360→    source: "huggingface",
+   361→    url: "https://huggingface.co/lilylilith/AnyPose",
+   362→    engineFamilies: ["FLUX.1", "FLUX.2"],
+   363→    purpose: "Arbitrary pose control from a reference pose image.",
+   364→    recommendedWeight: 0.74,
+   365→    tags: ["pose", "control", "reference"],
+   366→    mature: false,
+   367→    license: "verify",
+   368→    isControl: true,
+   369→  },
+   370→
+   371→  // ════════════════════════════════════════════════════════════════════════
+   372→  // STYLE — incl. Krea 2 style LoRAs
+   373→  // ════════════════════════════════════════════════════════════════════════
+   374→  {
+   375→    id: "krea-retroanime",
+   376→    name: "Krea 2 LoRA — Retro Anime",
+   377→    category: "style",
+   378→    source: "huggingface",
+   379→    url: "https://huggingface.co/krea/Krea-2-LoRA-retroanime",
+   380→    engineFamilies: ["Krea 2"],
+   381→    purpose: "Retro anime aesthetic for Krea 2. Vintage cel-shaded look.",
+   382→    recommendedWeight: 0.8,
+   383→    tags: ["krea", "anime", "retro", "style"],
+   384→    mature: false,
+   385→    license: "verify",
+   386→    isControl: false,
+   387→    priority: "high",
+   388→  },
+   389→  {
+   390→    id: "gokay-krea-realism",
+   391→    name: "Krea 2 Realism LoRA",
+   392→    category: "style",
+   393→    source: "huggingface",
+   394→    url: "https://huggingface.co/gokaygokay/Krea-2-Realism-LoRA",
+   395→    engineFamilies: ["Krea 2"],
+   396→    purpose: "Boosts photorealism on Krea 2 base. Skin + texture fidelity.",
+   397→    recommendedWeight: 0.7,
+   398→    tags: ["krea", "realism", "photo"],
+   399→    mature: false,
+   400→    license: "verify",
+   401→    isControl: false,
+   402→    priority: "high",
+   403→  },
+   404→  {
+   405→    id: "agbr-cinematic",
+   406→    name: "Cinematic Film Still (Klein 9B)",
+   407→    category: "style",
+   408→    source: "huggingface",
+   409→    url: "https://huggingface.co/artificialguybr/CINEMATIC-FILMSTILL-REDMOND-FLUXKLEIN9B",
+   410→    engineFamilies: ["FLUX.2"],
+   411→    purpose: "Film-still color grade and framing. Pairs with Cinematic Grade preset.",
+   412→    recommendedWeight: 0.7,
+   413→    tags: ["cinematic", "film", "grade", "FLUX.2"],
+   414→    mature: false,
+   415→    license: "verify",
+   416→    isControl: false,
+   417→  },
+   418→  {
+   419→    id: "agbr-analog",
+   420→    name: "Analog Photography (Klein 9B)",
+   421→    category: "style",
+   422→    source: "huggingface",
+   423→    url: "https://huggingface.co/artificialguybr/ANALOG-REDMOND-FLUXKLEIN9B",
+   424→    engineFamilies: ["FLUX.2"],
+   425→    purpose: "Analog film look — grain, halation, warm blacks.",
+   426→    recommendedWeight: 0.68,
+   427→    tags: ["analog", "film", "grain", "FLUX.2"],
+   428→    mature: false,
+   429→    license: "verify",
+   430→    isControl: false,
+   431→  },
+   432→  {
+   433→    id: "agbr-filmgrain",
+   434→    name: "Film Grain (Klein 9B)",
+   435→    category: "style",
+   436→    source: "huggingface",
+   437→    url: "https://huggingface.co/artificialguybr/FILMGRAIN-REDMOND-FLUXKLEIN9B",
+   438→    engineFamilies: ["FLUX.2"],
+   439→    purpose: "Standalone grain texture LoRA for post-grade integration.",
+   440→    recommendedWeight: 0.6,
+   441→    tags: ["grain", "texture", "FLUX.2"],
+   442→    mature: false,
+   443→    license: "verify",
+   444→    isControl: false,
+   445→  },
+   446→  {
+   447→    id: "agbr-3drender",
+   448→    name: "3D Render Style (Klein 9B)",
+   449→    category: "style",
+   450→    source: "huggingface",
+   451→    url: "https://huggingface.co/artificialguybr/3DRenderStyle-REDMOND-FLUXKLEIN9B",
+   452→    engineFamilies: ["FLUX.2"],
+   453→    purpose: "Cycles/octane-style 3D render aesthetic.",
+   454→    recommendedWeight: 0.72,
+   455→    tags: ["3d", "render", "FLUX.2"],
+   456→    mature: false,
+   457→    license: "verify",
+   458→    isControl: false,
+   459→  },
+   460→  {
+   461→    id: "agbr-anime",
+   462→    name: "Anime Style (Klein)",
+   463→    category: "style",
+   464→    source: "huggingface",
+   465→    url: "https://huggingface.co/artificialguybr/ANIME-REDMOND-FLUXKLEIN",
+   466→    engineFamilies: ["FLUX.2"],
+   467→    purpose: "Clean anime key-visual style. Pairs with Anime/Illustration preset.",
+   468→    recommendedWeight: 0.8,
+   469→    tags: ["anime", "illustration", "FLUX.2"],
+   470→    mature: false,
+   471→    license: "verify",
+   472→    isControl: false,
+   473→  },
+   474→  {
+   475→    id: "agbr-360view",
+   476→    name: "360 View (Klein 9B)",
+   477→    category: "style",
+   478→    source: "huggingface",
+   479→    url: "https://huggingface.co/artificialguybr/360VIEW-REDMOND-FLUXKLEIN9B",
+   480→    engineFamilies: ["FLUX.2"],
+   481→    purpose: "Wrap-around 360° environment views.",
+   482→    recommendedWeight: 0.65,
+   483→    tags: ["360", "environment", "FLUX.2"],
+   484→    mature: false,
+   485→    license: "verify",
+   486→    isControl: false,
+   487→  },
+   488→  {
+   489→    id: "gokay-pencil",
+   490→    name: "Pencil Drawing (Kontext)",
+   491→    category: "style",
+   492→    source: "huggingface",
+   493→    url: "https://huggingface.co/gokaygokay/Pencil-Drawing-Kontext-Dev-LoRA",
+   494→    engineFamilies: ["FLUX.1"],
+   495→    purpose: "Graphite/pencil sketch rendering.",
+   496→    recommendedWeight: 0.78,
+   497→    tags: ["sketch", "pencil", "kontext"],
+   498→    mature: false,
+   499→    license: "verify",
+   500→    isControl: false,
+   501→  },
+   502→  {
+   503→    id: "ilkerzgi-glittering",
+   504→    name: "Glittering Portrait (Kontext)",
+   505→    category: "style",
+   506→    source: "huggingface",
+   507→    url: "https://huggingface.co/ilkerzgi/Glittering-Portrait-Kontext-Dev-Lora",
+   508→    engineFamilies: ["FLUX.1"],
+   509→    purpose: "Sparkle/glitter highlight LoRA for glamour portraiture.",
+   510→    recommendedWeight: 0.66,
+   511→    tags: ["glitter", "portrait", "glamour", "kontext"],
+   512→    mature: false,
+   513→    license: "verify",
+   514→    isControl: false,
+   515→  },
+   516→  {
+   517→    id: "ilkerzgi-metallic",
+   518→    name: "Metallic Objects (Kontext)",
+   519→    category: "style",
+   520→    source: "huggingface",
+   521→    url: "https://huggingface.co/ilkerzgi/metallic-objects-kontext-dev-lora",
+   522→    engineFamilies: ["FLUX.1"],
+   523→    purpose: "Physically-based metallic surface rendering.",
+   524→    recommendedWeight: 0.72,
+   525→    tags: ["metal", "pbr", "kontext"],
+   526→    mature: false,
+   527→    license: "verify",
+   528→    isControl: false,
+   529→  },
+   530→  {
+   531→    id: "ilkerzgi-tattoo",
+   532→    name: "Tattoo (Kontext)",
+   533→    category: "style",
+   534→    source: "huggingface",
+   535→    url: "https://huggingface.co/ilkerzgi/Tattoo-Kontext-Dev-Lora",
+   536→    engineFamilies: ["FLUX.1"],
+   537→    purpose: "Realistic tattoo application on skin.",
+   538→    recommendedWeight: 0.7,
+   539→    tags: ["tattoo", "skin", "kontext"],
+   540→    mature: false,
+   541→    license: "verify",
+   542→    isControl: false,
+   543→  },
+   544→
+   545→  // ════════════════════════════════════════════════════════════════════════
+   546→  // LIGHTING & LENS
+   547→  // ════════════════════════════════════════════════════════════════════════
+   548→  {
+   549→    id: "nkd-focal",
+   550→    name: "Focal Length Slider (Klein 9B)",
+   551→    category: "light",
+   552→    source: "huggingface",
+   553→    url: "https://huggingface.co/Nekodificador/NKD_Klein_9B_Focal_Lenght_Slider_V1",
+   554→    engineFamilies: ["FLUX.2"],
+   555→    purpose: "Slider to dial lens focal length (wide ↔ telephoto) on a subject.",
+   556→    recommendedWeight: 0.6,
+   557→    tags: ["lens", "focal", "slider", "FLUX.2"],
+   558→    mature: false,
+   559→    license: "verify",
+   560→    isControl: true,
+   561→  },
+   562→
+   563→  // ════════════════════════════════════════════════════════════════════════
+   564→  // CONTROL & SLIDERS
+   565→  // ════════════════════════════════════════════════════════════════════════
+   566→  {
+   567→    id: "dx8152-consistency",
+   568→    name: "Klein 9B Consistency",
+   569→    category: "control",
+   570→    source: "huggingface",
+   571→    url: "https://huggingface.co/dx8152/Flux2-Klein-9B-Consistency",
+   572→    engineFamilies: ["FLUX.2"],
+   573→    purpose: "Improves multi-shot character/scene consistency.",
+   574→    recommendedWeight: 0.7,
+   575→    tags: ["consistency", "multi-shot", "FLUX.2"],
+   576→    mature: false,
+   577→    license: "verify",
+   578→    isControl: false,
+   579→  },
+   580→  {
+   581→    id: "dx8152-enhanced-details",
+   582→    name: "Klein 9B Enhanced Details",
+   583→    category: "detailer",
+   584→    source: "huggingface",
+   585→    url: "https://huggingface.co/dx8152/Flux2-Klein-9B-Enhanced-Details",
+   586→    engineFamilies: ["FLUX.2"],
+   587→    purpose: "Detail enhancement pass for Klein 9B. Recovers fine texture.",
+   588→    recommendedWeight: 0.65,
+   589→    tags: ["detail", "enhance", "FLUX.2"],
+   590→    mature: false,
+   591→    license: "verify",
+   592→    isControl: false,
+   593→    priority: "high",
+   594→  },
+   595→  {
+   596→    id: "warmblood-real-chars",
+   597→    name: "Anything → Real Characters (Klein 9B)",
+   598→    category: "control",
+   599→    source: "huggingface",
+   600→    url: "https://huggingface.co/WarmBloodAban/Flux2_Klein_Anything_to_Real_Characters",
+   601→    engineFamilies: ["FLUX.2"],
+   602→    purpose: "Converts stylized subjects into photoreal characters.",
+   603→    recommendedWeight: 0.72,
+   604→    tags: ["realism", "character", "FLUX.2"],
+   605→    mature: false,
+   606→    license: "verify",
+   607→    isControl: false,
+   608→  },
+   609→  {
+   610→    id: "deverstyle-loras",
+   611→    name: "DeverStyle Klein LoRAs",
+   612→    category: "control",
+   613→    source: "huggingface",
+   614→    url: "https://huggingface.co/DeverStyle/Flux.2-Klein-Loras",
+   615→    engineFamilies: ["FLUX.2"],
+   616→    purpose: "Collection of style/character adapters for Klein 9B.",
+   617→    recommendedWeight: 0.7,
+   618→    tags: ["collection", "style", "character", "FLUX.2"],
+   619→    mature: false,
+   620→    license: "verify",
+   621→    isControl: false,
+   622→  },
+   623→
+   624→  // ════════════════════════════════════════════════════════════════════════
+   625→  // DETAILER & UPSCALE
+   626→  // ════════════════════════════════════════════════════════════════════════
+   627→  {
+   628→    id: "ultrasharp-v2",
+   629→    name: "UltraSharp V2",
+   630→    category: "detailer",
+   631→    source: "huggingface",
+   632→    url: "https://huggingface.co/Kim2091/UltraSharpV2",
+   633→    engineFamilies: ["FLUX.1", "FLUX.2", "Krea 2", "SDXL"],
+   634→    purpose: "High-fidelity upscale model. Sharpens without artifacts. Universal upscaler.",
+   635→    recommendedWeight: 0.6,
+   636→    tags: ["upscale", "sharpen", "universal"],
+   637→    mature: false,
+   638→    license: "verify",
+   639→    isControl: false,
+   640→    priority: "high",
+   641→  },
+   642→  {
+   643→    id: "ltx2-detailer",
+   644→    name: "LTX-2 IC-LoRA Detailer",
+   645→    category: "detailer",
+   646→    source: "huggingface",
+   647→    url: "https://huggingface.co/Lightricks/LTX-2-19b-IC-LoRA-Detailer",
+   648→    engineFamilies: ["LTX"],
+   649→    purpose: "In-context detailer for the final video refinement pass.",
+   650→    recommendedWeight: 0.6,
+   651→    tags: ["detail", "refine", "ic-lora", "LTX"],
+   652→    mature: false,
+   653→    license: "Lightricks (verify)",
+   654→    isControl: false,
+   655→  },
+   656→  {
+   657→    id: "vrgamedev-soft-enhance",
+   658→    name: "LTX 2.3 Soft Enhance",
+   659→    category: "detailer",
+   660→    source: "huggingface",
+   661→    url: "https://huggingface.co/vrgamedevgirl84/LTX_2.3_Soft_Enhance_Style_LoRa",
+   662→    engineFamilies: ["LTX"],
+   663→    purpose: "Soft enhancement + style pass for LTX 2.3.",
+   664→    recommendedWeight: 0.55,
+   665→    tags: ["enhance", "soft", "LTX"],
+   666→    mature: false,
+   667→    license: "verify",
+   668→    isControl: false,
+   669→  },
+   670→  {
+   671→    id: "pid-nvidia",
+   672→    name: "NVIDIA PiD (Pixel-Identity)",
+   673→    category: "detailer",
+   674→    source: "huggingface",
+   675→    url: "https://huggingface.co/nvidia/PiD",
+   676→    engineFamilies: ["FLUX.1", "FLUX.2"],
+   677→    purpose: "Pixel-level identity preservation. Keeps per-pixel fidelity during edits.",
+   678→    recommendedWeight: 0.62,
+   679→    tags: ["identity", "pixel", "preserve", "nvidia"],
+   680→    mature: false,
+   681→    license: "NVIDIA (verify)",
+   682→    isControl: false,
+   683→  },
+   684→
+   685→  // ════════════════════════════════════════════════════════════════════════
+   686→  // QWEN IMAGE EDIT LoRAs (context/edit engines)
+   687→  // ════════════════════════════════════════════════════════════════════════
+   688→  {
+   689→    id: "qwen-multi-angle",
+   690→    name: "Qwen-Image-Edit Multi-Angle LoRA",
+   691→    category: "control",
+   692→    source: "huggingface",
+   693→    url: "https://huggingface.co/fal/Qwen-Image-Edit-2511-Multiple-Angles-LoRA",
+   694→    engineFamilies: ["Qwen-Image"],
+   695→    purpose: "Multi-angle view synthesis from a single edit.",
+   696→    recommendedWeight: 0.6,
+   697→    tags: ["multi-angle", "edit", "qwen"],
+   698→    mature: false,
+   699→    license: "fal.ai (verify)",
+   700→    isControl: false,
+   701→  },
+   702→  {
+   703→    id: "qwen-next-scene",
+   704→    name: "Next-Scene Qwen Image LoRA",
+   705→    category: "control",
+   706→    source: "huggingface",
+   707→    url: "https://huggingface.co/lovis93/next-scene-qwen-image-lora-2509",
+   708→    engineFamilies: ["Qwen-Image"],
+   709→    purpose: "Generate the next scene/continuation from a current frame. Storyboard workflows.",
+   710→    recommendedWeight: 0.62,
+   711→    tags: ["next-scene", "continuation", "qwen", "storyboard"],
+   712→    mature: false,
+   713→    license: "verify",
+   714→    isControl: false,
+   715→  },
+   716→  {
+   717→    id: "qwen-unblur-upscale",
+   718→    name: "Qwen-Image-Edit Unblur Upscale",
+   719→    category: "detailer",
+   720→    source: "huggingface",
+   721→    url: "https://huggingface.co/prithivMLmods/Qwen-Image-Edit-2511-Unblur-Upscale",
+   722→    engineFamilies: ["Qwen-Image"],
+   723→    purpose: "Deblur + upscale via Qwen Image Edit. Restoration workflow.",
+   724→    recommendedWeight: 0.58,
+   725→    tags: ["unblur", "upscale", "restore", "qwen"],
+   726→    mature: false,
+   727→    license: "verify",
+   728→    isControl: false,
+   729→  },
+   730→  {
+   731→    id: "phr00t-qwen-rapid-aio",
+   732→    name: "Qwen-Image-Edit Rapid AIO",
+   733→    category: "detailer",
+   734→    source: "huggingface",
+   735→    url: "https://huggingface.co/Phr00t/Qwen-Image-Edit-Rapid-AIO",
+   736→    engineFamilies: ["Qwen-Image"],
+   737→    purpose: "Rapid all-in-one accelerator for Qwen Image Edit. Fewer steps.",
+   738→    recommendedWeight: 0.5,
+   739→    tags: ["rapid", "aio", "fast", "qwen"],
+   740→    mature: false,
+   741→    license: "verify",
+   742→    isControl: false,
+   743→  },
+   744→
+   745→  // ════════════════════════════════════════════════════════════════════════
+   746→  // IDEOGRAM LoRAs
+   747→  // ════════════════════════════════════════════════════════════════════════
+   748→  {
+   749→    id: "ideogram-turbotime",
+   750→    name: "Ideogram 4 Turbotime LoRA",
+   751→    category: "detailer",
+   752→    source: "huggingface",
+   753→    url: "https://huggingface.co/ostris/ideogram_4_turbotime_lora",
+   754→    engineFamilies: ["Ideogram"],
+   755→    purpose: "Cuts Ideogram 4 step count via turbo-time acceleration.",
+   756→    recommendedWeight: 0.55,
+   757→    tags: ["turbo", "fast", "ideogram", "accelerate"],
+   758→    mature: false,
+   759→    license: "verify",
+   760→    isControl: false,
+   761→  },
+   762→
+   763→  // ════════════════════════════════════════════════════════════════════════
+   764→  // VIDEO LoRAs — Wan 2.2 + LTX 2.3 + LongCat
+   765→  // ════════════════════════════════════════════════════════════════════════
+   766→  {
+   767→    id: "ltx2-pose-control",
+   768→    name: "LTX-2 Pose Control",
+   769→    category: "video",
+   770→    source: "huggingface",
+   771→    url: "https://huggingface.co/Lightricks/LTX-2-19b-IC-LoRA-Pose-Control",
+   772→    engineFamilies: ["LTX"],
+   773→    purpose: "Pose-driven motion control for image-to-video. CRUCIAL control system.",
+   774→    recommendedWeight: 0.65,
+   775→    tags: ["video", "pose", "i2v", "LTX", "control"],
+   776→    mature: false,
+   777→    license: "Lightricks (verify)",
+   778→    isControl: true,
+   779→    priority: "high",
+   780→  },
+   781→  {
+   782→    id: "ltx23-motion-track",
+   783→    name: "LTX 2.3 Motion Track Control",
+   784→    category: "video",
+   785→    source: "huggingface",
+   786→    url: "https://huggingface.co/Lightricks/LTX-2.3-22b-IC-LoRA-Motion-Track-Control",
+   787→    engineFamilies: ["LTX"],
+   788→    purpose: "Camera motion tracking control for LTX 2.3 I2V. CRUCIAL for stable camera moves.",
+   789→    recommendedWeight: 0.62,
+   790→    tags: ["video", "motion", "camera", "LTX", "control"],
+   791→    mature: false,
+   792→    license: "Lightricks (verify)",
+   793→    isControl: true,
+   794→    priority: "high",
+   795→  },
+   796→  {
+   797→    id: "joyfox-transition",
+   798→    name: "LTX 2.3 Transition",
+   799→    category: "video",
+   800→    source: "huggingface",
+   801→    url: "https://huggingface.co/joyfox/LTX-2.3-Transition-LORA",
+   802→    engineFamilies: ["LTX"],
+   803→    purpose: "Smooth scene-transition LoRA for LTX 2.3.",
+   804→    recommendedWeight: 0.58,
+   805→    tags: ["video", "transition", "LTX"],
+   806→    mature: false,
+   807→    license: "verify",
+   808→    isControl: false,
+   809→  },
+   810→  {
+   811→    id: "vrgamedev-musicvideo",
+   812→    name: "LTX 2.3 Music Video Creator",
+   813→    category: "video",
+   814→    source: "huggingface",
+   815→    url: "https://huggingface.co/vrgamedevgirl84/LTX_2.3_Music_Video_Creator_ComfyUI",
+   816→    engineFamilies: ["LTX"],
+   817→    purpose: "Beat-synced music-video generation workflow LoRA.",
+   818→    recommendedWeight: 0.6,
+   819→    tags: ["video", "music", "LTX", "comfyui"],
+   820→    mature: false,
+   821→    license: "verify",
+   822→    isControl: false,
+   823→  },
+   824→  {
+   825→    id: "wan22-lightning",
+   826→    name: "Wan 2.2 Lightning (lightx2v)",
+   827→    category: "video",
+   828→    source: "huggingface",
+   829→    url: "https://huggingface.co/lightx2v/Wan2.2-Lightning",
+   830→    engineFamilies: ["Wan"],
+   831→    purpose: "4-step lightning distill for Wan 2.2 I2V/T2V. Massive speedup.",
+   832→    recommendedWeight: 0.5,
+   833→    tags: ["video", "wan2.2", "lightning", "fast", "distill"],
+   834→    mature: false,
+   835→    license: "verify",
+   836→    isControl: false,
+   837→    priority: "high",
+   838→  },
+   839→  {
+   840→    id: "wan22-svi-pro",
+   841→    name: "Wan 2.2 SVI Pro (Stable Video Infinity)",
+   842→    category: "video",
+   843→    source: "huggingface",
+   844→    url: "https://huggingface.co/Kijai/WanVideo_comfy/blob/main/LoRAs/Stable-Video-Infinity/v2.0/SVI_v2_PRO_Wan2.2-I2V-A14B_HIGH_lora_rank_128_fp16.safetensors",
+   845→    engineFamilies: ["Wan"],
+   846→    purpose: "Stable Video Infinity Pro — extended-duration stable Wan 2.2 video.",
+   847→    recommendedWeight: 0.6,
+   848→    tags: ["video", "wan2.2", "svi", "stable", "long"],
+   849→    mature: false,
+   850→    license: "verify",
+   851→    isControl: false,
+   852→  },
+   853→  {
+   854→    id: "wan22-fun-reward",
+   855→    name: "Wan 2.2 Fun Reward LoRA",
+   856→    category: "video",
+   857→    source: "huggingface",
+   858→    url: "https://huggingface.co/alibaba-pai/Wan2.2-Fun-Reward-LoRAs/blob/main/Wan2.2-Fun-A14B-InP-low-noise-HPS2.1.safetensors",
+   859→    engineFamilies: ["Wan"],
+   860→    purpose: "Reward-model-tuned Wan 2.2 LoRA. Better HPS alignment.",
+   861→    recommendedWeight: 0.55,
+   862→    tags: ["video", "wan2.2", "reward", "hps"],
+   863→    mature: false,
+   864→    license: "verify",
+   865→    isControl: false,
+   866→  },
+   867→  {
+   868→    id: "krea-realtime-video",
+   869→    name: "Krea Realtime Video",
+   870→    category: "video",
+   871→    source: "huggingface",
+   872→    url: "https://huggingface.co/krea/krea-realtime-video",
+   873→    engineFamilies: ["Krea 2"],
+   874→    purpose: "Realtime video generation adapter. Krea's realtime pipeline.",
+   875→    recommendedWeight: 0.6,
+   876→    tags: ["video", "krea", "realtime"],
+   877→    mature: false,
+   878→    license: "verify",
+   879→    isControl: false,
+   880→  },
+   881→  {
+   882→    id: "ltx23-distilled",
+   883→    name: "LTX 2.3 Distilled (Abiray GGUF)",
+   884→    category: "video",
+   885→    source: "huggingface",
+   886→    url: "https://huggingface.co/Abiray/LTX-2.3-22B-DISTILLED-1.1-GGUF",
+   887→    engineFamilies: ["LTX"],
+   888→    purpose: "Distilled 1.1 GGUF of LTX 2.3 22B. Faster inference, lower VRAM.",
+   889→    recommendedWeight: 0.5,
+   890→    tags: ["video", "LTX", "distilled", "gguf", "fast"],
+   891→    mature: false,
+   892→    license: "verify",
+   893→    isControl: false,
+   894→  },
+   895→
+   896→  // ════════════════════════════════════════════════════════════════════════
+   897→  // OCR & UTILITY
+   898→  // ════════════════════════════════════════════════════════════════════════
+   899→  {
+   900→    id: "baidu-unlimited-ocr",
+   901→    name: "Baidu Unlimited-OCR",
+   902→    category: "ocr-tool",
+   903→    source: "huggingface",
+   904→    url: "https://huggingface.co/baidu/Unlimited-OCR",
+   905→    engineFamilies: [],
+   906→    purpose: "God-mode OCR. Extracts every text element (small/rotated/stylized/handwritten). Used by the Studio OCR tool.",
+   907→    recommendedWeight: 0,
+   908→    tags: ["ocr", "baidu", "text-extraction", "utility"],
+   909→    mature: false,
+   910→    license: "verify",
+   911→    isControl: false,
+   912→    priority: "high",
+   913→  },
+   914→
+   915→  // ════════════════════════════════════════════════════════════════════════
+   916→  // SAFETY
+   917→  // ════════════════════════════════════════════════════════════════════════
+   918→  {
+   919→    id: "compvis-safety-checker",
+   920→    name: "Stable Diffusion Safety Checker",
+   921→    category: "safety",
+   922→    source: "huggingface",
+   923→    url: "https://huggingface.co/CompVis/stable-diffusion-safety-checker",
+   924→    engineFamilies: [],
+   925→    purpose: "Reference safety classifier for the governance layer.",
+   926→    recommendedWeight: 0,
+   927→    tags: ["safety", "classifier", "governance"],
+   928→    mature: false,
+   929→    license: "OpenRAIL (verify)",
+   930→    isControl: false,
+   931→  },
+   932→
+   933→  // ════════════════════════════════════════════════════════════════════════
+   934→  // MATURE (18+, gated) — hidden unless consent + mature unlocked.
+   935→  // Hard blocklist (csam, nonconsensual, real-person) ALWAYS applies.
+   936→  // ════════════════════════════════════════════════════════════════════════
+   937→  {
+   938→    id: "heartsync-flux-nsfw",
+   939→    name: "Flux NSFW Uncensored (Heartsync)",
+   940→    category: "mature",
+   941→    source: "huggingface",
+   942→    url: "https://huggingface.co/Heartsync/Flux-NSFW-uncensored",
+   943→    engineFamilies: ["FLUX.1", "FLUX.2"],
+   944→    purpose: "Uncensored generation adapter. 18+ consent required; subject to the hard blocklist.",
+   945→    recommendedWeight: 0.8,
+   946→    tags: ["nsfw", "18+", "uncensored"],
+   947→    mature: true,
+   948→    license: "verify · 18+ only",
+   949→    isControl: false,
+   950→  },
+   951→  {
+   952→    id: "bigjutt-true-v2",
+   953→    name: "Klein 9B True V2 (BIGJUTT)",
+   954→    category: "mature",
+   955→    source: "huggingface",
+   956→    url: "https://huggingface.co/BIGJUTT/Flux2-Klein-9B-True-V2",
+   957→    engineFamilies: ["FLUX.2"],
+   958→    purpose: "Mature realism adapter for Klein 9B. 18+ consent required.",
+   959→    recommendedWeight: 0.75,
+   960→    tags: ["nsfw", "18+", "realism", "FLUX.2"],
+   961→    mature: true,
+   962→    license: "verify · 18+ only",
+   963→    isControl: false,
+   964→  },
+   965→  {
+   966→    id: "lora-daddy-ltx-nudity",
+   967→    name: "LTX 2.3 Animated Nudity",
+   968→    category: "mature",
+   969→    source: "huggingface",
+   970→    url: "https://huggingface.co/Lora-Daddy/LTX-2.3-animated-nudity-lora",
+   971→    engineFamilies: ["LTX"],
+   972→    purpose: "Mature I2V nudity adapter. 18+ consent required; video output.",
+   973→    recommendedWeight: 0.7,
+   974→    tags: ["nsfw", "18+", "video", "LTX"],
+   975→    mature: true,
+   976→    license: "verify · 18+ only",
+   977→    isControl: false,
+   978→  },
+   979→  {
+   980→    id: "tenstrip-ltx-eros",
+   981→    name: "TenStrip LTX 2.3 10Eros",
+   982→    category: "mature",
+   983→    source: "huggingface",
+   984→    url: "https://huggingface.co/TenStrip/LTX2.3-10Eros",
+   985→    engineFamilies: ["LTX"],
+   986→    purpose: "TenStrip's mature LTX 2.3 build. 18+ consent required.",
+   987→    recommendedWeight: 0.72,
+   988→    tags: ["nsfw", "18+", "video", "LTX", "tenstrip"],
+   989→    mature: true,
+   990→    license: "verify · 18+ only",
+   991→    isControl: false,
+   992→  },
+   993→  {
+   994→    id: "phr00t-wan-rapid-aio",
+   995→    name: "WAN 2.2 14B Rapid All-In-One (Phr00t)",
+   996→    category: "mature",
+   997→    source: "huggingface",
+   998→    url: "https://huggingface.co/Phr00t/WAN2.2-14B-Rapid-AllInOne",
+   999→    engineFamilies: ["Wan"],
+  1000→    purpose: "Rapid AIO Wan 2.2 mature build. 18+ consent required.",
+  1001→    recommendedWeight: 0.6,
+  1002→    tags: ["nsfw", "18+", "video", "wan2.2", "rapid"],
+  1003→    mature: true,
+  1004→    license: "verify · 18+ only",
+  1005→    isControl: false,
+  1006→  },
+  1007→  {
+  1008→    id: "eddy-wan-palingenesis",
+  1009→    name: "WAN 22.XX Palingenesis (eddy)",
+  1010→    category: "mature",
+  1011→    source: "huggingface",
+  1012→    url: "https://huggingface.co/eddy1111111/WAN22.XX_Palingenesis",
+  1013→    engineFamilies: ["Wan"],
+  1014→    purpose: "Mature Wan 2.2 variant. 18+ consent required.",
+  1015→    recommendedWeight: 0.65,
+  1016→    tags: ["nsfw", "18+", "video", "wan2.2"],
+  1017→    mature: true,
+  1018→    license: "verify · 18+ only",
+  1019→    isControl: false,
+  1020→  },
+  1021→];
+  1022→
+  1023→// Convenience: filter visible entries given a maturity unlock.
+  1024→export function visibleLoras(matureUnlocked: boolean): LoraEntry[] {
+  1025→  if (matureUnlocked) return LORA_LIBRARY;
+  1026→  return LORA_LIBRARY.filter((l) => !l.mature);
+  1027→}
+  1028→
+  1029→export function lorasByCategory(matureUnlocked: boolean): Record<LoraCategory, LoraEntry[]> {
+  1030→  const visible = visibleLoras(matureUnlocked);
+  1031→  const out = {} as Record<LoraCategory, LoraEntry[]>;
+  1032→  for (const c of LORA_CATEGORIES) {
+  1033→    out[c.id] = visible.filter((l) => l.category === c.id);
+  1034→  }
+  1035→  return out;
+  1036→}
+  1037→
+  1038→export function countMature(): number {
+  1039→  return LORA_LIBRARY.filter((l) => l.mature).length;
+  1040→}
+  1041→
+  1042→export function getLora(id: string): LoraEntry | undefined {
+  1043→  return LORA_LIBRARY.find((l) => l.id === id);
+  1044→}
+  1045→
+  1046→// Filter LoRAs by engine family (for the studio engine picker).
+  1047→export function lorasForEngine(engineFamily: EngineFamily, matureUnlocked: boolean): LoraEntry[] {
+  1048→  return visibleLoras(matureUnlocked).filter(
+  1049→    (l) => l.engineFamilies.length === 0 || l.engineFamilies.includes(engineFamily)
+  1050→  );
+  1051→}
+  1052→

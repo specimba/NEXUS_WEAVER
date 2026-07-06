@@ -1,0 +1,1865 @@
+     1→"use client";
+     2→
+     3→import { useState, useCallback, useRef, useEffect } from "react";
+     4→import { useNexus } from "./store";
+     5→import { ASPECTS, STYLES, PIPELINE_STAGES, PROMPT_TEMPLATES, TEMPLATE_CATEGORIES } from "@/lib/nexus-types";
+     6→import type { StageId, PromptTemplate } from "@/lib/nexus-types";
+     7→import { cn } from "@/lib/utils";
+     8→import { ScoreRing, ScoreBar } from "./score-ring";
+     9→import { VerdictBadge, StatusDot } from "./verdict-badge";
+    10→import { useQuery } from "@tanstack/react-query";
+    11→import {
+    12→  Sparkles,
+    13→  Wand2,
+    14→  Loader2,
+    15→  Shirt,
+    16→  Ratio,
+    17→  Palette,
+    18→  CheckCircle2,
+    19→  XCircle,
+    20→  AlertTriangle,
+    21→  ScanEye,
+    22→  FileJson,
+    23→  Image as ImageIcon,
+    24→  RotateCcw,
+    25→  ChevronRight,
+    26→  Zap,
+    27→  Wand,
+    28→  LayoutGrid,
+    29→  History,
+    30→  Download,
+    31→  Copy,
+    32→  Keyboard,
+    33→  Clock,
+    34→  Crosshair,
+    35→  Flame,
+    36→  Cloud,
+    37→  Clock3,
+    38→  ArrowRight,
+    39→  ShieldAlert,
+    40→  Cpu,
+    41→  Sliders,
+    42→  Layers,
+    43→  Plus,
+    44→} from "lucide-react";
+    45→import { toast } from "sonner";
+    46→import { motion } from "framer-motion";
+    47→import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+    48→import { Slider } from "@/components/ui/slider";
+    49→import {
+    50→  CALIBRATION_PRESETS,
+    51→  getPreset,
+    52→  presetCategoryLabel,
+    53→} from "@/lib/calibration";
+    54→import { getLora } from "@/lib/lora-library";
+    55→import type { LoraEntry } from "@/lib/lora-library";
+    56→import type { RunPipelineRequest, PipelineResponse } from "@/lib/nexus-types";
+    57→import type { RunResult } from "./store";
+    58→
+    59→const SAMPLE_PROMPTS = [
+    60→  "A lone astronaut discovering a bioluminescent forest on an alien moon, cinematic lighting",
+    61→  "Portrait of a cyberpunk street vendor in neon-lit Tokyo rain, reflective puddles",
+    62→  "A majestic airship docked at a floating island at golden hour, volumetric clouds",
+    63→  "Cozy bookshop interior with a sleeping cat, warm afternoon light through dusty windows",
+    64→  "A samurai standing in cherry blossom storm, ink-wash painting style",
+    65→];
+    66→
+    67→// Pre-run heuristic: looks like a mature-content prompt? We don't block here —
+    68→// the backend policy layer makes the final call. This only shows a heads-up
+    69→// toast so the user isn't surprised when the pipeline returns status=blocked.
+    70→const MATURE_PROMPT_RE =
+    71→  /\b(nude|nudity|nsfw|explicit|18\+|adult|mature|erotic|lingerie|undress|naked|topless|nipples?|porn|pornograph|sex|sexual|genital|bare\s+skin|intimate|provocative)\b/i;
+    72→
+    73→function downloadFile(filename: string, content: string, mime: string) {
+    74→  const blob = new Blob([content], { type: mime });
+    75→  const url = URL.createObjectURL(blob);
+    76→  const a = document.createElement("a");
+    77→  a.href = url;
+    78→  a.download = filename;
+    79→  document.body.appendChild(a);
+    80→  a.click();
+    81→  document.body.removeChild(a);
+    82→  URL.revokeObjectURL(url);
+    83→}
+    84→
+    85→async function downloadImage(url: string, filename: string) {
+    86→  try {
+    87→    const res = await fetch(url);
+    88→    const blob = await res.blob();
+    89→    const objUrl = URL.createObjectURL(blob);
+    90→    const a = document.createElement("a");
+    91→    a.href = objUrl;
+    92→    a.download = filename;
+    93→    document.body.appendChild(a);
+    94→    a.click();
+    95→    document.body.removeChild(a);
+    96→    URL.revokeObjectURL(objUrl);
+    97→  } catch {
+    98→    toast.error("Could not download image");
+    99→  }
+   100→}
+   101→
+   102→export function StudioView() {
+   103→  const {
+   104→    prompt,
+   105→    style,
+   106→    aspect,
+   107→    wardrobe,
+   108→    setPrompt,
+   109→    setStyle,
+   110→    setAspect,
+   111→    setWardrobe,
+   112→    loadSettings,
+   113→    running,
+   114→    stages,
+   115→    result,
+   116→    error,
+   117→    startRun,
+   118→    setStage,
+   119→    finishRun,
+   120→    failRun,
+   121→    clearResult,
+   122→    setView,
+   123→    history,
+   124→    pushHistory,
+   125→    // v3 additions: calibration + LoRA + consent/policy
+   126→    calibrationId,
+   127→    calibrationOverrides,
+   128→    loraIds,
+   129→    fingerprint,
+   130→    matureUnlocked,
+   131→  } = useNexus();
+   132→
+   133→  const [advanced, setAdvanced] = useState(false);
+   134→  const [showTemplates, setShowTemplates] = useState(false);
+   135→  const [showHistory, setShowHistory] = useState(false);
+   136→  const [tplCategory, setTplCategory] = useState("All");
+   137→  const [enhancing, setEnhancing] = useState(false);
+   138→  const [elapsed, setElapsed] = useState(0);
+   139→  const [warming, setWarming] = useState(false);
+   140→  const [modalWarm, setModalWarm] = useState<boolean | null>(null);
+   141→  const runStartRef = useRef<number | null>(null);
+   142→
+   143→  // live elapsed timer during run
+   144→  useEffect(() => {
+   145→    if (!running) {
+   146→      runStartRef.current = null;
+   147→      setElapsed(0);
+   148→      return;
+   149→    }
+   150→    runStartRef.current = Date.now();
+   151→    const t = setInterval(() => {
+   152→      if (runStartRef.current) setElapsed(Date.now() - runStartRef.current);
+   153→    }, 100);
+   154→    return () => clearInterval(t);
+   155→  }, [running]);
+   156→
+   157→  const run = useCallback(async () => {
+   158→    const p = prompt.trim();
+   159→    if (!p) {
+   160→      toast.error("Enter a prompt first");
+   161→      return;
+   162→    }
+   163→    if (running) return;
+   164→
+   165→    // Pre-run heads-up: if the prompt looks mature but mature mode is locked,
+   166→    // warn the user. We do NOT block here — the backend policy layer makes the
+   167→    // final call and will return status=blocked, which we render as a dedicated
+   168→    // blocked-state card.
+   169→    if (MATURE_PROMPT_RE.test(p) && !matureUnlocked()) {
+   170→      toast.warning("This prompt may require mature mode.", {
+   171→        description: "Enable it in Compliance → Policy after accepting the 18+ notice.",
+   172→      });
+   173→    }
+   174→
+   175→    startRun();
+   176→    pushHistory(p);
+   177→    setStage("prompt", { status: "running", message: "Tokenizing prompt…" });
+   178→    await new Promise((r) => setTimeout(r, 60));
+   179→    setStage("prompt", { status: "done", ms: 8, message: "Prompt accepted" });
+   180→
+   181→    setStage("flux", { status: "running", message: "FLUX rendering via GPU…" });
+   182→    try {
+   183→      const body: RunPipelineRequest = {
+   184→        prompt: p,
+   185→        style,
+   186→        aspect,
+   187→        wardrobe: wardrobe.trim() || undefined,
+   188→        calibrationId,
+   189→        calibrationOverrides:
+   190→          Object.keys(calibrationOverrides).length > 0 ? calibrationOverrides : undefined,
+   191→        loraIds: loraIds.length > 0 ? loraIds : undefined,
+   192→        consentFingerprint: fingerprint || undefined,
+   193→      };
+   194→      const res = await fetch("/api/pipeline/run", {
+   195→        method: "POST",
+   196→        headers: { "Content-Type": "application/json" },
+   197→        body: JSON.stringify(body),
+   198→      });
+   199→      const data = (await res.json()) as PipelineResponse & { error?: string };
+   200→
+   201→      // Hard HTTP error or pipeline failure
+   202→      if (!res.ok || data.status === "failed") {
+   203→        const msg = data.errorMessage || data.error || "Generation failed";
+   204→        setStage("flux", { status: "error", message: msg });
+   205→        failRun(msg);
+   206→        toast.error(msg);
+   207→        return;
+   208→      }
+   209→
+   210→      // Policy refusal — render as a dedicated blocked-state card (NOT an error)
+   211→      if (data.status === "blocked") {
+   212→        setStage("flux", { status: "error", message: "Blocked by policy" });
+   213→        setStage("st3gg", {
+   214→          status: "done",
+   215→          message: data.safety
+   216→            ? `${data.safety.riskLevel} risk · score ${data.safety.score}`
+   217→            : "Blocked",
+   218→        });
+   219→        setStage("judge", { status: "skipped", message: "Skipped — blocked" });
+   220→        setStage("nemotron", { status: "skipped", message: "Skipped — blocked" });
+   221→        setStage("output", { status: "skipped", message: "Skipped — blocked" });
+   222→        finishRun({
+   223→          id: data.id,
+   224→          status: "blocked",
+   225→          imagePath: null,
+   226→          verdict: data.verdict,
+   227→          overallScore: null,
+   228→          safety: data.safety,
+   229→          judge: null,
+   230→          evidence: data.evidence,
+   231→          timings: data.timings,
+   232→          errorMessage: null,
+   233→          calibration: data.calibration,
+   234→          loraIds: data.loraIds ?? loraIds,
+   235→          maturityTier: data.maturityTier,
+   236→          blockReason: data.blockReason ?? "Blocked by safety policy",
+   237→          prompt: p,
+   238→          style,
+   239→          aspect,
+   240→          wardrobe: wardrobe.trim() || null,
+   241→        });
+   242→        toast.warning("Run blocked by safety policy", {
+   243→          description: data.blockReason ?? undefined,
+   244→        });
+   245→        return;
+   246→      }
+   247→
+   248→      // Normal completion
+   249→      const t = data.timings || {};
+   250→      setStage("flux", { status: "done", ms: t.flux, message: "Image rendered" });
+   251→      setStage("st3gg", {
+   252→        status: "done",
+   253→        ms: t.st3gg,
+   254→        message: data.safety ? `${data.safety.riskLevel} risk · score ${data.safety.score}` : "Scanned",
+   255→      });
+   256→      setStage("judge", {
+   257→        status: "done",
+   258→        ms: t.judge,
+   259→        message: data.judge ? `${data.judge.verdict} · ${data.judge.overallScore}` : "Judged",
+   260→      });
+   261→      setStage("nemotron", { status: "done", ms: t.nemotron, message: "Evidence aggregated" });
+   262→      setStage("output", { status: "done", ms: 1, message: "Persisted to gallery" });
+   263→
+   264→      finishRun({
+   265→        id: data.id,
+   266→        status: data.status,
+   267→        imagePath: data.imagePath,
+   268→        verdict: data.verdict,
+   269→        overallScore: data.overallScore,
+   270→        safety: data.safety,
+   271→        judge: data.judge,
+   272→        evidence: data.evidence,
+   273→        timings: data.timings,
+   274→        errorMessage: null,
+   275→        calibration: data.calibration,
+   276→        loraIds: data.loraIds ?? loraIds,
+   277→        maturityTier: data.maturityTier,
+   278→        blockReason: null,
+   279→        prompt: p,
+   280→        style,
+   281→        aspect,
+   282→        wardrobe: wardrobe.trim() || null,
+   283→      });
+   284→      toast.success(`Pipeline complete — ${data.verdict}`);
+   285→    } catch (e) {
+   286→      setStage("flux", { status: "error" });
+   287→      const msg = e instanceof Error ? e.message : String(e);
+   288→      failRun(msg);
+   289→      toast.error(msg);
+   290→    }
+   291→  }, [
+   292→    prompt, style, aspect, wardrobe, running,
+   293→    calibrationId, calibrationOverrides, loraIds, fingerprint, matureUnlocked,
+   294→    startRun, setStage, finishRun, failRun, pushHistory,
+   295→  ]);
+   296→
+   297→  // keyboard shortcut: Cmd/Ctrl+Enter to run
+   298→  useEffect(() => {
+   299→    const onKey = (e: KeyboardEvent) => {
+   300→      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+   301→        e.preventDefault();
+   302→        if (!running && prompt.trim()) run();
+   303→      }
+   304→    };
+   305→    window.addEventListener("keydown", onKey);
+   306→    return () => window.removeEventListener("keydown", onKey);
+   307→  }, [run, running, prompt]);
+   308→
+   309→  // Auto-warm Modal on mount if last generation was > 10 min ago (or no gens).
+   310→  // Runs once per page load. Silent on success; subtle toast on cold-start.
+   311→  useEffect(() => {
+   312→    let cancelled = false;
+   313→    (async () => {
+   314→      try {
+   315→        // Check most recent generation timestamp
+   316→        const r = await fetch("/api/gallery?limit=1", { cache: "no-store" });
+   317→        if (!r.ok) return;
+   318→        const d = await r.json();
+   319→        const lastGen = d.items?.[0]?.createdAt;
+   320→        const stale = !lastGen || Date.now() - new Date(lastGen).getTime() > 10 * 60 * 1000;
+   321→        if (!stale) return; // Recent gen → container likely still warm
+   322→        // Probe Modal silently
+   323→        const wr = await fetch("/api/modal/warmup", { method: "POST" });
+   324→        if (cancelled) return;
+   325→        const wd = await wr.json();
+   326→        if (wd.warmed) {
+   327→          setModalWarm(true);
+   328→          // No toast on auto-success — too noisy. Just visual indicator.
+   329→        } else if (wd.enabled && !wd.reachable) {
+   330→          // Cold-starting — let user know they can wait
+   331→          toast.info("Modal GPU is cold-starting", {
+   332→            description: "First generation may take 1–7 min, or use z-ai fallback.",
+   333→          });
+   334→        }
+   335→      } catch {
+   336→        // silent — auto-warm is best-effort
+   337→      }
+   338→    })();
+   339→    return () => {
+   340→      cancelled = true;
+   341→    };
+   342→  }, []);
+   343→
+   344→  // Pre-emptively warm up the Modal container so the first generation
+   345→  // doesn't pay the 1–7 min cold-start latency.
+   346→  const warmupModal = useCallback(async () => {
+   347→    setWarming(true);
+   348→    setModalWarm(null);
+   349→    try {
+   350→      const res = await fetch("/api/modal/warmup", { method: "POST" });
+   351→      const data = await res.json();
+   352→      if (data.warmed) {
+   353→        setModalWarm(true);
+   354→        toast.success(`Modal warm — ${data.latencyMs ?? "?"}ms`, {
+   355→          description: data.model ? `${data.model} on ${data.gpu}` : undefined,
+   356→        });
+   357→      } else if (!data.enabled) {
+   358→        setModalWarm(false);
+   359→        toast.info("Modal disabled — using z-ai fallback");
+   360→      } else {
+   361→        setModalWarm(false);
+   362→        toast.warning("Modal still cold-starting", {
+   363→          description: "Try again in 1–2 minutes, or run the pipeline and wait.",
+   364→        });
+   365→      }
+   366→    } catch (e) {
+   367→      setModalWarm(false);
+   368→      toast.error("Warm-up probe failed", {
+   369→        description: e instanceof Error ? e.message : String(e),
+   370→      });
+   371→    } finally {
+   372→      setWarming(false);
+   373→    }
+   374→  }, []);
+   375→
+   376→  const enhance = useCallback(async () => {
+   377→    const p = prompt.trim();
+   378→    if (!p) {
+   379→      toast.error("Enter a prompt to enhance");
+   380→      return;
+   381→    }
+   382→    setEnhancing(true);
+   383→    try {
+   384→      const res = await fetch("/api/prompt/enhance", {
+   385→        method: "POST",
+   386→        headers: { "Content-Type": "application/json" },
+   387→        body: JSON.stringify({ prompt: p, style }),
+   388→      });
+   389→      const data = await res.json();
+   390→      if (!res.ok) throw new Error(data.error || "Enhance failed");
+   391→      setPrompt(data.enhanced);
+   392→      toast.success("Prompt enhanced by AI");
+   393→    } catch (e) {
+   394→      toast.error(e instanceof Error ? e.message : "Enhance failed");
+   395→    } finally {
+   396→      setEnhancing(false);
+   397→    }
+   398→  }, [prompt, style, setPrompt]);
+   399→
+   400→  const aspectDef = ASPECTS.find((a) => a.id === aspect) ?? ASPECTS[0];
+   401→  const filteredTemplates =
+   402→    tplCategory === "All"
+   403→      ? PROMPT_TEMPLATES
+   404→      : PROMPT_TEMPLATES.filter((t) => t.category === tplCategory);
+   405→
+   406→  return (
+   407→    <div className="space-y-5 nexus-rise">
+   408→      {/* Hero header */}
+   409→      <section className="nexus-gradient-border relative overflow-hidden rounded-2xl p-5 sm:p-7">
+   410→        <div className="absolute inset-0 nexus-scanline pointer-events-none opacity-30" />
+   411→        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+   412→          <div>
+   413→            <div className="mb-2 flex items-center gap-2">
+   414→              <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary/15 text-primary nexus-glow">
+   415→                <Sparkles className="h-3.5 w-3.5" />
+   416→              </span>
+   417→              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
+   418→                Studio · Generation Surface
+   419→              </span>
+   420→            </div>
+   421→            <h1 className="nexus-headline nexus-text-balance font-mono text-2xl font-bold tracking-tight sm:text-3xl">
+   422→              Weave a vision through the governed pipeline
+   423→            </h1>
+   424→            <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-[15px]">
+   425→              Describe what you want. FLUX generates the image on a Modal H100 GPU,
+   426→              then ST3GG, MiniCPM-V and Nemotron scan, judge and structure the result — automatically.
+   427→            </p>
+   428→          </div>
+   429→          <div className="flex shrink-0 items-center gap-3">
+   430→            <div className="flex items-center gap-2 rounded-xl nexus-glass px-3 py-2.5">
+   431→              <Zap className="h-4 w-4 text-amber-400" />
+   432→              <div className="leading-none">
+   433→                <div className="font-mono text-xs font-semibold">~30–60s</div>
+   434→                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+   435→                  end-to-end
+   436→                </div>
+   437→              </div>
+   438→            </div>
+   439→            <div className="hidden items-center gap-1.5 rounded-xl nexus-glass px-3 py-2.5 sm:flex">
+   440→              <Keyboard className="h-3.5 w-3.5 text-muted-foreground" />
+   441→              <span className="font-mono text-[10px] text-muted-foreground">
+   442→                <kbd className="rounded bg-foreground/10 px-1 py-0.5 text-[9px]">⌘</kbd>
+   443→                <kbd className="ml-0.5 rounded bg-foreground/10 px-1 py-0.5 text-[9px]">↵</kbd>
+   444→                run
+   445→              </span>
+   446→            </div>
+   447→          </div>
+   448→        </div>
+   449→      </section>
+   450→
+   451→      <div className="grid gap-5 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+   452→        {/* LEFT: control panel */}
+   453→        <div className="space-y-4">
+   454→          {/* Prompt + enhance + history */}
+   455→          <div className="nexus-card rounded-2xl p-4">
+   456→            <div className="mb-2 flex items-center justify-between">
+   457→              <label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   458→                <Crosshair className="h-3 w-3 text-primary" /> Prompt
+   459→              </label>
+   460→              <div className="flex items-center gap-1.5">
+   461→                <span className="font-mono text-[10px] text-muted-foreground/70">
+   462→                  {prompt.length}/2000
+   463→                </span>
+   464→                <button
+   465→                  onClick={() => setShowHistory((v) => !v)}
+   466→                  className={cn(
+   467→                    "inline-flex items-center gap-1 rounded-md border border-border/50 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground transition hover:text-foreground",
+   468→                    showHistory && "border-primary/40 text-primary"
+   469→                  )}
+   470→                  title="Recent prompts"
+   471→                >
+   472→                  <History className="h-2.5 w-2.5" /> History
+   473→                </button>
+   474→              </div>
+   475→            </div>
+   476→            <textarea
+   477→              value={prompt}
+   478→              onChange={(e) => setPrompt(e.target.value.slice(0, 2000))}
+   479→              placeholder="Describe the image you want to weave…"
+   480→              rows={5}
+   481→              className="nexus-input w-full resize-none rounded-lg border border-border/60 bg-background/60 px-3 py-2.5 text-sm outline-none"
+   482→            />
+   483→            {showHistory && history.length > 0 ? (
+   484→              <div className="mt-2 max-h-40 space-y-0.5 overflow-y-auto nexus-scroll rounded-lg border border-border/40 bg-background/40 p-1.5">
+   485→                {history.map((h, i) => (
+   486→                  <button
+   487→                    key={i}
+   488→                    onClick={() => {
+   489→                      setPrompt(h);
+   490→                      setShowHistory(false);
+   491→                    }}
+   492→                    className="block w-full truncate rounded px-2 py-1 text-left text-[11px] text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+   493→                    title={h}
+   494→                  >
+   495→                    {h}
+   496→                  </button>
+   497→                ))}
+   498→              </div>
+   499→            ) : null}
+   500→            {showHistory && history.length === 0 ? (
+   501→              <div className="mt-2 rounded-lg border border-dashed border-border/40 px-3 py-2 text-center text-[10px] text-muted-foreground">
+   502→                No history yet — run a pipeline to populate
+   503→              </div>
+   504→            ) : null}
+   505→
+   506→            {/* Action row: enhance + templates */}
+   507→            <div className="mt-2.5 flex flex-wrap gap-1.5">
+   508→              <button
+   509→                onClick={enhance}
+   510→                disabled={enhancing || !prompt.trim()}
+   511→                className={cn(
+   512→                  "nexus-chip inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/40 px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+   513→                )}
+   514→              >
+   515→                {enhancing ? <Loader2 className="h-3 w-3 animate-spin text-primary" /> : <Wand className="h-3 w-3 text-primary" />}
+   516→                Enhance
+   517→              </button>
+   518→              <button
+   519→                onClick={() => setShowTemplates((v) => !v)}
+   520→                className={cn(
+   521→                  "nexus-chip inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] font-medium transition",
+   522→                  showTemplates
+   523→                    ? "nexus-chip-active"
+   524→                    : "border-border/50 bg-background/40 text-muted-foreground hover:text-foreground"
+   525→                )}
+   526→              >
+   527→                <LayoutGrid className="h-3 w-3" /> Templates
+   528→              </button>
+   529→              {prompt ? (
+   530→                <button
+   531→                  onClick={() => {
+   532→                    navigator.clipboard?.writeText(prompt);
+   533→                    toast.success("Prompt copied");
+   534→                  }}
+   535→                  className="nexus-chip inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/40 px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+   536→                >
+   537→                  <Copy className="h-3 w-3" /> Copy
+   538→                </button>
+   539→              ) : null}
+   540→            </div>
+   541→
+   542→            {/* Templates panel */}
+   543→            {showTemplates ? (
+   544→              <div className="mt-3 nexus-rise rounded-lg border border-border/50 bg-background/40 p-2.5">
+   545→                <div className="mb-2 flex flex-wrap gap-1">
+   546→                  {TEMPLATE_CATEGORIES.map((c) => (
+   547→                    <button
+   548→                      key={c}
+   549→                      onClick={() => setTplCategory(c)}
+   550→                      className={cn(
+   551→                        "rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider transition",
+   552→                        tplCategory === c
+   553→                          ? "bg-primary/15 text-primary"
+   554→                          : "text-muted-foreground hover:text-foreground"
+   555→                      )}
+   556→                    >
+   557→                      {c}
+   558→                    </button>
+   559→                  ))}
+   560→                </div>
+   561→                <div className="grid max-h-56 gap-1.5 overflow-y-auto nexus-scroll sm:grid-cols-2">
+   562→                  {filteredTemplates.map((tpl) => (
+   563→                    <TemplateCard
+   564→                      key={tpl.id}
+   565→                      tpl={tpl}
+   566→                      onUse={() => {
+   567→                        loadSettings({ prompt: tpl.prompt, style: tpl.style, aspect: tpl.aspect });
+   568→                        setShowTemplates(false);
+   569→                        toast.success(`Loaded "${tpl.title}"`);
+   570→                      }}
+   571→                    />
+   572→                  ))}
+   573→                </div>
+   574→              </div>
+   575→            ) : null}
+   576→
+   577→            {/* Sample prompts (only when empty) */}
+   578→            {!prompt ? (
+   579→              <div className="mt-2.5 flex flex-wrap gap-1.5">
+   580→                {SAMPLE_PROMPTS.map((s, i) => (
+   581→                  <button
+   582→                    key={i}
+   583→                    onClick={() => setPrompt(s)}
+   584→                    className="nexus-chip rounded-md border border-border/50 bg-background/40 px-2 py-1 text-[10px] text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+   585→                    title={s}
+   586→                  >
+   587→                    {s.slice(0, 26)}…
+   588→                  </button>
+   589→                ))}
+   590→              </div>
+   591→            ) : null}
+   592→          </div>
+   593→
+   594→          {/* Style */}
+   595→          <div className="nexus-card rounded-2xl p-4">
+   596→            <label className="mb-2 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   597→              <Palette className="h-3.5 w-3.5 text-primary" /> Style
+   598→            </label>
+   599→            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+   600→              {STYLES.map((s) => (
+   601→                <button
+   602→                  key={s}
+   603→                  onClick={() => setStyle(s)}
+   604→                  className={cn(
+   605→                    "nexus-chip rounded-md border px-2 py-1.5 text-left text-[11px] font-medium",
+   606→                    style === s ? "nexus-chip-active" : "border-border/50 bg-background/40 text-muted-foreground hover:text-foreground"
+   607→                  )}
+   608→                >
+   609→                  {s}
+   610→                </button>
+   611→              ))}
+   612→            </div>
+   613→          </div>
+   614→
+   615→          {/* Aspect */}
+   616→          <div className="nexus-card rounded-2xl p-4">
+   617→            <label className="mb-2 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   618→              <Ratio className="h-3.5 w-3.5 text-primary" /> Aspect Ratio
+   619→            </label>
+   620→            <div className="grid grid-cols-3 gap-1.5">
+   621→              {ASPECTS.map((a) => {
+   622→                const active = aspect === a.id;
+   623→                return (
+   624→                  <button
+   625→                    key={a.id}
+   626→                    onClick={() => setAspect(a.id)}
+   627→                    className={cn(
+   628→                      "nexus-chip flex flex-col items-center gap-1.5 rounded-md border px-1 py-2",
+   629→                      active ? "nexus-chip-active" : "border-border/50 bg-background/40 hover:border-primary/30"
+   630→                    )}
+   631→                  >
+   632→                    <div
+   633→                      className={cn(
+   634→                        "rounded-sm border",
+   635→                        active ? "border-primary" : "border-muted-foreground/50"
+   636→                      )}
+   637→                      style={{
+   638→                        width: a.w >= a.h ? 22 : (22 * a.w) / a.h,
+   639→                        height: a.h >= a.w ? 16 : (16 * a.h) / a.w,
+   640→                      }}
+   641→                    />
+   642→                    <span className={cn("font-mono text-[10px]", active ? "text-primary" : "text-muted-foreground")}>
+   643→                      {a.id}
+   644→                    </span>
+   645→                  </button>
+   646→                );
+   647→              })}
+   648→            </div>
+   649→            <div className="mt-2 text-[10px] text-muted-foreground">
+   650→              Output size: <span className="font-mono text-foreground">{aspectDef.size}px</span>
+   651→            </div>
+   652→          </div>
+   653→
+   654→          {/* v3: FLUX Calibration panel */}
+   655→          <CalibrationPanel />
+   656→
+   657→          {/* Wardrobe (advanced) */}
+   658→          <div className="nexus-card rounded-2xl p-4">
+   659→            <button onClick={() => setAdvanced((v) => !v)} className="flex w-full items-center justify-between">
+   660→              <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   661→                <Shirt className="h-3.5 w-3.5 text-primary" /> Wardrobe / Detail Notes
+   662→              </span>
+   663→              <ChevronRight className={cn("h-3.5 w-3.5 text-muted-foreground transition", advanced && "rotate-90")} />
+   664→            </button>
+   665→            {advanced ? (
+   666→              <input
+   667→                value={wardrobe}
+   668→                onChange={(e) => setWardrobe(e.target.value.slice(0, 500))}
+   669→                placeholder="e.g. flowing red cloak, leather armor, silver circlet"
+   670→                className="nexus-input mt-3 w-full rounded-lg border border-border/60 bg-background/60 px-3 py-2 text-sm outline-none"
+   671→              />
+   672→            ) : null}
+   673→          </div>
+   674→
+   675→          {/* v3: LoRA stack */}
+   676→          <LoraStack />
+   677→
+   678→          {/* Run button + Warm up Modal */}
+   679→          <div className="flex gap-2">
+   680→            <button
+   681→              onClick={run}
+   682→              disabled={running || !prompt.trim()}
+   683→              className="nexus-btn-primary flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 font-mono text-sm font-semibold text-primary-foreground"
+   684→            >
+   685→              {running ? (
+   686→                <>
+   687→                  <Loader2 className="h-4 w-4 animate-spin" />
+   688→                  Weaving…
+   689→                </>
+   690→              ) : (
+   691→                <>
+   692→                  <Wand2 className="h-4 w-4" />
+   693→                  Run Pipeline
+   694→                </>
+   695→              )}
+   696→            </button>
+   697→            <button
+   698→              onClick={warmupModal}
+   699→              disabled={warming || running}
+   700→              title="Pre-warm the Modal GPU container so the first generation doesn't pay cold-start latency"
+   701→              className={cn(
+   702→                "flex items-center justify-center gap-1.5 rounded-xl border px-3 py-3 font-mono text-[11px] uppercase tracking-wider transition",
+   703→                modalWarm === true
+   704→                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+   705→                  : modalWarm === false
+   706→                    ? "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+   707→                    : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+   708→              )}
+   709→            >
+   710→              {warming ? (
+   711→                <Loader2 className="h-4 w-4 animate-spin" />
+   712→              ) : (
+   713→                <Flame className="h-4 w-4" />
+   714→              )}
+   715→              <span className="hidden sm:inline">
+   716→                {warming ? "Warming…" : modalWarm === true ? "Warm" : modalWarm === false ? "Cold" : "Warm up"}
+   717→              </span>
+   718→            </button>
+   719→            {(result || error) && !running ? (
+   720→              <button
+   721→                onClick={clearResult}
+   722→                className="rounded-xl border border-border/60 px-3 py-3 text-muted-foreground transition hover:text-foreground"
+   723→                title="Clear"
+   724→              >
+   725→                <RotateCcw className="h-4 w-4" />
+   726→              </button>
+   727→            ) : null}
+   728→          </div>
+   729→
+   730→          {/* Modal warm-up status strip */}
+   731→          {modalWarm !== null && !running ? (
+   732→            <div
+   733→              className={cn(
+   734→                "flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px]",
+   735→                modalWarm
+   736→                  ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-300"
+   737→                  : "border-amber-500/30 bg-amber-500/5 text-amber-300"
+   738→              )}
+   739→            >
+   740→              <Cloud className="h-3.5 w-3.5 shrink-0" />
+   741→              <span className="flex-1">
+   742→                {modalWarm
+   743→                  ? "Modal GPU container is warm — generation will be ~1.5–2s."
+   744→                  : "Modal container is cold. First generation may take 1–7 min, or use z-ai fallback."}
+   745→              </span>
+   746→            </div>
+   747→          ) : null}
+   748→
+   749→          {error ? (
+   750→            <div className="nexus-rise rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-300">
+   751→              <div className="mb-1 flex items-center gap-1.5 font-semibold">
+   752→                <XCircle className="h-3.5 w-3.5" /> Pipeline Error
+   753→              </div>
+   754→              {error}
+   755→            </div>
+   756→          ) : null}
+   757→        </div>
+   758→
+   759→        {/* RIGHT: pipeline + result */}
+   760→        <div className="space-y-4">
+   761→          {/* Pipeline progress */}
+   762→          <div className="nexus-card relative overflow-hidden rounded-2xl p-4">
+   763→            <div className="mb-3 flex items-center justify-between">
+   764→              <h3 className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   765→                <span className="text-primary">◆</span> Pipeline Stages
+   766→              </h3>
+   767→              <div className="flex items-center gap-2">
+   768→                {running ? (
+   769→                  <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-cyan-400">
+   770→                    <Clock className="h-3 w-3" /> {(elapsed / 1000).toFixed(1)}s
+   771→                  </span>
+   772→                ) : null}
+   773→                {running ? (
+   774→                  <span className="font-mono text-[10px] text-cyan-400">live · running</span>
+   775→                ) : null}
+   776→              </div>
+   777→            </div>
+   778→            {running ? <div className="absolute inset-x-0 top-0 h-0.5 nexus-sweep" /> : null}
+   779→            <ol className="space-y-1.5">
+   780→              {stages.map((st, i) => {
+   781→                const def = PIPELINE_STAGES.find((p) => p.id === st.id)!;
+   782→                const Icon = stageIcon(st.id);
+   783→                return (
+   784→                  <motion.li
+   785→                    key={st.id}
+   786→                    layout
+   787→                    initial={{ opacity: 0, x: -8 }}
+   788→                    animate={{ opacity: 1, x: 0 }}
+   789→                    transition={{ duration: 0.25, delay: i * 0.04 }}
+   790→                    className={cn(
+   791→                      "flex items-center gap-3 rounded-lg border px-3 py-2 transition",
+   792→                      st.status === "running"
+   793→                        ? "border-cyan-500/40 bg-cyan-500/5"
+   794→                        : st.status === "done"
+   795→                          ? "border-emerald-500/30 bg-emerald-500/5"
+   796→                          : st.status === "error"
+   797→                            ? "border-rose-500/40 bg-rose-500/5"
+   798→                            : "border-border/40 bg-background/30"
+   799→                    )}
+   800→                  >
+   801→                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-background/60">
+   802→                      <Icon className="h-3.5 w-3.5" />
+   803→                    </span>
+   804→                    <div className="min-w-0 flex-1">
+   805→                      <div className="flex items-center gap-2">
+   806→                        <span className="font-mono text-[10px] text-muted-foreground">
+   807→                          {String(i + 1).padStart(2, "0")}
+   808→                        </span>
+   809→                        <span className="truncate text-sm font-medium">{def.label}</span>
+   810→                      </div>
+   811→                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+   812→                        <span className="font-mono">{def.model}</span>
+   813→                        <span>·</span>
+   814→                        <span>{def.params}</span>
+   815→                      </div>
+   816→                    </div>
+   817→                    <div className="flex shrink-0 items-center gap-2">
+   818→                      {st.message ? (
+   819→                        <span className="hidden text-[10px] text-muted-foreground sm:inline">{st.message}</span>
+   820→                      ) : null}
+   821→                      {typeof st.ms === "number" ? (
+   822→                        <span className="font-mono text-[10px] text-primary">
+   823→                          {st.ms < 1000 ? `${st.ms}ms` : `${(st.ms / 1000).toFixed(1)}s`}
+   824→                        </span>
+   825→                      ) : null}
+   826→                      {st.status === "running" ? (
+   827→                        <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+   828→                      ) : (
+   829→                        <StatusDot status={st.status} />
+   830→                      )}
+   831→                    </div>
+   832→                  </motion.li>
+   833→                );
+   834→              })}
+   835→            </ol>
+   836→          </div>
+   837→
+   838→          {/* Result */}
+   839→          {result ? (
+   840→            <ResultPanel
+   841→              result={result}
+   842→              onGallery={() => setView("gallery")}
+   843→              onCompliance={() => setView("compliance")}
+   844→              onRerun={() => {
+   845→                loadSettings({
+   846→                  prompt: result.prompt,
+   847→                  style: result.style,
+   848→                  aspect: result.aspect,
+   849→                  wardrobe: result.wardrobe ?? "",
+   850→                });
+   851→                clearResult();
+   852→                toast.info("Settings loaded — press Run to re-weave");
+   853→              }}
+   854→            />
+   855→          ) : null}
+   856→          {!result && !running ? (
+   857→            <EmptyState
+   858→              onQuickStart={(p, s, a) => {
+   859→                loadSettings({ prompt: p, style: s, aspect: a });
+   860→                toast.success(`Loaded "${s}" template — press Run to weave`);
+   861→              }}
+   862→            />
+   863→          ) : null}
+   864→
+   865→          {/* Recent Generations strip — always visible when there's history */}
+   866→          <RecentGenerations
+   867→            onPick={(g) => {
+   868→              loadSettings({
+   869→                prompt: g.prompt,
+   870→                style: g.style,
+   871→                aspect: g.aspect,
+   872→                wardrobe: g.wardrobe ?? "",
+   873→              });
+   874→              toast.success("Loaded prior prompt — press Run to re-weave");
+   875→            }}
+   876→          />
+   877→        </div>
+   878→      </div>
+   879→    </div>
+   880→  );
+   881→}
+   882→
+   883→/**
+   884→ * RecentGenerations — horizontal thumbnail strip of the last 8 generations.
+   885→ * Lets the user quickly re-load a prior prompt+settings into the form.
+   886→ */
+   887→function RecentGenerations({ onPick }: { onPick: (g: RecentGen) => void }) {
+   888→  const { data, isLoading } = useQuery({
+   889→    queryKey: ["nexus-recent-gens"],
+   890→    queryFn: async () => {
+   891→      const res = await fetch("/api/gallery?limit=8", { cache: "no-store" });
+   892→      if (!res.ok) throw new Error("gallery");
+   893→      const d = (await res.json()) as { items: RecentGen[] };
+   894→      return d.items;
+   895→    },
+   896→    refetchInterval: 15000,
+   897→  });
+   898→
+   899→  const items = data ?? [];
+   900→  if (isLoading && items.length === 0) {
+   901→    return (
+   902→      <div className="nexus-card rounded-2xl p-4">
+   903→        <div className="mb-3 flex items-center gap-1.5">
+   904→          <Clock3 className="h-3.5 w-3.5 text-primary" />
+   905→          <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   906→            Recent Generations
+   907→          </span>
+   908→        </div>
+   909→        <div className="flex gap-2 overflow-hidden">
+   910→          {[1, 2, 3, 4].map((i) => (
+   911→            <div key={i} className="nexus-skeleton h-20 w-24 shrink-0 rounded-lg" />
+   912→          ))}
+   913→        </div>
+   914→      </div>
+   915→    );
+   916→  }
+   917→
+   918→  if (items.length === 0) return null;
+   919→
+   920→  return (
+   921→    <div className="nexus-card rounded-2xl p-4">
+   922→      <div className="mb-3 flex items-center justify-between">
+   923→        <div className="flex items-center gap-1.5">
+   924→          <Clock3 className="h-3.5 w-3.5 text-primary" />
+   925→          <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   926→            Recent Generations
+   927→          </span>
+   928→          <span className="font-mono text-[9px] text-muted-foreground/60">· {items.length}</span>
+   929→        </div>
+   930→        <span className="font-mono text-[9px] text-muted-foreground/60">
+   931→          click to load prompt
+   932→        </span>
+   933→      </div>
+   934→      <div className="flex gap-2 overflow-x-auto nexus-scroll pb-1">
+   935→        {items.map((g) => (
+   936→          <button
+   937→            key={g.id}
+   938→            onClick={() => onPick(g)}
+   939→            className="group nexus-card-hover relative h-20 w-24 shrink-0 overflow-hidden rounded-lg border border-border/40 bg-background/40 transition hover:border-primary/40"
+   940→            title={g.prompt}
+   941→          >
+   942→            {g.imagePath ? (
+   943→               
+   944→              <img
+   945→                src={g.imagePath}
+   946→                alt={g.prompt}
+   947→                className="h-full w-full object-cover transition group-hover:scale-105"
+   948→                loading="lazy"
+   949→              />
+   950→            ) : (
+   951→              <div className="grid h-full w-full place-items-center text-muted-foreground">
+   952→                <ImageIcon className="h-4 w-4" />
+   953→              </div>
+   954→            )}
+   955→            {/* gradient overlay with verdict + score */}
+   956→            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+   957→            <div className="absolute bottom-1 left-1 right-1 flex items-center justify-between">
+   958→              <span
+   959→                className={cn(
+   960→                  "rounded px-1 py-0.5 font-mono text-[8px] uppercase tracking-wider backdrop-blur",
+   961→                  g.verdict === "approved"
+   962→                    ? "bg-emerald-500/30 text-emerald-200"
+   963→                    : g.verdict === "rejected"
+   964→                      ? "bg-rose-500/30 text-rose-200"
+   965→                      : "bg-amber-500/30 text-amber-200"
+   966→                )}
+   967→              >
+   968→                {g.verdict?.slice(0, 4) ?? "—"}
+   969→              </span>
+   970→              {typeof g.overallScore === "number" ? (
+   971→                <span className="rounded bg-black/60 px-1 py-0.5 font-mono text-[8px] text-foreground backdrop-blur">
+   972→                  {Math.round(g.overallScore)}
+   973→                </span>
+   974→              ) : null}
+   975→            </div>
+   976→            {/* hover hint */}
+   977→            <div className="absolute inset-0 grid place-items-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+   978→              <span className="flex items-center gap-1 rounded-md bg-primary/80 px-1.5 py-0.5 font-mono text-[9px] text-primary-foreground">
+   979→                Load <ArrowRight className="h-2.5 w-2.5" />
+   980→              </span>
+   981→            </div>
+   982→          </button>
+   983→        ))}
+   984→      </div>
+   985→    </div>
+   986→  );
+   987→}
+   988→
+   989→interface RecentGen {
+   990→  id: string;
+   991→  prompt: string;
+   992→  style: string;
+   993→  aspect: string;
+   994→  wardrobe?: string | null;
+   995→  imagePath?: string | null;
+   996→  verdict?: string | null;
+   997→  overallScore?: number | null;
+   998→  createdAt: string;
+   999→}
+  1000→
+  1001→function stageIcon(id: StageId) {
+  1002→  switch (id) {
+  1003→    case "prompt":
+  1004→      return Sparkles;
+  1005→    case "flux":
+  1006→      return ImageIcon;
+  1007→    case "st3gg":
+  1008→      return ShieldMark;
+  1009→    case "judge":
+  1010→      return ScanEye;
+  1011→    case "nemotron":
+  1012→      return FileJson;
+  1013→    case "output":
+  1014→      return CheckCircle2;
+  1015→  }
+  1016→}
+  1017→
+  1018→function ShieldMark() {
+  1019→  return <AlertTriangle className="h-3.5 w-3.5" />;
+  1020→}
+  1021→
+  1022→function TemplateCard({ tpl, onUse }: { tpl: PromptTemplate; onUse: () => void }) {
+  1023→  return (
+  1024→    <button
+  1025→      onClick={onUse}
+  1026→      className="group nexus-card-hover rounded-lg border border-border/40 bg-background/30 p-2.5 text-left"
+  1027→    >
+  1028→      <div className="mb-1 flex items-center justify-between">
+  1029→        <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-primary">
+  1030→          {tpl.category}
+  1031→        </span>
+  1032→        {tpl.style ? (
+  1033→          <span className="font-mono text-[8px] text-muted-foreground">{tpl.style}</span>
+  1034→        ) : null}
+  1035→      </div>
+  1036→      <div className="text-[11px] font-semibold leading-tight text-foreground">{tpl.title}</div>
+  1037→      <p className="mt-1 line-clamp-2 text-[9px] leading-snug text-muted-foreground">{tpl.prompt}</p>
+  1038→    </button>
+  1039→  );
+  1040→}
+  1041→
+  1042→function EmptyState({ onQuickStart }: { onQuickStart?: (prompt: string, style: string, aspect: string) => void }) {
+  1043→  const quickStarts: { prompt: string; style: string; aspect: string; label: string; emoji: string }[] = [
+  1044→    { prompt: "A lone astronaut discovering a bioluminescent forest on an alien moon, cinematic lighting", style: "cinematic", aspect: "16:9", label: "Astronaut", emoji: "🧑‍🚀" },
+  1045→    { prompt: "Portrait of a cyberpunk street vendor in neon-lit Tokyo rain, reflective puddles", style: "cyberpunk", aspect: "1:1", label: "Cyberpunk", emoji: "🌃" },
+  1046→    { prompt: "A majestic airship docked at a floating island at golden hour, volumetric clouds", style: "digital-art", aspect: "16:9", label: "Airship", emoji: "🛩️" },
+  1047→    { prompt: "Cozy bookshop interior with a sleeping cat, warm afternoon light through dusty windows", style: "oil-painting", aspect: "4:3", label: "Bookshop", emoji: "📚" },
+  1048→    { prompt: "A samurai standing in cherry blossom storm, ink-wash painting style", style: "watercolor", aspect: "3:4", label: "Samurai", emoji: "🌸" },
+  1049→    { prompt: "Abstract liquid metal sculpture on a black pedestal, studio lighting, hyper-detailed", style: "3d-render", aspect: "1:1", label: "Sculpture", emoji: "🗿" },
+  1050→  ];
+  1051→  return (
+  1052→    <div className="nexus-card relative overflow-hidden rounded-2xl p-6 sm:p-8">
+  1053→      <div className="absolute inset-0 nexus-scanline pointer-events-none opacity-20" />
+  1054→      <div className="relative grid min-h-[280px] place-items-center text-center">
+  1055→        <div className="nexus-rise w-full">
+  1056→          <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary nexus-glow nexus-float">
+  1057→            <Wand2 className="h-7 w-7" />
+  1058→            <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-amber-400 nexus-pulse" />
+  1059→          </div>
+  1060→          <h3 className="font-mono text-sm font-semibold">Awaiting first job</h3>
+  1061→          <p className="mx-auto mt-1.5 max-w-sm text-xs text-muted-foreground">
+  1062→            Enter a prompt, pick a style, and run the pipeline. Or launch a curated quick-start
+  1063→            below. The multi-model chain produces a governed image with structured evidence.
+  1064→          </p>
+  1065→          <div className="mx-auto mt-4 grid max-w-xs grid-cols-3 gap-2">
+  1066→            {[
+  1067→              { k: "Generate", v: "FLUX.1" },
+  1068→              { k: "Scan", v: "ST3GG" },
+  1069→              { k: "Judge", v: "CPM-V" },
+  1070→            ].map((s) => (
+  1071→              <div key={s.k} className="rounded-lg border border-border/40 bg-background/40 px-2 py-1.5">
+  1072→                <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{s.k}</div>
+  1073→                <div className="font-mono text-[10px] text-primary">{s.v}</div>
+  1074→              </div>
+  1075→            ))}
+  1076→          </div>
+  1077→
+  1078→          {onQuickStart ? (
+  1079→            <div className="mx-auto mt-6 max-w-2xl">
+  1080→              <div className="mb-2 flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1081→                <Zap className="h-3 w-3 text-amber-400" /> Quick Start
+  1082→              </div>
+  1083→              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+  1084→                {quickStarts.map((q) => (
+  1085→                  <button
+  1086→                    key={q.label}
+  1087→                    onClick={() => onQuickStart(q.prompt, q.style, q.aspect)}
+  1088→                    className="nexus-press nexus-card-hover group rounded-lg border border-border/50 bg-background/40 p-2.5 text-left transition hover:border-primary/40"
+  1089→                  >
+  1090→                    <div className="mb-1 flex items-center gap-1.5">
+  1091→                      <span className="text-base">{q.emoji}</span>
+  1092→                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground group-hover:text-primary">
+  1093→                        {q.label}
+  1094→                      </span>
+  1095→                    </div>
+  1096→                    <div className="truncate text-[10px] text-muted-foreground/80" title={q.prompt}>
+  1097→                      {q.prompt.slice(0, 42)}…
+  1098→                    </div>
+  1099→                    <div className="mt-1 flex items-center gap-1">
+  1100→                      <span className="rounded bg-primary/10 px-1 py-0.5 font-mono text-[8px] text-primary">{q.style}</span>
+  1101→                      <span className="rounded bg-foreground/10 px-1 py-0.5 font-mono text-[8px] text-muted-foreground">{q.aspect}</span>
+  1102→                    </div>
+  1103→                  </button>
+  1104→                ))}
+  1105→              </div>
+  1106→            </div>
+  1107→          ) : null}
+  1108→        </div>
+  1109→      </div>
+  1110→    </div>
+  1111→  );
+  1112→}
+  1113→
+  1114→function ResultPanel({
+  1115→  result,
+  1116→  onGallery,
+  1117→  onCompliance,
+  1118→  onRerun,
+  1119→}: {
+  1120→  result: NonNullable<ReturnType<typeof useNexus.getState>["result"]>;
+  1121→  onGallery: () => void;
+  1122→  onCompliance: () => void;
+  1123→  onRerun: () => void;
+  1124→}) {
+  1125→  const totalMs = result.timings
+  1126→    ? Object.values(result.timings).reduce<number>((a, b) => a + (typeof b === "number" ? b : 0), 0)
+  1127→    : 0;
+  1128→
+  1129→  // Policy refusal — dedicated blocked-state UI (not an error).
+  1130→  if (result.status === "blocked") {
+  1131→    return (
+  1132→      <div className="space-y-4 nexus-rise">
+  1133→        <div className="nexus-card rounded-2xl border border-rose-500/40 bg-rose-500/5 p-5 sm:p-6">
+  1134→          <div className="flex items-start gap-3">
+  1135→            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-500/15 text-rose-400 nexus-glow">
+  1136→              <ShieldAlert className="h-5 w-5" />
+  1137→            </div>
+  1138→            <div className="min-w-0 flex-1">
+  1139→              <div className="flex flex-wrap items-center gap-2">
+  1140→                <h3 className="font-mono text-sm font-semibold text-rose-200">
+  1141→                  Run blocked by safety policy
+  1142→                </h3>
+  1143→                {result.maturityTier ? (
+  1144→                  <span className="rounded bg-rose-500/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-rose-300">
+  1145→                    tier: {result.maturityTier}
+  1146→                  </span>
+  1147→                ) : null}
+  1148→              </div>
+  1149→              <p className="mt-1.5 text-sm text-rose-100/80">
+  1150→                {result.blockReason ?? "The pipeline refused to render this prompt."}
+  1151→              </p>
+  1152→              {result.safety ? (
+  1153→                <div className="mt-3 rounded-lg border border-rose-500/20 bg-background/40 p-2.5">
+  1154→                  <div className="mb-1.5 flex items-center justify-between">
+  1155→                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1156→                      ST3GG safety scan
+  1157→                    </span>
+  1158→                    <span className="font-mono text-[10px] text-rose-300">
+  1159→                      risk: {result.safety.riskLevel} · score {result.safety.score}
+  1160→                    </span>
+  1161→                  </div>
+  1162→                  <p className="text-[11px] leading-snug text-muted-foreground">
+  1163→                    {result.safety.rationale}
+  1164→                  </p>
+  1165→                  {result.safety.flags.length > 0 ? (
+  1166→                    <div className="mt-1.5 flex flex-wrap gap-1">
+  1167→                      {result.safety.flags.map((f) => (
+  1168→                        <span
+  1169→                          key={f}
+  1170→                          className="rounded border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 font-mono text-[9px] text-rose-300"
+  1171→                        >
+  1172→                          {f}
+  1173→                        </span>
+  1174→                      ))}
+  1175→                    </div>
+  1176→                  ) : null}
+  1177→                </div>
+  1178→              ) : null}
+  1179→              <div className="mt-3 flex flex-wrap gap-1.5">
+  1180→                <button
+  1181→                  type="button"
+  1182→                  onClick={onCompliance}
+  1183→                  className="inline-flex items-center gap-1.5 rounded-md border border-rose-500/40 bg-rose-500/10 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-rose-200 transition hover:bg-rose-500/20"
+  1184→                >
+  1185→                  <ShieldAlert className="h-3 w-3" /> Review policy in Compliance
+  1186→                  <ArrowRight className="h-3 w-3" />
+  1187→                </button>
+  1188→                <button
+  1189→                  type="button"
+  1190→                  onClick={onRerun}
+  1191→                  className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-background/40 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1192→                >
+  1193→                  <RotateCcw className="h-3 w-3" /> Adjust &amp; retry
+  1194→                </button>
+  1195→              </div>
+  1196→            </div>
+  1197→          </div>
+  1198→        </div>
+  1199→
+  1200→        <ProvenanceCard result={result} />
+  1201→      </div>
+  1202→    );
+  1203→  }
+  1204→
+  1205→  return (
+  1206→    <div className="space-y-4 nexus-rise">
+  1207→      {/* Image + verdict */}
+  1208→      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,280px)]">
+  1209→        <div className="nexus-card group relative overflow-hidden rounded-2xl">
+  1210→          {result.imagePath ? (
+  1211→             
+  1212→            <img src={result.imagePath} alt={result.prompt} className="w-full object-cover" />
+  1213→          ) : (
+  1214→            <div className="grid aspect-square place-items-center text-muted-foreground">
+  1215→              <XCircle className="h-8 w-8" />
+  1216→            </div>
+  1217→          )}
+  1218→          {result.imagePath ? (
+  1219→            <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-1.5 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 transition group-hover:opacity-100">
+  1220→              <button
+  1221→                onClick={() => downloadImage(result.imagePath!, `nexus-${result.id.slice(-8)}.png`)}
+  1222→                className="inline-flex items-center gap-1 rounded-md nexus-glass px-2 py-1 font-mono text-[10px] text-foreground transition hover:text-primary"
+  1223→              >
+  1224→                <Download className="h-3 w-3" /> PNG
+  1225→              </button>
+  1226→            </div>
+  1227→          ) : null}
+  1228→        </div>
+  1229→        <div className="nexus-card flex flex-col gap-3 p-4">
+  1230→          <div className="flex items-center justify-between">
+  1231→            <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Verdict</span>
+  1232→            <VerdictBadge verdict={result.verdict} size="sm" />
+  1233→          </div>
+  1234→          <div className="flex items-center gap-3">
+  1235→            <ScoreRing value={result.overallScore} size={76} label="Overall" />
+  1236→            <div className="flex-1 space-y-1.5">
+  1237→              {result.judge ? (
+  1238→                <>
+  1239→                  <ScoreBar label="Prompt adherence" value={result.judge.promptAdherence} />
+  1240→                  <ScoreBar label="Visual quality" value={result.judge.visualQuality} />
+  1241→                  <ScoreBar label="Aesthetic" value={result.judge.aestheticScore} />
+  1242→                  <ScoreBar label="Safety" value={result.judge.safetyScore} />
+  1243→                </>
+  1244→              ) : null}
+  1245→            </div>
+  1246→          </div>
+  1247→          {totalMs > 0 ? (
+  1248→            <div className="flex items-center justify-between rounded-lg border border-border/40 bg-background/30 px-2.5 py-1.5 text-[10px]">
+  1249→              <span className="flex items-center gap-1 text-muted-foreground">
+  1250→                <Clock className="h-3 w-3" /> Total
+  1251→              </span>
+  1252→              <span className="font-mono text-primary">{(totalMs / 1000).toFixed(1)}s</span>
+  1253→            </div>
+  1254→          ) : null}
+  1255→          <div className="mt-auto grid grid-cols-2 gap-1.5">
+  1256→            <button
+  1257→              onClick={onRerun}
+  1258→              className="rounded-lg border border-border/60 bg-background/40 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1259→            >
+  1260→              <RotateCcw className="mr-1 inline h-3 w-3" /> Re-run
+  1261→            </button>
+  1262→            <button
+  1263→              onClick={onGallery}
+  1264→              className="rounded-lg border border-border/60 bg-background/40 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1265→            >
+  1266→              Gallery →
+  1267→            </button>
+  1268→          </div>
+  1269→        </div>
+  1270→      </div>
+  1271→
+  1272→      {/* Safety + Judge detail */}
+  1273→      <div className="grid gap-4 md:grid-cols-2">
+  1274→        {result.safety ? (
+  1275→          <DetailCard title="ST3GG Safety Scan" icon={<ShieldMark />} tone={result.safety.passed ? "ok" : "warn"}>
+  1276→            <div className="mb-3 flex items-center justify-between">
+  1277→              <span className="font-mono text-xs text-muted-foreground">Risk: {result.safety.riskLevel}</span>
+  1278→              <ScoreRing value={result.safety.score} size={48} />
+  1279→            </div>
+  1280→            <p className="text-xs text-muted-foreground">{result.safety.rationale}</p>
+  1281→            {result.safety.flags.length > 0 ? (
+  1282→              <div className="mt-2 flex flex-wrap gap-1">
+  1283→                {result.safety.flags.map((f) => (
+  1284→                  <span key={f} className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] text-amber-300">
+  1285→                    {f}
+  1286→                  </span>
+  1287→                ))}
+  1288→              </div>
+  1289→            ) : (
+  1290→              <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-400">
+  1291→                <CheckCircle2 className="h-3 w-3" /> No flags raised
+  1292→              </div>
+  1293→            )}
+  1294→          </DetailCard>
+  1295→        ) : null}
+  1296→
+  1297→        {result.judge ? (
+  1298→          <DetailCard
+  1299→            title="MiniCPM-V Judge Report"
+  1300→            icon={<ScanEye className="h-4 w-4" />}
+  1301→            tone={result.judge.verdict === "approved" ? "ok" : result.judge.verdict === "rejected" ? "bad" : "warn"}
+  1302→          >
+  1303→            <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+  1304→              <ScoreBar label="Wardrobe match" value={result.judge.wardrobeMatch} />
+  1305→              <ScoreBar label="Prompt adherence" value={result.judge.promptAdherence} />
+  1306→            </div>
+  1307→            {result.judge.strengths.length > 0 ? (
+  1308→              <div className="mt-3">
+  1309→                <div className="mb-1 text-[10px] uppercase tracking-wider text-emerald-400">Strengths</div>
+  1310→                <ul className="space-y-0.5 text-[11px] text-muted-foreground">
+  1311→                  {result.judge.strengths.map((s, i) => (
+  1312→                    <li key={i} className="flex gap-1.5">
+  1313→                      <span className="text-emerald-400">+</span>
+  1314→                      {s}
+  1315→                    </li>
+  1316→                  ))}
+  1317→                </ul>
+  1318→              </div>
+  1319→            ) : null}
+  1320→            {result.judge.weaknesses.length > 0 ? (
+  1321→              <div className="mt-2">
+  1322→                <div className="mb-1 text-[10px] uppercase tracking-wider text-rose-400">Weaknesses</div>
+  1323→                <ul className="space-y-0.5 text-[11px] text-muted-foreground">
+  1324→                  {result.judge.weaknesses.map((s, i) => (
+  1325→                    <li key={i} className="flex gap-1.5">
+  1326→                      <span className="text-rose-400">−</span>
+  1327→                      {s}
+  1328→                    </li>
+  1329→                  ))}
+  1330→                </ul>
+  1331→              </div>
+  1332→            ) : null}
+  1333→          </DetailCard>
+  1334→        ) : null}
+  1335→      </div>
+  1336→
+  1337→      {/* Nemotron evidence */}
+  1338→      {result.evidence ? (
+  1339→        <DetailCard
+  1340→          title="Nemotron Structured Evidence"
+  1341→          icon={<FileJson className="h-4 w-4" />}
+  1342→          action={
+  1343→            <button
+  1344→              onClick={() =>
+  1345→                downloadFile(
+  1346→                  `nexus-evidence-${result.id.slice(-8)}.json`,
+  1347→                  JSON.stringify(result.evidence, null, 2),
+  1348→                  "application/json"
+  1349→                )
+  1350→              }
+  1351→              className="inline-flex items-center gap-1 rounded-md border border-border/50 px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+  1352→            >
+  1353→              <Download className="h-3 w-3" /> Export
+  1354→            </button>
+  1355→          }
+  1356→        >
+  1357→          <div className="mb-3 flex flex-wrap items-center gap-2">
+  1358→            <VerdictBadge verdict={(result.evidence.finalVerdict as string) ?? result.verdict} size="sm" />
+  1359→            {typeof result.evidence.confidence === "number" ? (
+  1360→              <span className="font-mono text-[10px] text-muted-foreground">
+  1361→                confidence {String(result.evidence.confidence)}
+  1362→              </span>
+  1363→            ) : null}
+  1364→          </div>
+  1365→          {typeof result.evidence.summary === "string" ? (
+  1366→            <p className="mb-3 text-sm text-foreground">{result.evidence.summary}</p>
+  1367→          ) : null}
+  1368→          {Array.isArray(result.evidence.keyFindings) ? (
+  1369→            <div className="mb-3">
+  1370→              <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Key Findings</div>
+  1371→              <ul className="space-y-0.5 text-xs text-muted-foreground">
+  1372→                {result.evidence.keyFindings.map((f, i) => (
+  1373→                  <li key={i}>• {String(f)}</li>
+  1374→                ))}
+  1375→              </ul>
+  1376→            </div>
+  1377→          ) : null}
+  1378→          <details className="rounded-lg border border-border/40 bg-background/40">
+  1379→            <summary className="cursor-pointer px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1380→              Raw evidence JSON
+  1381→            </summary>
+  1382→            <pre className="nexus-scroll max-h-72 overflow-auto px-3 pb-3 text-[10px] leading-relaxed text-foreground/80">
+  1383→{JSON.stringify(result.evidence, null, 2)}
+  1384→            </pre>
+  1385→          </details>
+  1386→        </DetailCard>
+  1387→      ) : null}
+  1388→
+  1389→      {/* v3: Provenance — calibration + LoRA + maturity tier */}
+  1390→      <ProvenanceCard result={result} />
+  1391→    </div>
+  1392→  );
+  1393→}
+  1394→
+  1395→/**
+  1396→ * ProvenanceCard — surfaces the calibration preset, applied LoRAs and maturity
+  1397→ * tier for a completed (or blocked) run. Lets the user audit exactly which
+  1398→ * params produced an image — required for EU AI Act transparency obligations.
+  1399→ */
+  1400→function ProvenanceCard({ result }: { result: RunResult }) {
+  1401→  const hasCalibration = !!result.calibration;
+  1402→  const hasLoras = result.loraIds.length > 0;
+  1403→  const hasTier = !!result.maturityTier;
+  1404→  if (!hasCalibration && !hasLoras && !hasTier) return null;
+  1405→
+  1406→  return (
+  1407→    <DetailCard title="Provenance" icon={<FileJson className="h-4 w-4" />}>
+  1408→      {result.calibration ? (
+  1409→        <div className="mb-3">
+  1410→          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+  1411→            <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary">
+  1412→              {getPreset(result.calibration.presetId).name}
+  1413→            </span>
+  1414→            <span className="font-mono text-[9px] text-muted-foreground">
+  1415→              {result.calibration.model}
+  1416→            </span>
+  1417→            {result.calibration.appliedOverrides.length > 0 ? (
+  1418→              <span className="rounded border border-amber-500/30 bg-amber-500/10 px-1 py-0.5 font-mono text-[8px] uppercase tracking-wider text-amber-300">
+  1419→                {result.calibration.appliedOverrides.length} override(s)
+  1420→              </span>
+  1421→            ) : null}
+  1422→          </div>
+  1423→          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 font-mono text-[10px] sm:grid-cols-4">
+  1424→            <span>
+  1425→              <span className="text-muted-foreground/60">steps:</span>{" "}
+  1426→              <span className="text-foreground">{result.calibration.steps}</span>
+  1427→            </span>
+  1428→            <span>
+  1429→              <span className="text-muted-foreground/60">cfg:</span>{" "}
+  1430→              <span className="text-foreground">{result.calibration.cfg.toFixed(1)}</span>
+  1431→            </span>
+  1432→            <span>
+  1433→              <span className="text-muted-foreground/60">sampler:</span>{" "}
+  1434→              <span className="text-foreground">{result.calibration.sampler}</span>
+  1435→            </span>
+  1436→            <span>
+  1437→              <span className="text-muted-foreground/60">res:</span>{" "}
+  1438→              <span className="text-foreground">{result.calibration.resolution}</span>
+  1439→            </span>
+  1440→          </div>
+  1441→        </div>
+  1442→      ) : null}
+  1443→
+  1444→      {hasLoras ? (
+  1445→        <div className="mb-3">
+  1446→          <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+  1447→            LoRAs applied
+  1448→          </div>
+  1449→          <div className="flex flex-wrap gap-1">
+  1450→            {result.loraIds.map((id) => {
+  1451→              const l = getLora(id);
+  1452→              const mature = l?.mature === true;
+  1453→              return (
+  1454→                <span
+  1455→                  key={id}
+  1456→                  className={cn(
+  1457→                    "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[9px]",
+  1458→                    mature
+  1459→                      ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+  1460→                      : "border-border/50 bg-background/40 text-foreground"
+  1461→                  )}
+  1462→                  title={l?.purpose ?? id}
+  1463→                >
+  1464→                  {l?.name ?? id}
+  1465→                  {mature ? (
+  1466→                    <span className="text-[8px] uppercase tracking-wider">18+</span>
+  1467→                  ) : null}
+  1468→                </span>
+  1469→              );
+  1470→            })}
+  1471→          </div>
+  1472→        </div>
+  1473→      ) : null}
+  1474→
+  1475→      {hasTier ? (
+  1476→        <div className="flex items-center gap-1.5">
+  1477→          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+  1478→            Maturity tier:
+  1479→          </span>
+  1480→          <span
+  1481→            className={cn(
+  1482→              "rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider",
+  1483→              result.maturityTier === "safe" && "bg-emerald-500/15 text-emerald-300",
+  1484→              result.maturityTier === "mature" && "bg-amber-500/15 text-amber-300",
+  1485→              result.maturityTier === "blocked" && "bg-rose-500/15 text-rose-300"
+  1486→            )}
+  1487→          >
+  1488→            {result.maturityTier}
+  1489→          </span>
+  1490→        </div>
+  1491→      ) : null}
+  1492→    </DetailCard>
+  1493→  );
+  1494→}
+  1495→
+  1496→function DetailCard({
+  1497→  title,
+  1498→  icon,
+  1499→  children,
+  1500→  tone = "neutral",
+  1501→  action,
+  1502→}: {
+  1503→  title: string;
+  1504→  icon: React.ReactNode;
+  1505→  children: React.ReactNode;
+  1506→  tone?: "ok" | "warn" | "bad" | "neutral";
+  1507→  action?: React.ReactNode;
+  1508→}) {
+  1509→  const toneCls =
+  1510→    tone === "ok"
+  1511→      ? "border-emerald-500/30"
+  1512→      : tone === "warn"
+  1513→        ? "border-amber-500/30"
+  1514→        : tone === "bad"
+  1515→          ? "border-rose-500/30"
+  1516→          : "border-border/60";
+  1517→  return (
+  1518→    <div className={cn("nexus-card rounded-2xl p-4", toneCls)}>
+  1519→      <div className="mb-3 flex items-center justify-between">
+  1520→        <h4 className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+  1521→          {icon}
+  1522→          {title}
+  1523→        </h4>
+  1524→        {action}
+  1525→      </div>
+  1526→      {children}
+  1527→    </div>
+  1528→  );
+  1529→}
+  1530→
+  1531→/**
+  1532→ * CalibrationPanel — FLUX.1 calibration preset picker + advanced overrides.
+  1533→ * Renders the 6 presets as a horizontal chip row, shows a compact key/value
+  1534→ * grid for the active preset, and exposes steps/cfg/denoise/loraWeight
+  1535→ * sliders in a collapsible "Advanced overrides" section.
+  1536→ */
+  1537→function CalibrationPanel() {
+  1538→  const {
+  1539→    calibrationId,
+  1540→    setCalibration,
+  1541→    calibrationOverrides,
+  1542→    setCalibrationOverride,
+  1543→    clearCalibrationOverrides,
+  1544→  } = useNexus();
+  1545→  const preset = getPreset(calibrationId);
+  1546→  const [advOpen, setAdvOpen] = useState(false);
+  1547→
+  1548→  // Effective values: preset base, optionally overridden.
+  1549→  const steps = (calibrationOverrides.steps as number | undefined) ?? preset.steps;
+  1550→  const cfg = (calibrationOverrides.cfg as number | undefined) ?? preset.cfg;
+  1551→  const denoise = (calibrationOverrides.denoise as number | undefined) ?? preset.denoise;
+  1552→  const loraWeight =
+  1553→    (calibrationOverrides.loraWeight as number | undefined) ?? preset.loraWeight;
+  1554→
+  1555→  // Has the user diverged from the preset base on any of the slider keys?
+  1556→  const modifiedKeys = (["steps", "cfg", "denoise", "loraWeight"] as const).filter((k) => {
+  1557→    const v = calibrationOverrides[k];
+  1558→    return typeof v === "number" && v !== preset[k];
+  1559→  });
+  1560→  const modified = modifiedKeys.length > 0;
+  1561→
+  1562→  return (
+  1563→    <div className="nexus-card rounded-2xl p-4">
+  1564→      <div className="flex items-center justify-between">
+  1565→        <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+  1566→          <Cpu className="h-3.5 w-3.5 text-primary" /> FLUX Calibration
+  1567→        </span>
+  1568→        {modified ? (
+  1569→          <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-amber-300">
+  1570→            <AlertTriangle className="h-2.5 w-2.5" /> modified
+  1571→          </span>
+  1572→        ) : null}
+  1573→      </div>
+  1574→
+  1575→      {/* Preset chips — horizontal scroll on narrow screens */}
+  1576→      <div className="mt-2 flex gap-1.5 overflow-x-auto nexus-scroll pb-1.5">
+  1577→        {CALIBRATION_PRESETS.map((p) => {
+  1578→          const active = p.id === calibrationId;
+  1579→          return (
+  1580→            <button
+  1581→              key={p.id}
+  1582→              type="button"
+  1583→              onClick={() => setCalibration(p.id)}
+  1584→              className={cn(
+  1585→                "nexus-chip nexus-card-hover shrink-0 rounded-md border px-2 py-1 text-left transition",
+  1586→                active
+  1587→                  ? "nexus-chip-active"
+  1588→                  : "border-border/50 bg-background/40 hover:border-primary/30"
+  1589→              )}
+  1590→            >
+  1591→              <div className="text-[11px] font-medium leading-tight">{p.name}</div>
+  1592→              <div className="mt-0.5 font-mono text-[8px] uppercase tracking-wider text-muted-foreground/70">
+  1593→                {p.tag}
+  1594→              </div>
+  1595→            </button>
+  1596→          );
+  1597→        })}
+  1598→      </div>
+  1599→
+  1600→      {/* Active preset detail */}
+  1601→      <div className="mt-2 rounded-lg border border-border/40 bg-background/30 p-2.5">
+  1602→        <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+  1603→          <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary">
+  1604→            {presetCategoryLabel(preset.category)}
+  1605→          </span>
+  1606→          <span className="font-mono text-[9px] text-muted-foreground/70">{preset.model}</span>
+  1607→          <span className="font-mono text-[9px] text-muted-foreground/60">
+  1608→            · ~{(preset.estWarmMs / 1000).toFixed(1)}s warm
+  1609→          </span>
+  1610→        </div>
+  1611→        <p className="text-[11px] leading-snug text-muted-foreground">{preset.description}</p>
+  1612→        <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-0.5 font-mono text-[10px] sm:grid-cols-3">
+  1613→          <KV k="steps" v={String(steps)} highlight={modifiedKeys.includes("steps")} />
+  1614→          <KV k="cfg" v={cfg.toFixed(1)} highlight={modifiedKeys.includes("cfg")} />
+  1615→          <KV k="sampler" v={preset.sampler} />
+  1616→          <KV k="scheduler" v={preset.scheduler} />
+  1617→          <KV k="denoise" v={denoise.toFixed(2)} highlight={modifiedKeys.includes("denoise")} />
+  1618→          <KV k="resolution" v={preset.resolution} />
+  1619→          <KV k="loraWeight" v={loraWeight.toFixed(2)} highlight={modifiedKeys.includes("loraWeight")} />
+  1620→          <KV k="refinerPass" v={preset.refinerPass ? "yes" : "no"} />
+  1621→          <KV k="estWarmMs" v={`${preset.estWarmMs}ms`} />
+  1622→        </div>
+  1623→      </div>
+  1624→
+  1625→      {/* Advanced overrides */}
+  1626→      <Collapsible open={advOpen} onOpenChange={setAdvOpen}>
+  1627→        <CollapsibleTrigger asChild>
+  1628→          <button
+  1629→            type="button"
+  1630→            className="mt-2 flex w-full items-center justify-between rounded-md border border-border/40 bg-background/30 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:text-foreground"
+  1631→          >
+  1632→            <span className="flex items-center gap-1.5">
+  1633→              <Sliders className="h-3 w-3" /> Advanced overrides
+  1634→            </span>
+  1635→            <ChevronRight className={cn("h-3 w-3 transition", advOpen && "rotate-90")} />
+  1636→          </button>
+  1637→        </CollapsibleTrigger>
+  1638→        <CollapsibleContent className="mt-2 space-y-2.5">
+  1639→          <SliderRow
+  1640→            label="steps"
+  1641→            min={1}
+  1642→            max={40}
+  1643→            step={1}
+  1644→            value={steps}
+  1645→            onChange={(v) => setCalibrationOverride("steps", v)}
+  1646→            display={String(steps)}
+  1647→          />
+  1648→          <SliderRow
+  1649→            label="cfg"
+  1650→            min={1}
+  1651→            max={20}
+  1652→            step={0.5}
+  1653→            value={cfg}
+  1654→            onChange={(v) => setCalibrationOverride("cfg", v)}
+  1655→            display={cfg.toFixed(1)}
+  1656→          />
+  1657→          <SliderRow
+  1658→            label="denoise"
+  1659→            min={0}
+  1660→            max={1}
+  1661→            step={0.05}
+  1662→            value={denoise}
+  1663→            onChange={(v) => setCalibrationOverride("denoise", v)}
+  1664→            display={denoise.toFixed(2)}
+  1665→          />
+  1666→          <SliderRow
+  1667→            label="loraWeight"
+  1668→            min={0}
+  1669→            max={1}
+  1670→            step={0.05}
+  1671→            value={loraWeight}
+  1672→            onChange={(v) => setCalibrationOverride("loraWeight", v)}
+  1673→            display={loraWeight.toFixed(2)}
+  1674→          />
+  1675→          {modified ? (
+  1676→            <button
+  1677→              type="button"
+  1678→              onClick={() => clearCalibrationOverrides()}
+  1679→              className="flex w-full items-center justify-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 font-mono text-[10px] uppercase tracking-wider text-amber-300 transition hover:bg-amber-500/20"
+  1680→            >
+  1681→              <RotateCcw className="h-3 w-3" /> Reset to preset
+  1682→            </button>
+  1683→          ) : (
+  1684→            <p className="text-center font-mono text-[9px] text-muted-foreground/50">
+  1685→              All values at preset base
+  1686→            </p>
+  1687→          )}
+  1688→        </CollapsibleContent>
+  1689→      </Collapsible>
+  1690→
+  1691→      <p className="mt-2 text-[9px] leading-snug text-muted-foreground/60">
+  1692→        Modal H100 backend receives steps/cfg/sampler as real params. The z-ai
+  1693→        fallback injects qualityTokens into the prompt (steps/cfg recorded as
+  1694→        provenance).
+  1695→      </p>
+  1696→    </div>
+  1697→  );
+  1698→}
+  1699→
+  1700→function KV({ k, v, highlight }: { k: string; v: string; highlight?: boolean }) {
+  1701→  return (
+  1702→    <div className="flex items-center justify-between gap-1">
+  1703→      <span className={cn("text-muted-foreground/60", highlight && "text-amber-300")}>{k}</span>
+  1704→      <span className={cn("text-foreground", highlight && "text-amber-200")}>{v}</span>
+  1705→    </div>
+  1706→  );
+  1707→}
+  1708→
+  1709→function SliderRow({
+  1710→  label,
+  1711→  min,
+  1712→  max,
+  1713→  step,
+  1714→  value,
+  1715→  onChange,
+  1716→  display,
+  1717→}: {
+  1718→  label: string;
+  1719→  min: number;
+  1720→  max: number;
+  1721→  step: number;
+  1722→  value: number;
+  1723→  onChange: (v: number) => void;
+  1724→  display: string;
+  1725→}) {
+  1726→  return (
+  1727→    <div>
+  1728→      <div className="mb-1 flex items-center justify-between font-mono text-[10px]">
+  1729→        <span className="text-muted-foreground">{label}</span>
+  1730→        <span className="text-foreground">{display}</span>
+  1731→      </div>
+  1732→      <Slider
+  1733→        min={min}
+  1734→        max={max}
+  1735→        step={step}
+  1736→        value={[value]}
+  1737→        onValueChange={(v) => onChange(v[0] ?? value)}
+  1738→        className="cursor-pointer"
+  1739→      />
+  1740→    </div>
+  1741→  );
+  1742→}
+  1743→
+  1744→/**
+  1745→ * LoraStack — shows the currently applied LoRAs and lets the user jump to the
+  1746→ * Library to add more. Defends against mature LoRAs being applied while mature
+  1747→ * mode is locked (shouldn't happen via the Library, but defended here too).
+  1748→ */
+  1749→function LoraStack() {
+  1750→  const {
+  1751→    loraIds,
+  1752→    toggleLora,
+  1753→    clearLoras,
+  1754→    calibrationId,
+  1755→    matureUnlocked,
+  1756→    setView,
+  1757→  } = useNexus();
+  1758→  const preset = getPreset(calibrationId);
+  1759→  const unlocked = matureUnlocked();
+  1760→  const loras: LoraEntry[] = loraIds
+  1761→    .map((id) => getLora(id))
+  1762→    .filter((l): l is LoraEntry => !!l);
+  1763→  const hasMatureBlocked = loras.some((l) => l.mature && !unlocked);
+  1764→
+  1765→  return (
+  1766→    <div className="nexus-card rounded-2xl p-4">
+  1767→      <div className="mb-2 flex items-center justify-between">
+  1768→        <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+  1769→          <Layers className="h-3.5 w-3.5 text-primary" /> LoRA Stack
+  1770→        </span>
+  1771→        <span className="font-mono text-[9px] text-muted-foreground/60">
+  1772→          w: <span className="text-foreground">{preset.loraWeight.toFixed(2)}</span> ·{" "}
+  1773→          {loras.length} applied
+  1774→        </span>
+  1775→      </div>
+  1776→
+  1777→      {hasMatureBlocked ? (
+  1778→        <div className="mb-2 flex items-start gap-1.5 rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1.5 text-[10px] leading-snug text-rose-300">
+  1779→          <ShieldAlert className="mt-0.5 h-3 w-3 shrink-0" />
+  1780→          <span>
+  1781→            A mature LoRA is selected but mature mode is locked. This run will be blocked.
+  1782→          </span>
+  1783→        </div>
+  1784→      ) : null}
+  1785→
+  1786→      {loras.length === 0 ? (
+  1787→        <div className="rounded-md border border-dashed border-border/40 px-3 py-3 text-center text-[11px] text-muted-foreground">
+  1788→          No LoRAs applied — generation uses the base FLUX model only.
+  1789→        </div>
+  1790→      ) : (
+  1791→        <ul className="max-h-72 space-y-1.5 overflow-y-auto nexus-scroll pr-0.5">
+  1792→          {loras.map((l) => {
+  1793→            const matureFlagged = l.mature && !unlocked;
+  1794→            return (
+  1795→              <li
+  1796→                key={l.id}
+  1797→                className={cn(
+  1798→                  "flex items-center gap-2 rounded-md border px-2 py-1.5 transition",
+  1799→                  matureFlagged
+  1800→                    ? "border-rose-500/40 bg-rose-500/5"
+  1801→                    : "border-border/40 bg-background/30 hover:border-primary/30"
+  1802→                )}
+  1803→              >
+  1804→                <div className="min-w-0 flex-1">
+  1805→                  <div className="flex items-center gap-1">
+  1806→                    <span className="truncate text-[11px] font-medium text-foreground">
+  1807→                      {l.name}
+  1808→                    </span>
+  1809→                    {matureFlagged ? (
+  1810→                      <ShieldAlert className="h-3 w-3 shrink-0 text-rose-400" />
+  1811→                    ) : null}
+  1812→                  </div>
+  1813→                  <div className="mt-0.5 flex flex-wrap items-center gap-1.5 font-mono text-[9px] text-muted-foreground">
+  1814→                    <span className="rounded bg-foreground/10 px-1 py-0.5 uppercase tracking-wider">
+  1815→                      {l.category}
+  1816→                    </span>
+  1817→                    <span className="truncate">{l.baseModel}</span>
+  1818→                    <span>
+  1819→                      · w:{" "}
+  1820→                      <span className="text-foreground">{preset.loraWeight.toFixed(2)}</span>
+  1821→                    </span>
+  1822→                  </div>
+  1823→                </div>
+  1824→                <button
+  1825→                  type="button"
+  1826→                  onClick={() => toggleLora(l.id)}
+  1827→                  className="shrink-0 rounded p-1 text-muted-foreground transition hover:bg-rose-500/10 hover:text-rose-300"
+  1828→                  title={`Remove ${l.name}`}
+  1829→                  aria-label={`Remove ${l.name}`}
+  1830→                >
+  1831→                  <XCircle className="h-3.5 w-3.5" />
+  1832→                </button>
+  1833→              </li>
+  1834→            );
+  1835→          })}
+  1836→        </ul>
+  1837→      )}
+  1838→
+  1839→      <div className="mt-2.5 flex gap-1.5">
+  1840→        <button
+  1841→          type="button"
+  1842→          onClick={() => setView("library")}
+  1843→          className="nexus-chip flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border/50 bg-background/40 px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1844→        >
+  1845→          <Plus className="h-3 w-3" /> Add LoRA
+  1846→        </button>
+  1847→        {loras.length > 0 ? (
+  1848→          <button
+  1849→            type="button"
+  1850→            onClick={() => clearLoras()}
+  1851→            className="flex items-center justify-center gap-1 rounded-md border border-border/50 px-2 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-rose-500/40 hover:text-rose-300"
+  1852→            title="Remove all applied LoRAs"
+  1853→          >
+  1854→            <XCircle className="h-3 w-3" /> Clear all
+  1855→          </button>
+  1856→        ) : null}
+  1857→      </div>
+  1858→
+  1859→      <p className="mt-1.5 text-[9px] leading-snug text-muted-foreground/60">
+  1860→        Browse the curated HF + Civitai library →
+  1861→      </p>
+  1862→    </div>
+  1863→  );
+  1864→}
+  1865→

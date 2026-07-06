@@ -1,0 +1,194 @@
+// NEXUS Visual Weaver — Prisma schema
+// Governed multi-agent visual creation pipeline persistence layer
+// v3: adds NSFW 18+ consent records + configurable safety/legal policy
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A single image generation job produced by the NEXUS pipeline
+model Generation {
+  id          String   @id @default(cuid())
+  prompt      String
+  style       String   @default("cinematic")
+  aspect      String   @default("1:1")
+  wardrobe    String?
+  size        String   @default("1024x1024")
+  // relative path under /public where the generated PNG lives
+  imagePath   String?
+  // base64-encoded PNG stored in DB — the sandbox filesystem is ephemeral
+  imageData   String?
+  status      String   @default("pending") // pending | running | completed | failed
+  // aggregate verdict from the dual-AI judge
+  verdict     String?  // approved | rejected | needs_review
+  overallScore Float?  // 0..100
+  // structured evidence blob (JSON) from Nemotron
+  evidence    String?
+  // stage timings in ms (JSON)
+  timings     String?
+  // FLUX calibration preset id + resolved params (JSON) applied to this run
+  calibrationId String?
+  calibration   String? // JSON: {presetId, model, steps, cfg, sampler, denoise, resolution, loras:[]}
+  // LoRA ids (comma-separated) applied to this run
+  loraIds     String?
+  // NSFW maturity tier this run was executed under: safe | mature | blocked
+  maturityTier String?
+  errorMessage String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  safetyScan  SafetyScan?
+  judgeReport JudgeReport?
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([verdict])
+  @@index([maturityTier])
+}
+
+// ST3GG security scan results
+model SafetyScan {
+  id           String   @id @default(cuid())
+  generationId String   @unique
+  generation   Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  passed       Boolean  @default(false)
+  score        Float    @default(0) // 0..100, higher = safer
+  riskLevel    String   @default("unknown") // safe | low | medium | high | critical
+  flags        String?  // JSON array of flag strings
+  rationale    String?
+  stageMs      Int      @default(0)
+  createdAt    DateTime @default(now())
+}
+
+// MiniCPM-V visual judge results
+model JudgeReport {
+  id              String   @id @default(cuid())
+  generationId    String   @unique
+  generation      Generation @relation(fields: [generationId], references: [id], onDelete: Cascade)
+  promptAdherence Float    @default(0)
+  visualQuality   Float    @default(0)
+  aestheticScore  Float    @default(0)
+  safetyScore     Float    @default(0)
+  wardrobeMatch   Float    @default(0)
+  overallScore    Float    @default(0)
+  verdict         String   @default("needs_review") // approved | rejected | needs_review
+  observations    String?  // JSON array of strings
+  strengths       String?  // JSON array
+  weaknesses      String?  // JSON array
+  stageMs         Int      @default(0)
+  createdAt       DateTime @default(now())
+}
+
+// Append-only audit log of pipeline events
+model AuditEvent {
+  id          String   @id @default(cuid())
+  kind        String
+  message     String
+  severity    String   @default("info")
+  generationId String?
+  meta        String?  // JSON
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([kind])
+}
+
+// Persisted runtime metric samples
+model MetricSample {
+  id           String   @id @default(cuid())
+  cpuPercent   Float    @default(0)
+  rssMB        Float    @default(0)
+  heapUsedMB   Float    @default(0)
+  heapTotalMB  Float    @default(0)
+  externalMB   Float    @default(0)
+  load1m       Float    @default(0)
+  load5m       Float    @default(0)
+  load15m      Float    @default(0)
+  freeMemMB    Float    @default(0)
+  totalMemMB   Float    @default(0)
+  dbSizeMB     Float    @default(0)
+  galleryImgs  Int      @default(0)
+  generations  Int      @default(0)
+  auditEvents  Int      @default(0)
+  uptimeSec    Float    @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// NSFW 18+ consent records. One row per accepted session/device.
+// A session must have an "accepted" row to unlock mature content.
+model ConsentRecord {
+  id           String   @id @default(cuid())
+  // anonymous device/session fingerprint (no PII). Stored as a hash.
+  fingerprint  String   @unique
+  status       String   @default("pending") // pending | accepted | rejected | revoked
+  // the policy version hash the user consented to
+  policyVersion String
+  // maturity tier the user unlocked: safe | mature
+  tier         String   @default("safe")
+  // free-text acknowledgment string the user saw
+  ackText      String?
+  userAgent    String?
+  ipHash       String?
+  acceptedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([tier])
+}
+
+// Async pipeline job — tracks long-running generations that exceed the 60s
+// ALB/gateway timeout. The /api/pipeline/run route creates a job row and
+// returns {jobId} immediately (HTTP 202); the frontend polls /api/pipeline/jobs/[id]
+// every 2s until status === 'completed' | 'failed' | 'blocked'.
+model PipelineJob {
+  id           String   @id @default(cuid())
+  // queued | running | completed | failed | blocked
+  status       String   @default("queued")
+  // current stage: queued | st3gg | flux | judge | nemotron | done
+  currentStage String   @default("queued")
+  // JSON: { [stageName]: { status: running|done|error|skipped, ms?: number, message?: string } }
+  stageStatus  String?
+  // JSON: PipelineRunInput (the full request body, for replay/debug)
+  input        String
+  // → Generation.id once the pipeline creates one (early in stageSt3gg)
+  generationId String?
+  // final error message (when status=failed)
+  errorMessage String?
+  // creation → completion wall-clock (ms), set on terminal status
+  totalMs      Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Configurable safety / legal policy (single active row, id="active").
+// Drives the NSFW gate, content filters, and which disclaimers render.
+model PolicyConfig {
+  id              String   @id @default("active")
+  // master switch for any mature (18+) content
+  matureEnabled   Boolean  @default(false)
+  // blocklist of content categories that are ALWAYS blocked (JSON array)
+  // e.g. ["csam","real-person","nonconsensual","hate","self-harm","violence-extreme"]
+  blockCategories String   @default("[]")
+  // flag-only categories (allowed through but flagged for review) (JSON array)
+  flagCategories  String   @default("[]")
+  // minimum safety score (0..100) required to pass the ST3GG gate
+  minSafetyScore  Float    @default(60)
+  // conservative default policy mode
+  policyMode      String   @default("conservative") // conservative | permissive | strict
+  // jurisdiction tag for compliance messaging
+  jurisdiction    String   @default("EU")
+  // free-text legal disclaimer override (uses default if null)
+  disclaimerOverride String?
+  updatedAt       DateTime @updatedAt
+}

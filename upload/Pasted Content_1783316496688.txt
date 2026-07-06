@@ -1,0 +1,1263 @@
+Modal
+
+specimba
+Starter
+/
+
+main
+
+Search
+Ctrl+K
+
+Workspace metrics
+
+Credits
+$256.69
+Community
+Docs
+
+Apps
+Endpoints
+New
+Logs
+Containers
+Secrets
+Storage
+Notebooks
+Ctrl-B
+Overview
+
+Deployment History
+
+App Logs
+
+Usage
+
+Search functions
+
+serve
+Containers: 0 live
+Calls: 0 running
+nexus-brain-uncensored / App Logs
+
+Shift ← (A)
+Toggle Pause/Play (T)
+Shift → (D)
+
+1d
+Jul 5, 8:41 AM – now
+GMT+3
+
+Zoom out (Z)
+Add filter
+Expand logs
+Search logs
+/
+Timestamp
+Container ID
+Input ID
+Content
+Settings
+Jul 06  07:30:00.300
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	Starting vLLM with uncensored model: HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced
+Command: vllm serve HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --served-model-name HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --host 0.0.0.0 --port 8000 --uvicorn-log-level info --trust-remote-code --dtype bfloat16 --gpu-memory-utilization 0.85 --max-model-len 8192 --enforce-eager
+Jul 06  07:30:11.457
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	INFO 07-06 04:30:11 [__init__.py:235] Automatically detected platform cuda.
+Jul 06  07:30:17.054
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	INFO 07-06 04:30:17 [api_server.py:1755] vLLM API server version 0.10.0
+Jul 06  07:30:17.057
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	INFO 07-06 04:30:17 [cli_args.py:261] non-default args: {'model_tag': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'host': '0.0.0.0', 'model': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'enforce_eager': True, 'served_model_name': ['HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'], 'gpu_memory_utilization': 0.85}
+Jul 06  07:30:17.200
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	Traceback (most recent call last):
+Jul 06  07:30:17.200
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/bin/vllm", line 10, in <module>
+Jul 06  07:30:17.200
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    sys.exit(main())
+Jul 06  07:30:17.200
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	             ^^^^^^
+Jul 06  07:30:17.200
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 54, in main
+Jul 06  07:30:17.201
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    args.dispatch_function(args)
+Jul 06  07:30:17.201
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 52, in cmd
+Jul 06  07:30:17.201
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    uvloop.run(run_server(args))
+Jul 06  07:30:17.201
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+Jul 06  07:30:17.201
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    return __asyncio.run(
+Jul 06  07:30:17.201
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	           ^^^^^^^^^^^^^^
+Jul 06  07:30:17.201
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 194, in run
+Jul 06  07:30:17.202
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    return runner.run(main)
+Jul 06  07:30:17.202
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	           ^^^^^^^^^^^^^^^^
+Jul 06  07:30:17.202
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+Jul 06  07:30:17.202
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    return self._loop.run_until_complete(task)
+Jul 06  07:30:17.202
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+Jul 06  07:30:17.203
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+Jul 06  07:30:17.203
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    return await main
+Jul 06  07:30:17.203
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	           ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1791, in run_server
+Jul 06  07:30:17.204
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+Jul 06  07:30:17.204
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1811, in run_server_worker
+Jul 06  07:30:17.205
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    async with build_async_engine_client(args, client_config) as engine_client:
+Jul 06  07:30:17.205
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  07:30:17.205
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    return await anext(self.gen)
+Jul 06  07:30:17.205
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:30:17.205
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 158, in build_async_engine_client
+Jul 06  07:30:17.205
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    async with build_async_engine_client_from_engine_args(
+  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  07:30:17.205
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    return await anext(self.gen)
+Jul 06  07:30:17.206
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 180, in build_async_engine_client_from_engine_args
+Jul 06  07:30:17.206
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+Jul 06  07:30:17.206
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1004, in create_engine_config
+Jul 06  07:30:17.206
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    model_config = self.create_model_config()
+Jul 06  07:30:17.206
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:30:17.206
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 872, in create_model_config
+Jul 06  07:30:17.207
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    return ModelConfig(
+Jul 06  07:30:17.207
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	           ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+Jul 06  07:30:17.207
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+Jul 06  07:30:17.207
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelConfig
+  Value error, Invalid repository ID or local directory specified: 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'.
+Please verify the following requirements:
+1. Provide a valid Hugging Face repository ID.
+2. Specify a local directory that contains a recognized configuration file.
+   - For Hugging Face models: ensure the presence of a 'config.json'.
+   - For Mistral models: ensure the presence of a 'params.json'.
+3. For GGUF: pass the local path of the GGUF checkpoint.
+   Loading GGUF from a remote repo directly is not yet supported.
+ [type=value_error, input_value=ArgsKwargs((), {'model': ...attention_dtype': None}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.13/v/value_error
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	Traceback (most recent call last):
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/root/nexus_brain_gemma4.py", line 38, in wait_ready
+    socket.create_connection(("localhost", VLLM_PORT), timeout=1).close()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/usr/local/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	ConnectionRefusedError: [Errno 111] Connection refused
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	
+During handling of the above exception, another exception occurred:
+
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	Traceback (most recent call last):
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 265, in construct_webhook_callable
+    user_defined_callable()
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/root/nexus_brain_gemma4.py", line 78, in serve
+    wait_ready(proc)
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	  File "/root/nexus_brain_gemma4.py", line 42, in wait_ready
+    raise RuntimeError(f"vLLM exited with {proc.returncode}")
+Jul 06  07:30:18.278
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	RuntimeError: vLLM exited with 1
+Jul 06  07:30:18.386
+ta-01KWTV1A05Q7VWTRYB826JC8VR	—	Runner failed with exception: RuntimeError('vLLM exited with 1')
+Jul 06  07:40:01.715
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	Starting vLLM with uncensored model: HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced
+Jul 06  07:40:01.715
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	Command: vllm serve HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --served-model-name HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --host 0.0.0.0 --port 8000 --uvicorn-log-level info --trust-remote-code --dtype bfloat16 --gpu-memory-utilization 0.85 --max-model-len 8192 --enforce-eager
+Jul 06  07:40:12.798
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	INFO 07-06 04:40:12 [__init__.py:235] Automatically detected platform cuda.
+Jul 06  07:40:18.288
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	INFO 07-06 04:40:18 [api_server.py:1755] vLLM API server version 0.10.0
+Jul 06  07:40:18.290
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	INFO 07-06 04:40:18 [cli_args.py:261] non-default args: {'model_tag': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'host': '0.0.0.0', 'model': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'enforce_eager': True, 'served_model_name': ['HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'], 'gpu_memory_utilization': 0.85}
+Jul 06  07:40:18.561
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	Traceback (most recent call last):
+Jul 06  07:40:18.561
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/bin/vllm", line 10, in <module>
+Jul 06  07:40:18.561
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    sys.exit(main())
+Jul 06  07:40:18.562
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	             ^^^^^^
+Jul 06  07:40:18.562
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 54, in main
+Jul 06  07:40:18.562
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    args.dispatch_function(args)
+Jul 06  07:40:18.562
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 52, in cmd
+Jul 06  07:40:18.562
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    uvloop.run(run_server(args))
+Jul 06  07:40:18.562
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+Jul 06  07:40:18.562
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    return __asyncio.run(
+Jul 06  07:40:18.562
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	           ^^^^^^^^^^^^^^
+Jul 06  07:40:18.562
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 194, in run
+Jul 06  07:40:18.563
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    return runner.run(main)
+Jul 06  07:40:18.563
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	           ^^^^^^^^^^^^^^^^
+Jul 06  07:40:18.563
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+Jul 06  07:40:18.564
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    return self._loop.run_until_complete(task)
+Jul 06  07:40:18.564
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:40:18.564
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+Jul 06  07:40:18.564
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+Jul 06  07:40:18.564
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    return await main
+Jul 06  07:40:18.564
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	           ^^^^^^^^^^
+Jul 06  07:40:18.564
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1791, in run_server
+Jul 06  07:40:18.565
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+Jul 06  07:40:18.565
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1811, in run_server_worker
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    async with build_async_engine_client(args, client_config) as engine_client:
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    return await anext(self.gen)
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 158, in build_async_engine_client
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    async with build_async_engine_client_from_engine_args(
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    return await anext(self.gen)
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 180, in build_async_engine_client_from_engine_args
+Jul 06  07:40:18.566
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+Jul 06  07:40:18.567
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:40:18.567
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1004, in create_engine_config
+Jul 06  07:40:18.567
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    model_config = self.create_model_config()
+Jul 06  07:40:18.567
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:40:18.567
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 872, in create_model_config
+Jul 06  07:40:18.567
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    return ModelConfig(
+Jul 06  07:40:18.567
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	           ^^^^^^^^^^^^
+Jul 06  07:40:18.567
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+Jul 06  07:40:18.568
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+Jul 06  07:40:18.568
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelConfig
+  Value error, Invalid repository ID or local directory specified: 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'.
+Please verify the following requirements:
+1. Provide a valid Hugging Face repository ID.
+2. Specify a local directory that contains a recognized configuration file.
+   - For Hugging Face models: ensure the presence of a 'config.json'.
+   - For Mistral models: ensure the presence of a 'params.json'.
+3. For GGUF: pass the local path of the GGUF checkpoint.
+   Loading GGUF from a remote repo directly is not yet supported.
+ [type=value_error, input_value=ArgsKwargs((), {'model': ...attention_dtype': None}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.13/v/value_error
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	Traceback (most recent call last):
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/root/nexus_brain_gemma4.py", line 38, in wait_ready
+    socket.create_connection(("localhost", VLLM_PORT), timeout=1).close()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/usr/local/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	ConnectionRefusedError: [Errno 111] Connection refused
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	
+During handling of the above exception, another exception occurred:
+
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	Traceback (most recent call last):
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 265, in construct_webhook_callable
+    user_defined_callable()
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/root/nexus_brain_gemma4.py", line 78, in serve
+    wait_ready(proc)
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	  File "/root/nexus_brain_gemma4.py", line 42, in wait_ready
+    raise RuntimeError(f"vLLM exited with {proc.returncode}")
+Jul 06  07:40:19.685
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	RuntimeError: vLLM exited with 1
+Jul 06  07:40:19.763
+ta-01KWTVKMYA6VKTS8XNYX7WYS3R	—	Runner failed with exception: RuntimeError('vLLM exited with 1')
+Jul 06  07:50:02.341
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	Starting vLLM with uncensored model: HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced
+Command: vllm serve HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --served-model-name HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --host 0.0.0.0 --port 8000 --uvicorn-log-level info --trust-remote-code --dtype bfloat16 --gpu-memory-utilization 0.85 --max-model-len 8192 --enforce-eager
+Jul 06  07:50:13.306
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	INFO 07-06 04:50:13 [__init__.py:235] Automatically detected platform cuda.
+Jul 06  07:50:19.191
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	INFO 07-06 04:50:19 [api_server.py:1755] vLLM API server version 0.10.0
+Jul 06  07:50:19.194
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	INFO 07-06 04:50:19 [cli_args.py:261] non-default args: {'model_tag': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'host': '0.0.0.0', 'model': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'enforce_eager': True, 'served_model_name': ['HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'], 'gpu_memory_utilization': 0.85}
+Jul 06  07:50:19.343
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	Traceback (most recent call last):
+  File "/usr/local/bin/vllm", line 10, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 54, in main
+Jul 06  07:50:19.343
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    args.dispatch_function(args)
+Jul 06  07:50:19.343
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 52, in cmd
+Jul 06  07:50:19.343
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    uvloop.run(run_server(args))
+Jul 06  07:50:19.343
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+Jul 06  07:50:19.343
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    return __asyncio.run(
+           ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/asyncio/runners.py", line 194, in run
+Jul 06  07:50:19.344
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    return runner.run(main)
+Jul 06  07:50:19.345
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+Jul 06  07:50:19.346
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+Jul 06  07:50:19.346
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    return await main
+Jul 06  07:50:19.346
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	           ^^^^^^^^^^
+Jul 06  07:50:19.346
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1791, in run_server
+Jul 06  07:50:19.347
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+Jul 06  07:50:19.347
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1811, in run_server_worker
+Jul 06  07:50:19.347
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    async with build_async_engine_client(args, client_config) as engine_client:
+Jul 06  07:50:19.347
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  07:50:19.348
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    return await anext(self.gen)
+Jul 06  07:50:19.348
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:50:19.348
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 158, in build_async_engine_client
+Jul 06  07:50:19.349
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    async with build_async_engine_client_from_engine_args(
+Jul 06  07:50:19.349
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  07:50:19.349
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    return await anext(self.gen)
+Jul 06  07:50:19.349
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:50:19.349
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 180, in build_async_engine_client_from_engine_args
+Jul 06  07:50:19.349
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+Jul 06  07:50:19.349
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:50:19.349
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1004, in create_engine_config
+Jul 06  07:50:19.350
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    model_config = self.create_model_config()
+Jul 06  07:50:19.350
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:50:19.350
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 872, in create_model_config
+Jul 06  07:50:19.350
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    return ModelConfig(
+Jul 06  07:50:19.350
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	           ^^^^^^^^^^^^
+Jul 06  07:50:19.350
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+Jul 06  07:50:19.350
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelConfig
+  Value error, Invalid repository ID or local directory specified: 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'.
+Please verify the following requirements:
+1. Provide a valid Hugging Face repository ID.
+2. Specify a local directory that contains a recognized configuration file.
+   - For Hugging Face models: ensure the presence of a 'config.json'.
+   - For Mistral models: ensure the presence of a 'params.json'.
+3. For GGUF: pass the local path of the GGUF checkpoint.
+   Loading GGUF from a remote repo directly is not yet supported.
+ [type=value_error, input_value=ArgsKwargs((), {'model': ...attention_dtype': None}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.13/v/value_error
+Jul 06  07:50:20.073
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	Traceback (most recent call last):
+Jul 06  07:50:20.073
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/root/nexus_brain_gemma4.py", line 38, in wait_ready
+    socket.create_connection(("localhost", VLLM_PORT), timeout=1).close()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:50:20.073
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+Jul 06  07:50:20.073
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/usr/local/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	ConnectionRefusedError: [Errno 111] Connection refused
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	
+During handling of the above exception, another exception occurred:
+
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	Traceback (most recent call last):
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 265, in construct_webhook_callable
+    user_defined_callable()
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/root/nexus_brain_gemma4.py", line 78, in serve
+    wait_ready(proc)
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	  File "/root/nexus_brain_gemma4.py", line 42, in wait_ready
+    raise RuntimeError(f"vLLM exited with {proc.returncode}")
+Jul 06  07:50:20.074
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	RuntimeError: vLLM exited with 1
+Jul 06  07:50:20.149
+ta-01KWTW5ZTMJY882NA3QZDM86CR	—	Runner failed with exception: RuntimeError('vLLM exited with 1')
+Jul 06  08:00:03.801
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	Starting vLLM with uncensored model: HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced
+Command: vllm serve HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --served-model-name HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --host 0.0.0.0 --port 8000 --uvicorn-log-level info --trust-remote-code --dtype bfloat16 --gpu-memory-utilization 0.85 --max-model-len 8192 --enforce-eager
+Jul 06  08:00:13.030
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	INFO 07-06 05:00:13 [__init__.py:235] Automatically detected platform cuda.
+Jul 06  08:00:17.950
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	INFO 07-06 05:00:17 [api_server.py:1755] vLLM API server version 0.10.0
+Jul 06  08:00:17.952
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	INFO 07-06 05:00:17 [cli_args.py:261] non-default args: {'model_tag': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'host': '0.0.0.0', 'model': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'enforce_eager': True, 'served_model_name': ['HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'], 'gpu_memory_utilization': 0.85}
+Jul 06  08:00:18.224
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	Traceback (most recent call last):
+Jul 06  08:00:18.224
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/bin/vllm", line 10, in <module>
+Jul 06  08:00:18.225
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    sys.exit(main())
+Jul 06  08:00:18.225
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	             ^^^^^^
+Jul 06  08:00:18.225
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 54, in main
+Jul 06  08:00:18.225
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    args.dispatch_function(args)
+Jul 06  08:00:18.225
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 52, in cmd
+Jul 06  08:00:18.225
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    uvloop.run(run_server(args))
+Jul 06  08:00:18.225
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+Jul 06  08:00:18.226
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    return __asyncio.run(
+Jul 06  08:00:18.226
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	           ^^^^^^^^^^^^^^
+Jul 06  08:00:18.226
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 194, in run
+Jul 06  08:00:18.226
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    return runner.run(main)
+Jul 06  08:00:18.226
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	           ^^^^^^^^^^^^^^^^
+Jul 06  08:00:18.226
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+Jul 06  08:00:18.226
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    return self._loop.run_until_complete(task)
+Jul 06  08:00:18.226
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:00:18.226
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+Jul 06  08:00:18.227
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+Jul 06  08:00:18.227
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    return await main
+Jul 06  08:00:18.227
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	           ^^^^^^^^^^
+Jul 06  08:00:18.227
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1791, in run_server
+Jul 06  08:00:18.227
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+Jul 06  08:00:18.227
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1811, in run_server_worker
+Jul 06  08:00:18.228
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    async with build_async_engine_client(args, client_config) as engine_client:
+  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:00:18.228
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    return await anext(self.gen)
+Jul 06  08:00:18.228
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:00:18.228
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 158, in build_async_engine_client
+Jul 06  08:00:18.229
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    async with build_async_engine_client_from_engine_args(
+Jul 06  08:00:18.229
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:00:18.229
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    return await anext(self.gen)
+Jul 06  08:00:18.229
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:00:18.229
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 180, in build_async_engine_client_from_engine_args
+Jul 06  08:00:18.229
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+Jul 06  08:00:18.229
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:00:18.229
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1004, in create_engine_config
+Jul 06  08:00:18.229
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    model_config = self.create_model_config()
+Jul 06  08:00:18.230
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:00:18.230
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 872, in create_model_config
+Jul 06  08:00:18.230
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    return ModelConfig(
+Jul 06  08:00:18.230
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	           ^^^^^^^^^^^^
+Jul 06  08:00:18.230
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+Jul 06  08:00:18.230
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+Jul 06  08:00:18.230
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelConfig
+  Value error, Invalid repository ID or local directory specified: 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'.
+Please verify the following requirements:
+1. Provide a valid Hugging Face repository ID.
+2. Specify a local directory that contains a recognized configuration file.
+   - For Hugging Face models: ensure the presence of a 'config.json'.
+   - For Mistral models: ensure the presence of a 'params.json'.
+3. For GGUF: pass the local path of the GGUF checkpoint.
+   Loading GGUF from a remote repo directly is not yet supported.
+ [type=value_error, input_value=ArgsKwargs((), {'model': ...attention_dtype': None}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.13/v/value_error
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	Traceback (most recent call last):
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/root/nexus_brain_gemma4.py", line 38, in wait_ready
+    socket.create_connection(("localhost", VLLM_PORT), timeout=1).close()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/usr/local/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	ConnectionRefusedError: [Errno 111] Connection refused
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	
+During handling of the above exception, another exception occurred:
+
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	Traceback (most recent call last):
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 265, in construct_webhook_callable
+    user_defined_callable()
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/root/nexus_brain_gemma4.py", line 78, in serve
+    wait_ready(proc)
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	  File "/root/nexus_brain_gemma4.py", line 42, in wait_ready
+    raise RuntimeError(f"vLLM exited with {proc.returncode}")
+Jul 06  08:00:19.367
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	RuntimeError: vLLM exited with 1
+Jul 06  08:00:19.477
+ta-01KWTWRAA5PQX16BR623E8GA1R	—	Runner failed with exception: RuntimeError('vLLM exited with 1')
+Jul 06  08:10:04.394
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	Starting vLLM with uncensored model: HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced
+Command: vllm serve HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --served-model-name HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --host 0.0.0.0 --port 8000 --uvicorn-log-level info --trust-remote-code --dtype bfloat16 --gpu-memory-utilization 0.85 --max-model-len 8192 --enforce-eager
+Jul 06  08:10:12.846
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	INFO 07-06 05:10:12 [__init__.py:235] Automatically detected platform cuda.
+Jul 06  08:10:17.120
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	INFO 07-06 05:10:17 [api_server.py:1755] vLLM API server version 0.10.0
+Jul 06  08:10:17.123
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	INFO 07-06 05:10:17 [cli_args.py:261] non-default args: {'model_tag': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'host': '0.0.0.0', 'model': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'enforce_eager': True, 'served_model_name': ['HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'], 'gpu_memory_utilization': 0.85}
+Jul 06  08:10:17.408
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	Traceback (most recent call last):
+Jul 06  08:10:17.408
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/bin/vllm", line 10, in <module>
+Jul 06  08:10:17.408
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    sys.exit(main())
+Jul 06  08:10:17.408
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	             ^^^^^^
+Jul 06  08:10:17.408
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 54, in main
+Jul 06  08:10:17.408
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    args.dispatch_function(args)
+Jul 06  08:10:17.408
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 52, in cmd
+Jul 06  08:10:17.409
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    uvloop.run(run_server(args))
+Jul 06  08:10:17.409
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+Jul 06  08:10:17.409
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    return __asyncio.run(
+Jul 06  08:10:17.409
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	           ^^^^^^^^^^^^^^
+Jul 06  08:10:17.409
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 194, in run
+Jul 06  08:10:17.409
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    return runner.run(main)
+Jul 06  08:10:17.409
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	           ^^^^^^^^^^^^^^^^
+Jul 06  08:10:17.409
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+Jul 06  08:10:17.410
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    return self._loop.run_until_complete(task)
+Jul 06  08:10:17.410
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:10:17.410
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+Jul 06  08:10:17.410
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+Jul 06  08:10:17.410
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    return await main
+Jul 06  08:10:17.410
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	           ^^^^^^^^^^
+Jul 06  08:10:17.410
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1791, in run_server
+Jul 06  08:10:17.411
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+Jul 06  08:10:17.411
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1811, in run_server_worker
+Jul 06  08:10:17.411
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    async with build_async_engine_client(args, client_config) as engine_client:
+Jul 06  08:10:17.411
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:10:17.411
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    return await anext(self.gen)
+Jul 06  08:10:17.411
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:10:17.411
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 158, in build_async_engine_client
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    async with build_async_engine_client_from_engine_args(
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    return await anext(self.gen)
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 180, in build_async_engine_client_from_engine_args
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1004, in create_engine_config
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    model_config = self.create_model_config()
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:10:17.412
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 872, in create_model_config
+Jul 06  08:10:17.413
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    return ModelConfig(
+Jul 06  08:10:17.413
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	           ^^^^^^^^^^^^
+Jul 06  08:10:17.413
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+Jul 06  08:10:17.413
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+Jul 06  08:10:17.413
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelConfig
+  Value error, Invalid repository ID or local directory specified: 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'.
+Please verify the following requirements:
+1. Provide a valid Hugging Face repository ID.
+2. Specify a local directory that contains a recognized configuration file.
+   - For Hugging Face models: ensure the presence of a 'config.json'.
+   - For Mistral models: ensure the presence of a 'params.json'.
+3. For GGUF: pass the local path of the GGUF checkpoint.
+   Loading GGUF from a remote repo directly is not yet supported.
+ [type=value_error, input_value=ArgsKwargs((), {'model': ...attention_dtype': None}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.13/v/value_error
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	Traceback (most recent call last):
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/root/nexus_brain_gemma4.py", line 38, in wait_ready
+    socket.create_connection(("localhost", VLLM_PORT), timeout=1).close()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/usr/local/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	ConnectionRefusedError: [Errno 111] Connection refused
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	
+During handling of the above exception, another exception occurred:
+
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	Traceback (most recent call last):
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 265, in construct_webhook_callable
+    user_defined_callable()
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/root/nexus_brain_gemma4.py", line 78, in serve
+    wait_ready(proc)
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	  File "/root/nexus_brain_gemma4.py", line 42, in wait_ready
+    raise RuntimeError(f"vLLM exited with {proc.returncode}")
+Jul 06  08:10:18.318
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	RuntimeError: vLLM exited with 1
+Jul 06  08:10:18.422
+ta-01KWTXAN4RMPTDA1M0PT60MT3R	—	Runner failed with exception: RuntimeError('vLLM exited with 1')
+Jul 06  08:20:31.735
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	Starting vLLM with uncensored model: HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced
+Command: vllm serve HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --served-model-name HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --host 0.0.0.0 --port 8000 --uvicorn-log-level info --trust-remote-code --dtype bfloat16 --gpu-memory-utilization 0.85 --max-model-len 8192 --enforce-eager
+Jul 06  08:20:43.041
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	INFO 07-06 05:20:43 [__init__.py:235] Automatically detected platform cuda.
+Jul 06  08:20:48.362
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	INFO 07-06 05:20:48 [api_server.py:1755] vLLM API server version 0.10.0
+Jul 06  08:20:48.365
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	INFO 07-06 05:20:48 [cli_args.py:261] non-default args: {'model_tag': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'host': '0.0.0.0', 'model': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'enforce_eager': True, 'served_model_name': ['HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'], 'gpu_memory_utilization': 0.85}
+Jul 06  08:20:48.533
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	Traceback (most recent call last):
+Jul 06  08:20:48.533
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/bin/vllm", line 10, in <module>
+Jul 06  08:20:48.534
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    sys.exit(main())
+Jul 06  08:20:48.534
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	             ^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 54, in main
+Jul 06  08:20:48.535
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    args.dispatch_function(args)
+Jul 06  08:20:48.535
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 52, in cmd
+Jul 06  08:20:48.535
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    uvloop.run(run_server(args))
+Jul 06  08:20:48.535
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+Jul 06  08:20:48.536
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    return __asyncio.run(
+           ^^^^^^^^^^^^^^
+Jul 06  08:20:48.536
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 194, in run
+Jul 06  08:20:48.537
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    return runner.run(main)
+Jul 06  08:20:48.537
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	           ^^^^^^^^^^^^^^^^
+Jul 06  08:20:48.537
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+Jul 06  08:20:48.537
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    return self._loop.run_until_complete(task)
+Jul 06  08:20:48.537
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+Jul 06  08:20:48.538
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+Jul 06  08:20:48.538
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    return await main
+Jul 06  08:20:48.538
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	           ^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1791, in run_server
+Jul 06  08:20:48.539
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+Jul 06  08:20:48.539
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1811, in run_server_worker
+Jul 06  08:20:48.539
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    async with build_async_engine_client(args, client_config) as engine_client:
+Jul 06  08:20:48.539
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:20:48.540
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    return await anext(self.gen)
+Jul 06  08:20:48.540
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:20:48.540
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 158, in build_async_engine_client
+Jul 06  08:20:48.540
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    async with build_async_engine_client_from_engine_args(
+Jul 06  08:20:48.540
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:20:48.540
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    return await anext(self.gen)
+Jul 06  08:20:48.540
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:20:48.540
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 180, in build_async_engine_client_from_engine_args
+Jul 06  08:20:48.541
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+Jul 06  08:20:48.541
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1004, in create_engine_config
+Jul 06  08:20:48.541
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    model_config = self.create_model_config()
+Jul 06  08:20:48.541
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:20:48.541
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 872, in create_model_config
+Jul 06  08:20:48.542
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    return ModelConfig(
+Jul 06  08:20:48.542
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	           ^^^^^^^^^^^^
+Jul 06  08:20:48.542
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+Jul 06  08:20:48.542
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+Jul 06  08:20:48.542
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelConfig
+  Value error, Invalid repository ID or local directory specified: 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'.
+Please verify the following requirements:
+1. Provide a valid Hugging Face repository ID.
+2. Specify a local directory that contains a recognized configuration file.
+   - For Hugging Face models: ensure the presence of a 'config.json'.
+   - For Mistral models: ensure the presence of a 'params.json'.
+3. For GGUF: pass the local path of the GGUF checkpoint.
+   Loading GGUF from a remote repo directly is not yet supported.
+ [type=value_error, input_value=ArgsKwargs((), {'model': ...attention_dtype': None}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.13/v/value_error
+Jul 06  08:20:49.618
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	Traceback (most recent call last):
+Jul 06  08:20:49.618
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/root/nexus_brain_gemma4.py", line 38, in wait_ready
+    socket.create_connection(("localhost", VLLM_PORT), timeout=1).close()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:20:49.618
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+Jul 06  08:20:49.618
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/usr/local/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+Jul 06  08:20:49.618
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	ConnectionRefusedError: [Errno 111] Connection refused
+Jul 06  08:20:49.618
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	
+During handling of the above exception, another exception occurred:
+
+Jul 06  08:20:49.618
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	Traceback (most recent call last):
+Jul 06  08:20:49.618
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 06  08:20:49.619
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:20:49.619
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 265, in construct_webhook_callable
+    user_defined_callable()
+  File "/root/nexus_brain_gemma4.py", line 78, in serve
+    wait_ready(proc)
+  File "/root/nexus_brain_gemma4.py", line 42, in wait_ready
+    raise RuntimeError(f"vLLM exited with {proc.returncode}")
+RuntimeError: vLLM exited with 1
+Jul 06  08:20:49.700
+ta-01KWTXXSFSQVV62SVYCJ3CGKZR	—	Runner failed with exception: RuntimeError('vLLM exited with 1')
+Jul 06  08:30:32.355
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	Starting vLLM with uncensored model: HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced
+Command: vllm serve HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --served-model-name HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --host 0.0.0.0 --port 8000 --uvicorn-log-level info --trust-remote-code --dtype bfloat16 --gpu-memory-utilization 0.85 --max-model-len 8192 --enforce-eager
+Jul 06  08:30:40.870
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	INFO 07-06 05:30:40 [__init__.py:235] Automatically detected platform cuda.
+Jul 06  08:30:44.920
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	INFO 07-06 05:30:44 [api_server.py:1755] vLLM API server version 0.10.0
+Jul 06  08:30:44.922
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	INFO 07-06 05:30:44 [cli_args.py:261] non-default args: {'model_tag': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'host': '0.0.0.0', 'model': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'enforce_eager': True, 'served_model_name': ['HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'], 'gpu_memory_utilization': 0.85}
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	Traceback (most recent call last):
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/bin/vllm", line 10, in <module>
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    sys.exit(main())
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	             ^^^^^^
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 54, in main
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    args.dispatch_function(args)
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 52, in cmd
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    uvloop.run(run_server(args))
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    return __asyncio.run(
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	           ^^^^^^^^^^^^^^
+Jul 06  08:30:45.073
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 194, in run
+Jul 06  08:30:45.074
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    return runner.run(main)
+Jul 06  08:30:45.074
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	           ^^^^^^^^^^^^^^^^
+Jul 06  08:30:45.074
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+Jul 06  08:30:45.074
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    return self._loop.run_until_complete(task)
+Jul 06  08:30:45.074
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:30:45.074
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+Jul 06  08:30:45.074
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+Jul 06  08:30:45.075
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    return await main
+Jul 06  08:30:45.075
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	           ^^^^^^^^^^
+Jul 06  08:30:45.075
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1791, in run_server
+Jul 06  08:30:45.075
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+Jul 06  08:30:45.075
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1811, in run_server_worker
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    async with build_async_engine_client(args, client_config) as engine_client:
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    return await anext(self.gen)
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 158, in build_async_engine_client
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    async with build_async_engine_client_from_engine_args(
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    return await anext(self.gen)
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 180, in build_async_engine_client_from_engine_args
+Jul 06  08:30:45.076
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1004, in create_engine_config
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    model_config = self.create_model_config()
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 872, in create_model_config
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    return ModelConfig(
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	           ^^^^^^^^^^^^
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+Jul 06  08:30:45.077
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelConfig
+  Value error, Invalid repository ID or local directory specified: 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'.
+Please verify the following requirements:
+1. Provide a valid Hugging Face repository ID.
+2. Specify a local directory that contains a recognized configuration file.
+   - For Hugging Face models: ensure the presence of a 'config.json'.
+   - For Mistral models: ensure the presence of a 'params.json'.
+3. For GGUF: pass the local path of the GGUF checkpoint.
+   Loading GGUF from a remote repo directly is not yet supported.
+ [type=value_error, input_value=ArgsKwargs((), {'model': ...attention_dtype': None}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.13/v/value_error
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	Traceback (most recent call last):
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/root/nexus_brain_gemma4.py", line 38, in wait_ready
+    socket.create_connection(("localhost", VLLM_PORT), timeout=1).close()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/usr/local/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+  File "/usr/local/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	ConnectionRefusedError: [Errno 111] Connection refused
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	
+During handling of the above exception, another exception occurred:
+
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	Traceback (most recent call last):
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 265, in construct_webhook_callable
+    user_defined_callable()
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/root/nexus_brain_gemma4.py", line 78, in serve
+    wait_ready(proc)
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	  File "/root/nexus_brain_gemma4.py", line 42, in wait_ready
+    raise RuntimeError(f"vLLM exited with {proc.returncode}")
+Jul 06  08:30:46.047
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	RuntimeError: vLLM exited with 1
+Jul 06  08:30:46.141
+ta-01KWTYG4NJD1823MGP1Q8CDDGR	—	Runner failed with exception: RuntimeError('vLLM exited with 1')
+Jul 06  08:40:33.067
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	Starting vLLM with uncensored model: HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced
+Command: vllm serve HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --served-model-name HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced --host 0.0.0.0 --port 8000 --uvicorn-log-level info --trust-remote-code --dtype bfloat16 --gpu-memory-utilization 0.85 --max-model-len 8192 --enforce-eager
+Jul 06  08:40:41.834
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	INFO 07-06 05:40:41 [__init__.py:235] Automatically detected platform cuda.
+Jul 06  08:40:46.635
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	INFO 07-06 05:40:46 [api_server.py:1755] vLLM API server version 0.10.0
+Jul 06  08:40:46.637
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	INFO 07-06 05:40:46 [cli_args.py:261] non-default args: {'model_tag': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'host': '0.0.0.0', 'model': 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced', 'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'enforce_eager': True, 'served_model_name': ['HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'], 'gpu_memory_utilization': 0.85}
+Jul 06  08:40:46.782
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	Traceback (most recent call last):
+Jul 06  08:40:46.782
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/bin/vllm", line 10, in <module>
+Jul 06  08:40:46.783
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    sys.exit(main())
+Jul 06  08:40:46.783
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	             ^^^^^^
+Jul 06  08:40:46.783
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/main.py", line 54, in main
+Jul 06  08:40:46.783
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    args.dispatch_function(args)
+Jul 06  08:40:46.783
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/cli/serve.py", line 52, in cmd
+Jul 06  08:40:46.783
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    uvloop.run(run_server(args))
+Jul 06  08:40:46.783
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 96, in run
+Jul 06  08:40:46.784
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    return __asyncio.run(
+Jul 06  08:40:46.784
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	           ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/asyncio/runners.py", line 194, in run
+Jul 06  08:40:46.784
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    return runner.run(main)
+Jul 06  08:40:46.784
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	           ^^^^^^^^^^^^^^^^
+Jul 06  08:40:46.784
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/asyncio/runners.py", line 118, in run
+Jul 06  08:40:46.784
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    return self._loop.run_until_complete(task)
+Jul 06  08:40:46.784
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:40:46.784
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+Jul 06  08:40:46.785
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/uvloop/__init__.py", line 48, in wrapper
+Jul 06  08:40:46.785
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    return await main
+Jul 06  08:40:46.785
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	           ^^^^^^^^^^
+Jul 06  08:40:46.785
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1791, in run_server
+Jul 06  08:40:46.785
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    await run_server_worker(listen_address, sock, args, **uvicorn_kwargs)
+Jul 06  08:40:46.785
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 1811, in run_server_worker
+Jul 06  08:40:46.786
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    async with build_async_engine_client(args, client_config) as engine_client:
+Jul 06  08:40:46.786
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:40:46.786
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    return await anext(self.gen)
+Jul 06  08:40:46.786
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:40:46.786
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 158, in build_async_engine_client
+Jul 06  08:40:46.786
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    async with build_async_engine_client_from_engine_args(
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/contextlib.py", line 210, in __aenter__
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    return await anext(self.gen)
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	           ^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/entrypoints/openai/api_server.py", line 180, in build_async_engine_client_from_engine_args
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    vllm_config = engine_args.create_engine_config(usage_context=usage_context)
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 1004, in create_engine_config
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    model_config = self.create_model_config()
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/vllm/engine/arg_utils.py", line 872, in create_model_config
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    return ModelConfig(
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	           ^^^^^^^^^^^^
+Jul 06  08:40:46.787
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/site-packages/pydantic/_internal/_dataclasses.py", line 121, in __init__
+Jul 06  08:40:46.788
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	    s.__pydantic_validator__.validate_python(ArgsKwargs(args, kwargs), self_instance=s)
+Jul 06  08:40:46.788
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	pydantic_core._pydantic_core.ValidationError: 1 validation error for ModelConfig
+  Value error, Invalid repository ID or local directory specified: 'HauhauCS/Gemma4-12B-QAT-Uncensored-HauhauCS-Balanced'.
+Please verify the following requirements:
+1. Provide a valid Hugging Face repository ID.
+2. Specify a local directory that contains a recognized configuration file.
+   - For Hugging Face models: ensure the presence of a 'config.json'.
+   - For Mistral models: ensure the presence of a 'params.json'.
+3. For GGUF: pass the local path of the GGUF checkpoint.
+   Loading GGUF from a remote repo directly is not yet supported.
+ [type=value_error, input_value=ArgsKwargs((), {'model': ...attention_dtype': None}), input_type=ArgsKwargs]
+    For further information visit https://errors.pydantic.dev/2.13/v/value_error
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	Traceback (most recent call last):
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/root/nexus_brain_gemma4.py", line 38, in wait_ready
+    socket.create_connection(("localhost", VLLM_PORT), timeout=1).close()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/usr/local/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+  File "/usr/local/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	
+During handling of the above exception, another exception occurred:
+
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	Traceback (most recent call last):
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 265, in construct_webhook_callable
+    user_defined_callable()
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/root/nexus_brain_gemma4.py", line 78, in serve
+    wait_ready(proc)
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	  File "/root/nexus_brain_gemma4.py", line 42, in wait_ready
+    raise RuntimeError(f"vLLM exited with {proc.returncode}")
+Jul 06  08:40:48.218
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	RuntimeError: vLLM exited with 1
+Jul 06  08:40:48.347
+ta-01KWTZ2FPMN820VRKWGMW0EHHR	—	Runner failed with exception: RuntimeError('vLLM exited with 1')
+Streaming
+Modal logo
+© Modal 2026
+About
+Status
+Changelog
+Documentation
+Slack Community
+Pricing
+Examples
+App Details - specimba | Modal

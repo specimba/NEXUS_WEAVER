@@ -1,0 +1,557 @@
+Modal
+
+specimba
+Starter
+/
+
+main
+
+Search
+Ctrl+K
+
+Workspace metrics
+
+Credits
+$281.08
+Community
+Docs
+
+Apps
+Endpoints
+New
+Logs
+Containers
+Secrets
+Storage
+Notebooks
+Overview
+
+Deployment History
+
+App Logs
+
+Usage
+
+Search functions
+
+NexusFlux2Generator.*
+Containers: 0 live
+Calls: 0 running
+
+web_app
+Containers: 0 live
+Calls: 0 running
+nexus-flux2-klein9b / App Logs
+
+Shift ← (A)
+Toggle Pause/Play (T)
+Shift → (D)
+
+1d
+Jul 1, 6:02 AM – now
+GMT+3
+
+Zoom out (Z)
+Add filter
+Expand logs
+Search logs
+/
+Timestamp
+Container ID
+Input ID
+Content
+Settings
+Jul 02  04:20:36.226
+ta-01KWG6K1Q9DYCBN28YPC65CSQR	—	Traceback (most recent call last):
+Jul 02  04:20:36.226
+ta-01KWG6K1Q9DYCBN28YPC65CSQR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:20:36.226
+ta-01KWG6K1Q9DYCBN28YPC65CSQR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:20:36.226
+ta-01KWG6K1Q9DYCBN28YPC65CSQR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:20:36.226
+ta-01KWG6K1Q9DYCBN28YPC65CSQR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:20:36.227
+ta-01KWG6K1Q9DYCBN28YPC65CSQR	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:20:36.227
+ta-01KWG6K1Q9DYCBN28YPC65CSQR	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:20:36.370
+ta-01KWG6K1Q9DYCBN28YPC65CSQR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:20:55.418
+ta-01KWG6KQCXEF02YQ8XCZ68JAGR	—	Traceback (most recent call last):
+Jul 02  04:20:55.418
+ta-01KWG6KQCXEF02YQ8XCZ68JAGR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:20:55.418
+ta-01KWG6KQCXEF02YQ8XCZ68JAGR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:20:55.418
+ta-01KWG6KQCXEF02YQ8XCZ68JAGR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:20:55.418
+ta-01KWG6KQCXEF02YQ8XCZ68JAGR	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:20:55.418
+ta-01KWG6KQCXEF02YQ8XCZ68JAGR	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:20:55.568
+ta-01KWG6KQCXEF02YQ8XCZ68JAGR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:21:08.445
+ta-01KWG6MA1192YVHKH0P4SG5B0R	—	Traceback (most recent call last):
+Jul 02  04:21:08.445
+ta-01KWG6MA1192YVHKH0P4SG5B0R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:08.445
+ta-01KWG6MA1192YVHKH0P4SG5B0R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:21:08.445
+ta-01KWG6MA1192YVHKH0P4SG5B0R	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:21:08.570
+ta-01KWG6MA1192YVHKH0P4SG5B0R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:21:22.458
+ta-01KWG6MPSFAQ1MSGA7P3WMS8RR	—	Traceback (most recent call last):
+Jul 02  04:21:22.458
+ta-01KWG6MPSFAQ1MSGA7P3WMS8RR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:21:22.458
+ta-01KWG6MPSFAQ1MSGA7P3WMS8RR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:22.458
+ta-01KWG6MPSFAQ1MSGA7P3WMS8RR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:22.458
+ta-01KWG6MPSFAQ1MSGA7P3WMS8RR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:22.458
+ta-01KWG6MPSFAQ1MSGA7P3WMS8RR	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:21:22.458
+ta-01KWG6MPSFAQ1MSGA7P3WMS8RR	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:21:22.573
+ta-01KWG6MPSFAQ1MSGA7P3WMS8RR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:21:38.081
+ta-01KWG6N4DK674R6EKHKVB0YTZR	—	Traceback (most recent call last):
+Jul 02  04:21:38.081
+ta-01KWG6N4DK674R6EKHKVB0YTZR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:21:38.081
+ta-01KWG6N4DK674R6EKHKVB0YTZR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:38.081
+ta-01KWG6N4DK674R6EKHKVB0YTZR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:38.081
+ta-01KWG6N4DK674R6EKHKVB0YTZR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:38.081
+ta-01KWG6N4DK674R6EKHKVB0YTZR	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:21:38.081
+ta-01KWG6N4DK674R6EKHKVB0YTZR	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:21:38.194
+ta-01KWG6N4DK674R6EKHKVB0YTZR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:21:57.588
+ta-01KWG6NKQQ0N35RF6A5V8BNC9R	—	Traceback (most recent call last):
+Jul 02  04:21:57.588
+ta-01KWG6NKQQ0N35RF6A5V8BNC9R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:21:57.588
+ta-01KWG6NKQQ0N35RF6A5V8BNC9R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:57.588
+ta-01KWG6NKQQ0N35RF6A5V8BNC9R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:57.588
+ta-01KWG6NKQQ0N35RF6A5V8BNC9R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:21:57.588
+ta-01KWG6NKQQ0N35RF6A5V8BNC9R	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:21:57.588
+ta-01KWG6NKQQ0N35RF6A5V8BNC9R	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:21:57.684
+ta-01KWG6NKQQ0N35RF6A5V8BNC9R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:22:18.439
+ta-01KWG6P6ZW9TMPJ2KEJ5Y6530R	—	Traceback (most recent call last):
+Jul 02  04:22:18.439
+ta-01KWG6P6ZW9TMPJ2KEJ5Y6530R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:22:18.439
+ta-01KWG6P6ZW9TMPJ2KEJ5Y6530R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:22:18.440
+ta-01KWG6P6ZW9TMPJ2KEJ5Y6530R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:22:18.440
+ta-01KWG6P6ZW9TMPJ2KEJ5Y6530R	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:22:18.440
+ta-01KWG6P6ZW9TMPJ2KEJ5Y6530R	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:22:18.543
+ta-01KWG6P6ZW9TMPJ2KEJ5Y6530R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:22:34.839
+ta-01KWG6PV4678PAY8K385HGAY3R	—	Traceback (most recent call last):
+Jul 02  04:22:34.840
+ta-01KWG6PV4678PAY8K385HGAY3R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:22:34.840
+ta-01KWG6PV4678PAY8K385HGAY3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:22:34.840
+ta-01KWG6PV4678PAY8K385HGAY3R	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:22:34.840
+ta-01KWG6PV4678PAY8K385HGAY3R	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:22:34.978
+ta-01KWG6PV4678PAY8K385HGAY3R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:22:41.319
+ta-01KWG6Q2BJQ1H78QQV1HPW5Z4R	—	Traceback (most recent call last):
+Jul 02  04:22:41.320
+ta-01KWG6Q2BJQ1H78QQV1HPW5Z4R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:22:41.320
+ta-01KWG6Q2BJQ1H78QQV1HPW5Z4R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:22:41.320
+ta-01KWG6Q2BJQ1H78QQV1HPW5Z4R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:22:41.320
+ta-01KWG6Q2BJQ1H78QQV1HPW5Z4R	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:22:41.451
+ta-01KWG6Q2BJQ1H78QQV1HPW5Z4R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:22:52.021
+ta-01KWG6QB6ZZTQG3RV4E38SCSHR	—	Traceback (most recent call last):
+Jul 02  04:22:52.021
+ta-01KWG6QB6ZZTQG3RV4E38SCSHR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:22:52.021
+ta-01KWG6QB6ZZTQG3RV4E38SCSHR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:22:52.136
+ta-01KWG6QB6ZZTQG3RV4E38SCSHR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:23:08.432
+ta-01KWG6QHR8PAXT8Y3NGTMYPY3R	—	Traceback (most recent call last):
+Jul 02  04:23:08.432
+ta-01KWG6QHR8PAXT8Y3NGTMYPY3R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:23:08.432
+ta-01KWG6QHR8PAXT8Y3NGTMYPY3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:23:08.432
+ta-01KWG6QHR8PAXT8Y3NGTMYPY3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:23:08.432
+ta-01KWG6QHR8PAXT8Y3NGTMYPY3R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:23:08.432
+ta-01KWG6QHR8PAXT8Y3NGTMYPY3R	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:23:08.432
+ta-01KWG6QHR8PAXT8Y3NGTMYPY3R	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:23:08.620
+ta-01KWG6QHR8PAXT8Y3NGTMYPY3R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:23:19.322
+ta-01KWG6QVW7JVZKCJMT9G2NFXZR	—	Traceback (most recent call last):
+Jul 02  04:23:19.322
+ta-01KWG6QVW7JVZKCJMT9G2NFXZR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:23:19.322
+ta-01KWG6QVW7JVZKCJMT9G2NFXZR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:23:19.322
+ta-01KWG6QVW7JVZKCJMT9G2NFXZR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:23:19.322
+ta-01KWG6QVW7JVZKCJMT9G2NFXZR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:23:19.322
+ta-01KWG6QVW7JVZKCJMT9G2NFXZR	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  04:23:19.323
+ta-01KWG6QVW7JVZKCJMT9G2NFXZR	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:23:19.420
+ta-01KWG6QVW7JVZKCJMT9G2NFXZR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:25:57.437
+ta-01KWG6X0B21AX53J74W6JQC24R	—	Traceback (most recent call last):
+Jul 02  04:25:57.438
+ta-01KWG6X0B21AX53J74W6JQC24R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:25:57.536
+ta-01KWG6X0B21AX53J74W6JQC24R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:25:57.597
+—	—	Function nexus_flux2_klein9b.web_app is crash-looping: containers are repeatedly failing to start.
+Jul 02  04:35:56.645
+ta-01KWG7FAZ89FYE8EETXZJ55KVR	—	Traceback (most recent call last):
+Jul 02  04:35:56.645
+ta-01KWG7FAZ89FYE8EETXZJ55KVR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:35:56.645
+ta-01KWG7FAZ89FYE8EETXZJ55KVR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:35:56.909
+ta-01KWG7FAZ89FYE8EETXZJ55KVR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:45:57.309
+ta-01KWG81NJKB190RXG3KGG4FWMR	—	Traceback (most recent call last):
+Jul 02  04:45:57.309
+ta-01KWG81NJKB190RXG3KGG4FWMR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  04:45:57.309
+ta-01KWG81NJKB190RXG3KGG4FWMR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:45:57.416
+ta-01KWG81NJKB190RXG3KGG4FWMR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  04:55:59.530
+ta-01KWG8M03KMBM44ZBGFMH35VVR	—	Traceback (most recent call last):
+Jul 02  04:55:59.530
+ta-01KWG8M03KMBM44ZBGFMH35VVR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  04:55:59.530
+ta-01KWG8M03KMBM44ZBGFMH35VVR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+ModuleNotFoundError: No module named 'fastapi'
+Jul 02  04:55:59.655
+ta-01KWG8M03KMBM44ZBGFMH35VVR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  05:05:58.924
+ta-01KWG96ASN2251W9CCX0RF8J8R	—	Traceback (most recent call last):
+Jul 02  05:05:58.924
+ta-01KWG96ASN2251W9CCX0RF8J8R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  05:05:58.924
+ta-01KWG96ASN2251W9CCX0RF8J8R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+ModuleNotFoundError: No module named 'fastapi'
+Jul 02  05:05:59.081
+ta-01KWG96ASN2251W9CCX0RF8J8R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  05:15:58.717
+ta-01KWG9RNFZN0BVAJD97SVEY9NR	—	Traceback (most recent call last):
+Jul 02  05:15:58.718
+ta-01KWG9RNFZN0BVAJD97SVEY9NR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  05:15:58.718
+ta-01KWG9RNFZN0BVAJD97SVEY9NR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  05:15:58.718
+ta-01KWG9RNFZN0BVAJD97SVEY9NR	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  05:15:58.718
+ta-01KWG9RNFZN0BVAJD97SVEY9NR	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  05:15:58.718
+ta-01KWG9RNFZN0BVAJD97SVEY9NR	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  05:15:58.898
+ta-01KWG9RNFZN0BVAJD97SVEY9NR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  05:26:16.010
+ta-01KWGAB06PZBQJ60V6VYKNBF6R	—	Traceback (most recent call last):
+Jul 02  05:26:16.010
+ta-01KWGAB06PZBQJ60V6VYKNBF6R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  05:26:16.010
+ta-01KWGAB06PZBQJ60V6VYKNBF6R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+ModuleNotFoundError: No module named 'fastapi'
+Jul 02  05:26:16.091
+ta-01KWGAB06PZBQJ60V6VYKNBF6R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  05:36:14.275
+ta-01KWGAXAXQ357ZYBYQ2CJDVM5R	—	Traceback (most recent call last):
+Jul 02  05:36:14.275
+ta-01KWGAXAXQ357ZYBYQ2CJDVM5R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  05:36:14.276
+ta-01KWGAXAXQ357ZYBYQ2CJDVM5R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  05:36:14.276
+ta-01KWGAXAXQ357ZYBYQ2CJDVM5R	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  05:36:14.388
+ta-01KWGAXAXQ357ZYBYQ2CJDVM5R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  05:46:03.434
+ta-01KWGBFNVS1Y0WHGADV2YM411R	—	Traceback (most recent call last):
+Jul 02  05:46:03.434
+ta-01KWGBFNVS1Y0WHGADV2YM411R	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+Jul 02  05:46:03.434
+ta-01KWGBFNVS1Y0WHGADV2YM411R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  05:46:03.435
+ta-01KWGBFNVS1Y0WHGADV2YM411R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  05:46:03.435
+ta-01KWGBFNVS1Y0WHGADV2YM411R	—	  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+Jul 02  05:46:03.435
+ta-01KWGBFNVS1Y0WHGADV2YM411R	—	  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+Jul 02  05:46:03.435
+ta-01KWGBFNVS1Y0WHGADV2YM411R	—	ModuleNotFoundError: No module named 'fastapi'
+Jul 02  05:46:03.629
+ta-01KWGBFNVS1Y0WHGADV2YM411R	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Jul 02  05:56:04.528
+ta-01KWGC20BK0A47XZ6CQA47DSWR	—	Traceback (most recent call last):
+Jul 02  05:56:04.528
+ta-01KWGC20BK0A47XZ6CQA47DSWR	—	  File "/pkg/modal/_runtime/task_lifecycle_manager.py", line 84, in handle_task_lifecycle_exception
+    yield
+  File "/pkg/modal/_runtime/user_code_imports.py", line 227, in function_execution_context
+    finalized_functions = self.get_finalized_functions(self.function_def, container_io_manager)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 324, in get_finalized_functions
+    web_callable, lifespan_manager = construct_webhook_callable(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/user_code_imports.py", line 254, in construct_webhook_callable
+    return asgi.wsgi_app_wrapper(user_defined_callable(), container_io_manager)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/nexus_flux2_klein9b.py", line 88, in web_app
+    from fastapi import FastAPI, Request
+ModuleNotFoundError: No module named 'fastapi'
+Jul 02  05:56:04.716
+ta-01KWGC20BK0A47XZ6CQA47DSWR	—	Runner failed with exception: ModuleNotFoundError("No module named 'fastapi'")
+Streaming
+Modal logo
+© Modal 2026
+About
+Status
+Changelog
+Documentation
+Slack Community
+Pricing
+Examples
+nexus-flux2-klein9b - specimba | Modal

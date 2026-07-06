@@ -1,0 +1,2002 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useState, useCallback, useRef, useEffect } from "react";
+     4→     4→import { useNexus } from "./store";
+     5→     5→import { ASPECTS, STYLES, getPipelineStages, PROMPT_TEMPLATES, TEMPLATE_CATEGORIES } from "@/lib/nexus-types";
+     6→     6→import type { StageId, PromptTemplate } from "@/lib/nexus-types";
+     7→     7→import { cn } from "@/lib/utils";
+     8→     8→import { ScoreRing, ScoreBar } from "./score-ring";
+     9→     9→import { VerdictBadge, StatusDot } from "./verdict-badge";
+    10→    10→import { useQuery } from "@tanstack/react-query";
+    11→    11→import {
+    12→    12→  Sparkles,
+    13→    13→  Wand2,
+    14→    14→  Loader2,
+    15→    15→  Shirt,
+    16→    16→  Ratio,
+    17→    17→  Palette,
+    18→    18→  CheckCircle2,
+    19→    19→  XCircle,
+    20→    20→  AlertTriangle,
+    21→    21→  ScanEye,
+    22→    22→  FileJson,
+    23→    23→  Image as ImageIcon,
+    24→    24→  RotateCcw,
+    25→    25→  ChevronRight,
+    26→    26→  Zap,
+    27→    27→  Wand,
+    28→    28→  LayoutGrid,
+    29→    29→  History,
+    30→    30→  Download,
+    31→    31→  Copy,
+    32→    32→  Keyboard,
+    33→    33→  Clock,
+    34→    34→  Crosshair,
+    35→    35→  Flame,
+    36→    36→  Cloud,
+    37→    37→  Clock3,
+    38→    38→  ArrowRight,
+    39→    39→  ShieldAlert,
+    40→    40→  Cpu,
+    41→    41→  Sliders,
+    42→    42→  Layers,
+    43→    43→  Plus,
+    44→    44→  Brain,
+    45→    45→  ScanText,
+    46→    46→  ExternalLink,
+    47→    47→  Film,
+    48→    48→  Sparkle,
+    49→    49→  Video,
+    50→    50→  Play,
+    51→    51→  Check,
+    52→    52→  X,
+    53→    53→} from "lucide-react";
+    54→    54→import { toast } from "sonner";
+    55→    55→import { motion } from "framer-motion";
+    56→    56→import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+    57→    57→import { Slider } from "@/components/ui/slider";
+    58→    58→import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+    59→    59→import { Switch } from "@/components/ui/switch";
+    60→    60→import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+    61→    61→import { Button } from "@/components/ui/button";
+    62→    62→import { Textarea } from "@/components/ui/textarea";
+    63→    63→import { Badge } from "@/components/ui/badge";
+    64→    64→import {
+    65→    65→  Select,
+    66→    66→  SelectContent,
+    67→    67→  SelectItem,
+    68→    68→  SelectTrigger,
+    69→    69→  SelectValue,
+    70→    70→} from "@/components/ui/select";
+    71→    71→import {
+    72→    72→  CALIBRATION_PRESETS,
+    73→    73→  getPreset,
+    74→    74→  presetCategoryLabel,
+    75→    75→  presetsForEngine,
+    76→    76→} from "@/lib/calibration";
+    77→    77→import { getLora } from "@/lib/lora-library";
+    78→    78→import type { LoraEntry } from "@/lib/lora-library";
+    79→    79→import {
+    80→    80→  ENGINES,
+    81→    81→  enginesByType,
+    82→    82→  getEngine,
+    83→    83→  engineTypeLabel,
+    84→    84→  DEFAULT_IMAGE_ENGINE_ID,
+    85→    85→  DEFAULT_VIDEO_ENGINE_ID,
+    86→    86→} from "@/lib/engines";
+    87→    87→import type { Engine, EngineType } from "@/lib/engines";
+    88→    88→import { BRAIN_MODELS, getBrain, DEFAULT_BRAIN_ID } from "@/lib/brain";
+    89→    89→import type { BrainModel } from "@/lib/brain";
+    90→    90→import { GROK_SUCCESS_PROMPTS, SUCCESS_PROMPT_CATEGORIES } from "@/lib/success-prompts";
+    91→    91→import type { SuccessPrompt } from "@/lib/success-prompts";
+    92→    92→import type { OcrResult } from "@/lib/ocr";
+    93→    93→import type { RunPipelineRequest, PipelineResponse } from "@/lib/nexus-types";
+    94→    94→import type { RunResult } from "./store";
+    95→    95→
+    96→    96→const SAMPLE_PROMPTS = [
+    97→    97→  "A lone astronaut discovering a bioluminescent forest on an alien moon, cinematic lighting",
+    98→    98→  "Portrait of a cyberpunk street vendor in neon-lit Tokyo rain, reflective puddles",
+    99→    99→  "A majestic airship docked at a floating island at golden hour, volumetric clouds",
+   100→   100→  "Cozy bookshop interior with a sleeping cat, warm afternoon light through dusty windows",
+   101→   101→  "A samurai standing in cherry blossom storm, ink-wash painting style",
+   102→   102→];
+   103→   103→
+   104→   104→// Pre-run heuristic: looks like a mature-content prompt? We don't block here —
+   105→   105→// the backend policy layer makes the final call. This only shows a heads-up
+   106→   106→// toast so the user isn't surprised when the pipeline returns status=blocked.
+   107→   107→const MATURE_PROMPT_RE =
+   108→   108→  /\b(nude|nudity|nsfw|explicit|18\+|adult|mature|erotic|lingerie|undress|naked|topless|nipples?|porn|pornograph|sex|sexual|genital|bare\s+skin|intimate|provocative)\b/i;
+   109→   109→
+   110→   110→function downloadFile(filename: string, content: string, mime: string) {
+   111→   111→  const blob = new Blob([content], { type: mime });
+   112→   112→  const url = URL.createObjectURL(blob);
+   113→   113→  const a = document.createElement("a");
+   114→   114→  a.href = url;
+   115→   115→  a.download = filename;
+   116→   116→  document.body.appendChild(a);
+   117→   117→  a.click();
+   118→   118→  document.body.removeChild(a);
+   119→   119→  URL.revokeObjectURL(url);
+   120→   120→}
+   121→   121→
+   122→   122→async function downloadImage(url: string, filename: string) {
+   123→   123→  try {
+   124→   124→    const res = await fetch(url);
+   125→   125→    const blob = await res.blob();
+   126→   126→    const objUrl = URL.createObjectURL(blob);
+   127→   127→    const a = document.createElement("a");
+   128→   128→    a.href = objUrl;
+   129→   129→    a.download = filename;
+   130→   130→    document.body.appendChild(a);
+   131→   131→    a.click();
+   132→   132→    document.body.removeChild(a);
+   133→   133→    URL.revokeObjectURL(objUrl);
+   134→   134→  } catch {
+   135→   135→    toast.error("Could not download image");
+   136→   136→  }
+   137→   137→}
+   138→   138→
+   139→   139→export function StudioView() {
+   140→   140→  const {
+   141→   141→    prompt,
+   142→   142→    style,
+   143→   143→    aspect,
+   144→   144→    wardrobe,
+   145→   145→    setPrompt,
+   146→   146→    setStyle,
+   147→   147→    setAspect,
+   148→   148→    setWardrobe,
+   149→   149→    loadSettings,
+   150→   150→    running,
+   151→   151→    stages,
+   152→   152→    result,
+   153→   153→    error,
+   154→   154→    startRun,
+   155→   155→    setStage,
+   156→   156→    finishRun,
+   157→   157→    failRun,
+   158→   158→    clearResult,
+   159→   159→    setView,
+   160→   160→    history,
+   161→   161→    pushHistory,
+   162→   162→    // v3 additions: calibration + LoRA + consent/policy
+   163→   163→    calibrationId,
+   164→   164→    calibrationOverrides,
+   165→   165→    loraIds,
+   166→   166→    fingerprint,
+   167→   167→    matureUnlocked,
+   168→   168→    setCalibration,
+   169→   169→    // v4 additions: engine + brain + video stage
+   170→   170→    engineId,
+   171→   171→    setEngine,
+   172→   172→    syncCalibrationToEngine,
+   173→   173→    brainId,
+   174→   174→    setBrain,
+   175→   175→    videoEnabled,
+   176→   176→    setVideoEnabled,
+   177→   177→  } = useNexus();
+   178→   178→
+   179→   179→  const [advanced, setAdvanced] = useState(false);
+   180→   180→  const [showTemplates, setShowTemplates] = useState(false);
+   181→   181→  const [showHistory, setShowHistory] = useState(false);
+   182→   182→  const [tplCategory, setTplCategory] = useState("All");
+   183→   183→  // v4: templates panel tab — curated (PROMPT_TEMPLATES) vs grok (GROK_SUCCESS_PROMPTS)
+   184→   184→  const [tplTab, setTplTab] = useState<"curated" | "grok">("curated");
+   185→   185→  const [grokCategory, setGrokCategory] = useState("All");
+   186→   186→  const [enhancing, setEnhancing] = useState(false);
+   187→   187→  // M3: artistic-override flag — when true, the next run sends artisticOverride=true
+   188→   188→  // to lower the minSafetyScore threshold (hard blocklist still enforced).
+   189→   189→  const [artisticOverride, setArtisticOverride] = useState(false);
+   190→   190→
+   191→   191→  // v4: engine-aware pipeline stages — reflect the selected engine + brain,
+   192→   192→  // not a hardcoded "FLUX.1-schnell" label.
+   193→   193→  const pipelineStages = getPipelineStages(engineId, brainId);
+   194→   194→  const [elapsed, setElapsed] = useState(0);
+   195→   195→  const [warming, setWarming] = useState(false);
+   196→   196→  const [modalWarm, setModalWarm] = useState<boolean | null>(null);
+   197→   197→  const runStartRef = useRef<number | null>(null);
+   198→   198→
+   199→   199→  // live elapsed timer during run
+   200→   200→  useEffect(() => {
+   201→   201→    if (!running) {
+   202→   202→      runStartRef.current = null;
+   203→   203→      setElapsed(0);
+   204→   204→      return;
+   205→   205→    }
+   206→   206→    runStartRef.current = Date.now();
+   207→   207→    const t = setInterval(() => {
+   208→   208→      if (runStartRef.current) setElapsed(Date.now() - runStartRef.current);
+   209→   209→    }, 100);
+   210→   210→    return () => clearInterval(t);
+   211→   211→  }, [running]);
+   212→   212→
+   213→   213→  const run = useCallback(async () => {
+   214→   214→    const p = prompt.trim();
+   215→   215→    if (!p) {
+   216→   216→      toast.error("Enter a prompt first");
+   217→   217→      return;
+   218→   218→    }
+   219→   219→    if (running) return;
+   220→   220→
+   221→   221→    // Pre-run heads-up: if the prompt looks mature but mature mode is locked,
+   222→   222→    // warn the user. We do NOT block here — the backend policy layer makes the
+   223→   223→    // final call and will return status=blocked, which we render as a dedicated
+   224→   224→    // blocked-state card.
+   225→   225→    if (MATURE_PROMPT_RE.test(p) && !matureUnlocked()) {
+   226→   226→      toast.warning("This prompt may require mature mode.", {
+   227→   227→        description: "Enable it in Compliance → Policy after accepting the 18+ notice.",
+   228→   228→      });
+   229→   229→    }
+   230→   230→
+   231→   231→    startRun();
+   232→   232→    pushHistory(p);
+   233→   233→    setStage("prompt", { status: "running", message: "Tokenizing prompt…" });
+   234→   234→    await new Promise((r) => setTimeout(r, 60));
+   235→   235→    setStage("prompt", { status: "done", ms: 8, message: "Prompt accepted" });
+   236→   236→
+   237→   237→    setStage("flux", { status: "running", message: "FLUX rendering via GPU…" });
+   238→   238→    try {
+   239→   239→      // v4: engineId/brainId/videoEnabled are accepted by the backend route
+   240→   240→      // (Task 11) but not yet declared on RunPipelineRequest — extend inline.
+   241→   241→      const body: RunPipelineRequest & {
+   242→   242→        engineId?: string;
+   243→   243→        brainId?: string;
+   244→   244→        videoEnabled?: boolean;
+   245→   245→        artisticOverride?: boolean;
+   246→   246→      } = {
+   247→   247→        prompt: p,
+   248→   248→        style,
+   249→   249→        aspect,
+   250→   250→        wardrobe: wardrobe.trim() || undefined,
+   251→   251→        calibrationId,
+   252→   252→        calibrationOverrides:
+   253→   253→          Object.keys(calibrationOverrides).length > 0 ? calibrationOverrides : undefined,
+   254→   254→        loraIds: loraIds.length > 0 ? loraIds : undefined,
+   255→   255→        consentFingerprint: fingerprint || undefined,
+   256→   256→        engineId,
+   257→   257→        brainId,
+   258→   258→        videoEnabled,
+   259→   259→        artisticOverride,
+   260→   260→      };
+   261→   261→      // reset the artistic-override flag after it's been consumed by this run
+   262→   262→      if (artisticOverride) setArtisticOverride(false);
+   263→   263→      // M2: explicit 300s timeout — the pipeline takes 30-60s end-to-end
+   264→   264→      // (ST3GG scan + Modal cold start + judge + evidence). Without this the
+   265→   265→      // browser may silently abort, showing "operation was aborted".
+   266→   266→      const runCtrl = new AbortController();
+   267→   267→      const runTimer = setTimeout(() => runCtrl.abort(), 300_000);
+   268→   268→      try {
+   269→   269→        const res = await fetch("/api/pipeline/run", {
+   270→   270→          method: "POST",
+   271→   271→          headers: { "Content-Type": "application/json" },
+   272→   272→          body: JSON.stringify(body),
+   273→   273→          signal: runCtrl.signal,
+   274→   274→        });
+   275→   275→        clearTimeout(runTimer);
+   276→   276→      const data = (await res.json()) as PipelineResponse & { error?: string };
+   277→   277→
+   278→   278→      // Hard HTTP error or pipeline failure
+   279→   279→      if (!res.ok || data.status === "failed") {
+   280→   280→        const msg = data.errorMessage || data.error || "Generation failed";
+   281→   281→        setStage("flux", { status: "error", message: msg });
+   282→   282→        failRun(msg);
+   283→   283→        toast.error(msg);
+   284→   284→        return;
+   285→   285→      }
+   286→   286→
+   287→   287→      // Policy refusal — render as a dedicated blocked-state card (NOT an error)
+   288→   288→      if (data.status === "blocked") {
+   289→   289→        setStage("flux", { status: "error", message: "Blocked by policy" });
+   290→   290→        setStage("st3gg", {
+   291→   291→          status: "done",
+   292→   292→          message: data.safety
+   293→   293→            ? `${data.safety.riskLevel} risk · score ${data.safety.score}`
+   294→   294→            : "Blocked",
+   295→   295→        });
+   296→   296→        setStage("judge", { status: "skipped", message: "Skipped — blocked" });
+   297→   297→        setStage("nemotron", { status: "skipped", message: "Skipped — blocked" });
+   298→   298→        setStage("output", { status: "skipped", message: "Skipped — blocked" });
+   299→   299→        finishRun({
+   300→   300→          id: data.id,
+   301→   301→          status: "blocked",
+   302→   302→          imagePath: null,
+   303→   303→          verdict: data.verdict,
+   304→   304→          overallScore: null,
+   305→   305→          safety: data.safety,
+   306→   306→          judge: null,
+   307→   307→          evidence: data.evidence,
+   308→   308→          timings: data.timings,
+   309→   309→          errorMessage: null,
+   310→   310→          calibration: data.calibration,
+   311→   311→          loraIds: data.loraIds ?? loraIds,
+   312→   312→          maturityTier: data.maturityTier,
+   313→   313→          blockReason: data.blockReason ?? "Blocked by safety policy",
+   314→   314→          prompt: p,
+   315→   315→          style,
+   316→   316→          aspect,
+   317→   317→          wardrobe: wardrobe.trim() || null,
+   318→   318→          // v4: engine + backend provenance
+   319→   319→          engineId: data.engineId ?? engineId,
+   320→   320→          backend: data.backend ?? null,
+   321→   321→          backendMismatch: data.backendMismatch ?? false,
+   322→   322→        });
+   323→   323→        toast.warning("Run blocked by safety policy", {
+   324→   324→          description: data.blockReason ?? undefined,
+   325→   325→        });
+   326→   326→        return;
+   327→   327→      }
+   328→   328→
+   329→   329→      // Normal completion
+   330→   330→      const t = (data.timings ?? {}) as Record<string, number | undefined>;
+   331→   331→      setStage("flux", { status: "done", ms: t.flux, message: "Image rendered" });
+   332→   332→      setStage("st3gg", {
+   333→   333→        status: "done",
+   334→   334→        ms: t.st3gg,
+   335→   335→        message: data.safety ? `${data.safety.riskLevel} risk · score ${data.safety.score}` : "Scanned",
+   336→   336→      });
+   337→   337→      setStage("judge", {
+   338→   338→        status: "done",
+   339→   339→        ms: t.judge,
+   340→   340→        message: data.judge ? `${data.judge.verdict} · ${data.judge.overallScore}` : "Judged",
+   341→   341→      });
+   342→   342→      setStage("nemotron", { status: "done", ms: t.nemotron, message: "Evidence aggregated" });
+   343→   343→      setStage("output", { status: "done", ms: 1, message: "Persisted to gallery" });
+   344→   344→
+   345→   345→      finishRun({
+   346→   346→        id: data.id,
+   347→   347→        status: data.status,
+   348→   348→        imagePath: data.imagePath,
+   349→   349→        verdict: data.verdict,
+   350→   350→        overallScore: data.overallScore,
+   351→   351→        safety: data.safety,
+   352→   352→        judge: data.judge,
+   353→   353→        evidence: data.evidence,
+   354→   354→        timings: data.timings,
+   355→   355→        errorMessage: null,
+   356→   356→        calibration: data.calibration,
+   357→   357→        loraIds: data.loraIds ?? loraIds,
+   358→   358→        maturityTier: data.maturityTier,
+   359→   359→        blockReason: null,
+   360→   360→        prompt: p,
+   361→   361→        style,
+   362→   362→        aspect,
+   363→   363→        wardrobe: wardrobe.trim() || null,
+   364→   364→        // v4: engine + backend provenance
+   365→   365→        engineId: data.engineId ?? engineId,
+   366→   366→        backend: data.backend ?? null,
+   367→   367→        backendMismatch: data.backendMismatch ?? false,
+   368→   368→      });
+   369→   369→      toast.success(`Pipeline complete — ${data.verdict}`);
+   370→   370→      } catch (fetchErr) {
+   371→   371→        clearTimeout(runTimer);
+   372→   372→        // M2: distinguish abort (timeout) from other fetch errors
+   373→   373→        if (fetchErr instanceof Error && fetchErr.name === "AbortError") {
+   374→   374→          const msg = "Generation timed out after 5 minutes. The Modal GPU may be cold-starting. Try again — the second call will be warm.";
+   375→   375→          setStage("flux", { status: "error", message: "Timed out" });
+   376→   376→          failRun(msg);
+   377→   377→          toast.error(msg);
+   378→   378→        } else {
+   379→   379→          throw fetchErr; // re-throw to outer catch
+   380→   380→        }
+   381→   381→      }
+   382→   382→    } catch (e) {
+   383→   383→      setStage("flux", { status: "error" });
+   384→   384→      const msg = e instanceof Error ? e.message : String(e);
+   385→   385→      failRun(msg);
+   386→   386→      toast.error(msg);
+   387→   387→    }
+   388→   388→  }, [
+   389→   389→    prompt, style, aspect, wardrobe, running,
+   390→   390→    calibrationId, calibrationOverrides, loraIds, fingerprint, matureUnlocked,
+   391→   391→    engineId, brainId, videoEnabled,
+   392→   392→    startRun, setStage, finishRun, failRun, pushHistory,
+   393→   393→  ]);
+   394→   394→
+   395→   395→  // keyboard shortcut: Cmd/Ctrl+Enter to run
+   396→   396→  useEffect(() => {
+   397→   397→    const onKey = (e: KeyboardEvent) => {
+   398→   398→      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+   399→   399→        e.preventDefault();
+   400→   400→        if (!running && prompt.trim()) run();
+   401→   401→      }
+   402→   402→    };
+   403→   403→    window.addEventListener("keydown", onKey);
+   404→   404→    return () => window.removeEventListener("keydown", onKey);
+   405→   405→  }, [run, running, prompt]);
+   406→   406→
+   407→   407→  // Auto-warm Modal on mount if last generation was > 10 min ago (or no gens).
+   408→   408→  // Runs once per page load. Silent on success; subtle toast on cold-start.
+   409→   409→  useEffect(() => {
+   410→   410→    let cancelled = false;
+   411→   411→    (async () => {
+   412→   412→      try {
+   413→   413→        // Check most recent generation timestamp
+   414→   414→        const r = await fetch("/api/gallery?limit=1", { cache: "no-store" });
+   415→   415→        if (!r.ok) return;
+   416→   416→        const d = await r.json();
+   417→   417→        const lastGen = d.items?.[0]?.createdAt;
+   418→   418→        const stale = !lastGen || Date.now() - new Date(lastGen).getTime() > 10 * 60 * 1000;
+   419→   419→        if (!stale) return; // Recent gen → container likely still warm
+   420→   420→        // Probe Modal silently
+   421→   421→        const wr = await fetch("/api/modal/warmup", { method: "POST" });
+   422→   422→        if (cancelled) return;
+   423→   423→        const wd = await wr.json();
+   424→   424→        if (wd.warmed) {
+   425→   425→          setModalWarm(true);
+   426→   426→          // No toast on auto-success — too noisy. Just visual indicator.
+   427→   427→        } else if (wd.enabled && !wd.reachable) {
+   428→   428→          // Cold-starting — let user know they can wait
+   429→   429→          toast.info("Modal GPU is cold-starting", {
+   430→   430→            description: "First generation may take 1–7 min, or use z-ai fallback.",
+   431→   431→          });
+   432→   432→        }
+   433→   433→      } catch {
+   434→   434→        // silent — auto-warm is best-effort
+   435→   435→      }
+   436→   436→    })();
+   437→   437→    return () => {
+   438→   438→      cancelled = true;
+   439→   439→    };
+   440→   440→  }, []);
+   441→   441→
+   442→   442→  // Pre-emptively warm up the Modal container so the first generation
+   443→   443→  // doesn't pay the 1–7 min cold-start latency.
+   444→   444→  const warmupModal = useCallback(async () => {
+   445→   445→    setWarming(true);
+   446→   446→    setModalWarm(null);
+   447→   447→    try {
+   448→   448→      const res = await fetch("/api/modal/warmup", { method: "POST" });
+   449→   449→      const data = await res.json();
+   450→   450→      if (data.warmed) {
+   451→   451→        setModalWarm(true);
+   452→   452→        toast.success(`Modal warm — ${data.latencyMs ?? "?"}ms`, {
+   453→   453→          description: data.model ? `${data.model} on ${data.gpu}` : undefined,
+   454→   454→        });
+   455→   455→      } else if (!data.enabled) {
+   456→   456→        setModalWarm(false);
+   457→   457→        toast.info("Modal disabled — using z-ai fallback");
+   458→   458→      } else {
+   459→   459→        setModalWarm(false);
+   460→   460→        toast.warning("Modal still cold-starting", {
+   461→   461→          description: "Try again in 1–2 minutes, or run the pipeline and wait.",
+   462→   462→        });
+   463→   463→      }
+   464→   464→    } catch (e) {
+   465→   465→      setModalWarm(false);
+   466→   466→      toast.error("Warm-up probe failed", {
+   467→   467→        description: e instanceof Error ? e.message : String(e),
+   468→   468→      });
+   469→   469→    } finally {
+   470→   470→      setWarming(false);
+   471→   471→    }
+   472→   472→  }, []);
+   473→   473→
+   474→   474→  const enhance = useCallback(async () => {
+   475→   475→    const p = prompt.trim();
+   476→   476→    if (!p) {
+   477→   477→      toast.error("Enter a prompt to enhance");
+   478→   478→      return;
+   479→   479→    }
+   480→   480→    setEnhancing(true);
+   481→   481→    try {
+   482→   482→      const res = await fetch("/api/prompt/enhance", {
+   483→   483→        method: "POST",
+   484→   484→        headers: { "Content-Type": "application/json" },
+   485→   485→        body: JSON.stringify({ prompt: p, style }),
+   486→   486→      });
+   487→   487→      const data = await res.json();
+   488→   488→      if (!res.ok) throw new Error(data.error || "Enhance failed");
+   489→   489→      setPrompt(data.enhanced);
+   490→   490→      toast.success("Prompt enhanced by AI");
+   491→   491→    } catch (e) {
+   492→   492→      toast.error(e instanceof Error ? e.message : "Enhance failed");
+   493→   493→    } finally {
+   494→   494→      setEnhancing(false);
+   495→   495→    }
+   496→   496→  }, [prompt, style, setPrompt]);
+   497→   497→
+   498→   498→  const aspectDef = ASPECTS.find((a) => a.id === aspect) ?? ASPECTS[0];
+   499→   499→  const filteredTemplates =
+   500→   500→    tplCategory === "All"
+   501→   501→      ? PROMPT_TEMPLATES
+   502→   502→      : PROMPT_TEMPLATES.filter((t) => t.category === tplCategory);
+   503→   503→
+   504→   504→  return (
+   505→   505→    <div className="space-y-5 nexus-rise">
+   506→   506→      {/* Hero header */}
+   507→   507→      <section className="nexus-gradient-border relative overflow-hidden rounded-2xl p-5 sm:p-7">
+   508→   508→        <div className="absolute inset-0 nexus-scanline pointer-events-none opacity-30" />
+   509→   509→        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+   510→   510→          <div>
+   511→   511→            <div className="mb-2 flex items-center gap-2">
+   512→   512→              <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary/15 text-primary nexus-glow">
+   513→   513→                <Sparkles className="h-3.5 w-3.5" />
+   514→   514→              </span>
+   515→   515→              <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-primary">
+   516→   516→                Studio · Generation Surface
+   517→   517→              </span>
+   518→   518→            </div>
+   519→   519→            <h1 className="nexus-headline nexus-text-balance font-mono text-2xl font-bold tracking-tight sm:text-3xl">
+   520→   520→              Weave a vision through the governed pipeline
+   521→   521→            </h1>
+   522→   522→            <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-[15px]">
+   523→   523→              Describe what you want. FLUX generates the image on a Modal H100 GPU,
+   524→   524→              then ST3GG, MiniCPM-V and Nemotron scan, judge and structure the result — automatically.
+   525→   525→            </p>
+   526→   526→          </div>
+   527→   527→          <div className="flex shrink-0 items-center gap-3">
+   528→   528→            <div className="flex items-center gap-2 rounded-xl nexus-glass px-3 py-2.5">
+   529→   529→              <Zap className="h-4 w-4 text-amber-400" />
+   530→   530→              <div className="leading-none">
+   531→   531→                <div className="font-mono text-xs font-semibold">~30–60s</div>
+   532→   532→                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+   533→   533→                  end-to-end
+   534→   534→                </div>
+   535→   535→              </div>
+   536→   536→            </div>
+   537→   537→            <div className="hidden items-center gap-1.5 rounded-xl nexus-glass px-3 py-2.5 sm:flex">
+   538→   538→              <Keyboard className="h-3.5 w-3.5 text-muted-foreground" />
+   539→   539→              <span className="font-mono text-[10px] text-muted-foreground">
+   540→   540→                <kbd className="rounded bg-foreground/10 px-1 py-0.5 text-[9px]">⌘</kbd>
+   541→   541→                <kbd className="ml-0.5 rounded bg-foreground/10 px-1 py-0.5 text-[9px]">↵</kbd>
+   542→   542→                run
+   543→   543→              </span>
+   544→   544→            </div>
+   545→   545→          </div>
+   546→   546→        </div>
+   547→   547→      </section>
+   548→   548→
+   549→   549→      <div className="grid gap-5 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+   550→   550→        {/* LEFT: control panel */}
+   551→   551→        <div className="space-y-4">
+   552→   552→          {/* v4: Engine picker — top of the studio controls */}
+   553→   553→          <EnginePicker />
+   554→   554→
+   555→   555→          {/* v4: Output card — video stage (I2V) toggle */}
+   556→   556→          <VideoStageToggle />
+   557→   557→
+   558→   558→          {/* Prompt + enhance + history */}
+   559→   559→          <div className="nexus-card rounded-2xl p-4">
+   560→   560→            <div className="mb-2 flex items-center justify-between">
+   561→   561→              <label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   562→   562→                <Crosshair className="h-3 w-3 text-primary" /> Prompt
+   563→   563→              </label>
+   564→   564→              <div className="flex items-center gap-1.5">
+   565→   565→                <span className="font-mono text-[10px] text-muted-foreground/70">
+   566→   566→                  {prompt.length}/2000
+   567→   567→                </span>
+   568→   568→                <button
+   569→   569→                  onClick={() => setShowHistory((v) => !v)}
+   570→   570→                  className={cn(
+   571→   571→                    "inline-flex items-center gap-1 rounded-md border border-border/50 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground transition hover:text-foreground",
+   572→   572→                    showHistory && "border-primary/40 text-primary"
+   573→   573→                  )}
+   574→   574→                  title="Recent prompts"
+   575→   575→                >
+   576→   576→                  <History className="h-2.5 w-2.5" /> History
+   577→   577→                </button>
+   578→   578→              </div>
+   579→   579→            </div>
+   580→   580→            <textarea
+   581→   581→              value={prompt}
+   582→   582→              onChange={(e) => setPrompt(e.target.value.slice(0, 2000))}
+   583→   583→              placeholder="Describe the image you want to weave…"
+   584→   584→              rows={5}
+   585→   585→              className="nexus-input w-full resize-none rounded-lg border border-border/60 bg-background/60 px-3 py-2.5 text-sm outline-none"
+   586→   586→            />
+   587→   587→            {showHistory && history.length > 0 ? (
+   588→   588→              <div className="mt-2 max-h-40 space-y-0.5 overflow-y-auto nexus-scroll rounded-lg border border-border/40 bg-background/40 p-1.5">
+   589→   589→                {history.map((h, i) => (
+   590→   590→                  <button
+   591→   591→                    key={i}
+   592→   592→                    onClick={() => {
+   593→   593→                      setPrompt(h);
+   594→   594→                      setShowHistory(false);
+   595→   595→                    }}
+   596→   596→                    className="block w-full truncate rounded px-2 py-1 text-left text-[11px] text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+   597→   597→                    title={h}
+   598→   598→                  >
+   599→   599→                    {h}
+   600→   600→                  </button>
+   601→   601→                ))}
+   602→   602→              </div>
+   603→   603→            ) : null}
+   604→   604→            {showHistory && history.length === 0 ? (
+   605→   605→              <div className="mt-2 rounded-lg border border-dashed border-border/40 px-3 py-2 text-center text-[10px] text-muted-foreground">
+   606→   606→                No history yet — run a pipeline to populate
+   607→   607→              </div>
+   608→   608→            ) : null}
+   609→   609→
+   610→   610→            {/* Action row: enhance + templates */}
+   611→   611→            <div className="mt-2.5 flex flex-wrap gap-1.5">
+   612→   612→              <button
+   613→   613→                onClick={enhance}
+   614→   614→                disabled={enhancing || !prompt.trim()}
+   615→   615→                className={cn(
+   616→   616→                  "nexus-chip inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/40 px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:border-primary/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+   617→   617→                )}
+   618→   618→              >
+   619→   619→                {enhancing ? <Loader2 className="h-3 w-3 animate-spin text-primary" /> : <Wand className="h-3 w-3 text-primary" />}
+   620→   620→                Enhance
+   621→   621→              </button>
+   622→   622→              <button
+   623→   623→                onClick={() => setShowTemplates((v) => !v)}
+   624→   624→                className={cn(
+   625→   625→                  "nexus-chip inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] font-medium transition",
+   626→   626→                  showTemplates
+   627→   627→                    ? "nexus-chip-active"
+   628→   628→                    : "border-border/50 bg-background/40 text-muted-foreground hover:text-foreground"
+   629→   629→                )}
+   630→   630→              >
+   631→   631→                <LayoutGrid className="h-3 w-3" /> Templates
+   632→   632→              </button>
+   633→   633→              {prompt ? (
+   634→   634→                <button
+   635→   635→                  onClick={() => {
+   636→   636→                    navigator.clipboard?.writeText(prompt);
+   637→   637→                    toast.success("Prompt copied");
+   638→   638→                  }}
+   639→   639→                  className="nexus-chip inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/40 px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:text-foreground"
+   640→   640→                >
+   641→   641→                  <Copy className="h-3 w-3" /> Copy
+   642→   642→                </button>
+   643→   643→              ) : null}
+   644→   644→            </div>
+   645→   645→
+   646→   646→            {/* Templates panel — v4: two tabs (Curated + Grok Success) */}
+   647→   647→            {showTemplates ? (
+   648→   648→              <div className="mt-3 nexus-rise rounded-lg border border-border/50 bg-background/40 p-2.5">
+   649→   649→                <Tabs value={tplTab} onValueChange={(v) => setTplTab(v as "curated" | "grok")}>
+   650→   650→                  <TabsList className="mb-2 h-7 w-full">
+   651→   651→                    <TabsTrigger value="curated" className="gap-1 text-[10px]">
+   652→   652→                      <LayoutGrid className="h-3 w-3" /> Curated
+   653→   653→                    </TabsTrigger>
+   654→   654→                    <TabsTrigger value="grok" className="gap-1 text-[10px]">
+   655→   655→                      <Sparkle className="h-3 w-3" /> Grok Success
+   656→   656→                    </TabsTrigger>
+   657→   657→                  </TabsList>
+   658→   658→
+   659→   659→                  {/* Curated templates (existing PROMPT_TEMPLATES) */}
+   660→   660→                  <TabsContent value="curated" className="mt-0">
+   661→   661→                    <div className="mb-2 flex flex-wrap gap-1">
+   662→   662→                      {TEMPLATE_CATEGORIES.map((c) => (
+   663→   663→                        <button
+   664→   664→                          key={c}
+   665→   665→                          onClick={() => setTplCategory(c)}
+   666→   666→                          className={cn(
+   667→   667→                            "rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider transition",
+   668→   668→                            tplCategory === c
+   669→   669→                              ? "bg-primary/15 text-primary"
+   670→   670→                              : "text-muted-foreground hover:text-foreground"
+   671→   671→                          )}
+   672→   672→                        >
+   673→   673→                          {c}
+   674→   674→                        </button>
+   675→   675→                      ))}
+   676→   676→                    </div>
+   677→   677→                    <div className="grid max-h-56 gap-1.5 overflow-y-auto nexus-scroll sm:grid-cols-2">
+   678→   678→                      {filteredTemplates.map((tpl) => (
+   679→   679→                        <TemplateCard
+   680→   680→                          key={tpl.id}
+   681→   681→                          tpl={tpl}
+   682→   682→                          onUse={() => {
+   683→   683→                            loadSettings({ prompt: tpl.prompt, style: tpl.style, aspect: tpl.aspect });
+   684→   684→                            setShowTemplates(false);
+   685→   685→                            toast.success(`Loaded "${tpl.title}"`);
+   686→   686→                          }}
+   687→   687→                        />
+   688→   688→                      ))}
+   689→   689→                    </div>
+   690→   690→                  </TabsContent>
+   691→   691→
+   692→   692→                  {/* Grok Success templates (v4) */}
+   693→   693→                  <TabsContent value="grok" className="mt-0">
+   694→   694→                    <div className="mb-2 flex flex-wrap gap-1">
+   695→   695→                      {SUCCESS_PROMPT_CATEGORIES.map((c) => (
+   696→   696→                        <button
+   697→   697→                          key={c}
+   698→   698→                          onClick={() => setGrokCategory(c)}
+   699→   699→                          className={cn(
+   700→   700→                            "rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider transition",
+   701→   701→                            grokCategory === c
+   702→   702→                              ? "bg-amber-500/15 text-amber-300"
+   703→   703→                              : "text-muted-foreground hover:text-foreground"
+   704→   704→                          )}
+   705→   705→                        >
+   706→   706→                          {c}
+   707→   707→                        </button>
+   708→   708→                      ))}
+   709→   709→                    </div>
+   710→   710→                    <div className="grid max-h-64 gap-1.5 overflow-y-auto nexus-scroll sm:grid-cols-2">
+   711→   711→                      {GROK_SUCCESS_PROMPTS.filter(
+   712→   712→                        (sp) => grokCategory === "All" || sp.category === grokCategory
+   713→   713→                      ).map((sp) => (
+   714→   714→                        <GrokSuccessCard
+   715→   715→                          key={sp.id}
+   716→   716→                          sp={sp}
+   717→   717→                          onUse={() => {
+   718→   718→                            loadSettings({
+   719→   719→                              prompt: sp.prompt,
+   720→   720→                              style: sp.style,
+   721→   721→                              aspect: sp.aspect,
+   722→   722→                              wardrobe: sp.wardrobe,
+   723→   723→                            });
+   724→   724→                            // set the engine to match sp.engineFamilies[0] if possible
+   725→   725→                            const fam = sp.engineFamilies[0];
+   726→   726→                            const match = ENGINES.find((e) => e.family === fam);
+   727→   727→                            if (match) {
+   728→   728→                              setEngine(match.id);
+   729→   729→                              syncCalibrationToEngine();
+   730→   730→                            }
+   731→   731→                            // set the calibration to sp.recommendedPresetId
+   732→   732→                            setCalibration(sp.recommendedPresetId);
+   733→   733→                            setShowTemplates(false);
+   734→   734→                            toast.success(`Loaded Grok template: ${sp.title}`);
+   735→   735→                          }}
+   736→   736→                        />
+   737→   737→                      ))}
+   738→   738→                    </div>
+   739→   739→                  </TabsContent>
+   740→   740→                </Tabs>
+   741→   741→              </div>
+   742→   742→            ) : null}
+   743→   743→
+   744→   744→            {/* Sample prompts (only when empty) */}
+   745→   745→            {!prompt ? (
+   746→   746→              <div className="mt-2.5 flex flex-wrap gap-1.5">
+   747→   747→                {SAMPLE_PROMPTS.map((s, i) => (
+   748→   748→                  <button
+   749→   749→                    key={i}
+   750→   750→                    onClick={() => setPrompt(s)}
+   751→   751→                    className="nexus-chip rounded-md border border-border/50 bg-background/40 px-2 py-1 text-[10px] text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+   752→   752→                    title={s}
+   753→   753→                  >
+   754→   754→                    {s.slice(0, 26)}…
+   755→   755→                  </button>
+   756→   756→                ))}
+   757→   757→              </div>
+   758→   758→            ) : null}
+   759→   759→          </div>
+   760→   760→
+   761→   761→          {/* Style */}
+   762→   762→          <div className="nexus-card rounded-2xl p-4">
+   763→   763→            <label className="mb-2 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   764→   764→              <Palette className="h-3.5 w-3.5 text-primary" /> Style
+   765→   765→            </label>
+   766→   766→            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+   767→   767→              {STYLES.map((s) => (
+   768→   768→                <button
+   769→   769→                  key={s}
+   770→   770→                  onClick={() => setStyle(s)}
+   771→   771→                  className={cn(
+   772→   772→                    "nexus-chip rounded-md border px-2 py-1.5 text-left text-[11px] font-medium",
+   773→   773→                    style === s ? "nexus-chip-active" : "border-border/50 bg-background/40 text-muted-foreground hover:text-foreground"
+   774→   774→                  )}
+   775→   775→                >
+   776→   776→                  {s}
+   777→   777→                </button>
+   778→   778→              ))}
+   779→   779→            </div>
+   780→   780→          </div>
+   781→   781→
+   782→   782→          {/* Aspect */}
+   783→   783→          <div className="nexus-card rounded-2xl p-4">
+   784→   784→            <label className="mb-2 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   785→   785→              <Ratio className="h-3.5 w-3.5 text-primary" /> Aspect Ratio
+   786→   786→            </label>
+   787→   787→            <div className="grid grid-cols-3 gap-1.5">
+   788→   788→              {ASPECTS.map((a) => {
+   789→   789→                const active = aspect === a.id;
+   790→   790→                return (
+   791→   791→                  <button
+   792→   792→                    key={a.id}
+   793→   793→                    onClick={() => setAspect(a.id)}
+   794→   794→                    className={cn(
+   795→   795→                      "nexus-chip flex flex-col items-center gap-1.5 rounded-md border px-1 py-2",
+   796→   796→                      active ? "nexus-chip-active" : "border-border/50 bg-background/40 hover:border-primary/30"
+   797→   797→                    )}
+   798→   798→                  >
+   799→   799→                    <div
+   800→   800→                      className={cn(
+   801→   801→                        "rounded-sm border",
+   802→   802→                        active ? "border-primary" : "border-muted-foreground/50"
+   803→   803→                      )}
+   804→   804→                      style={{
+   805→   805→                        width: a.w >= a.h ? 22 : (22 * a.w) / a.h,
+   806→   806→                        height: a.h >= a.w ? 16 : (16 * a.h) / a.w,
+   807→   807→                      }}
+   808→   808→                    />
+   809→   809→                    <span className={cn("font-mono text-[10px]", active ? "text-primary" : "text-muted-foreground")}>
+   810→   810→                      {a.id}
+   811→   811→                    </span>
+   812→   812→                  </button>
+   813→   813→                );
+   814→   814→              })}
+   815→   815→            </div>
+   816→   816→            <div className="mt-2 text-[10px] text-muted-foreground">
+   817→   817→              Output size: <span className="font-mono text-foreground">{aspectDef.size}px</span>
+   818→   818→            </div>
+   819→   819→          </div>
+   820→   820→
+   821→   821→          {/* v3: FLUX Calibration panel */}
+   822→   822→          <CalibrationPanel />
+   823→   823→
+   824→   824→          {/* v4: Pipeline Brain selector — uncensored judge/safety/evidence brain */}
+   825→   825→          <BrainSelector />
+   826→   826→
+   827→   827→          {/* Wardrobe (advanced) */}
+   828→   828→          <div className="nexus-card rounded-2xl p-4">
+   829→   829→            <button onClick={() => setAdvanced((v) => !v)} className="flex w-full items-center justify-between">
+   830→   830→              <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   831→   831→                <Shirt className="h-3.5 w-3.5 text-primary" /> Wardrobe / Detail Notes
+   832→   832→              </span>
+   833→   833→              <ChevronRight className={cn("h-3.5 w-3.5 text-muted-foreground transition", advanced && "rotate-90")} />
+   834→   834→            </button>
+   835→   835→            {advanced ? (
+   836→   836→              <input
+   837→   837→                value={wardrobe}
+   838→   838→                onChange={(e) => setWardrobe(e.target.value.slice(0, 500))}
+   839→   839→                placeholder="e.g. flowing red cloak, leather armor, silver circlet"
+   840→   840→                className="nexus-input mt-3 w-full rounded-lg border border-border/60 bg-background/60 px-3 py-2 text-sm outline-none"
+   841→   841→              />
+   842→   842→            ) : null}
+   843→   843→          </div>
+   844→   844→
+   845→   845→          {/* v3: LoRA stack */}
+   846→   846→          <LoraStack />
+   847→   847→
+   848→   848→          {/* Run button + Warm up Modal */}
+   849→   849→          <div className="flex gap-2">
+   850→   850→            <button
+   851→   851→              onClick={run}
+   852→   852→              disabled={running || !prompt.trim()}
+   853→   853→              className="nexus-btn-primary flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 font-mono text-sm font-semibold text-primary-foreground"
+   854→   854→            >
+   855→   855→              {running ? (
+   856→   856→                <>
+   857→   857→                  <Loader2 className="h-4 w-4 animate-spin" />
+   858→   858→                  Weaving…
+   859→   859→                </>
+   860→   860→              ) : (
+   861→   861→                <>
+   862→   862→                  <Wand2 className="h-4 w-4" />
+   863→   863→                  Run Pipeline
+   864→   864→                </>
+   865→   865→              )}
+   866→   866→            </button>
+   867→   867→            {running ? (
+   868→   868→              <div className="flex items-center gap-2 font-mono text-[10px] text-cyan-400/80">
+   869→   869→                <span className="nexus-pulse inline-block h-1.5 w-1.5 rounded-full bg-cyan-400" />
+   870→   870→                <span>ST3GG → FLUX → Judge → Nemotron · ~30-60s · {(elapsed / 1000).toFixed(1)}s elapsed</span>
+   871→   871→              </div>
+   872→   872→            ) : null}
+   873→   873→            <button
+   874→   874→              onClick={warmupModal}
+   875→   875→              disabled={warming || running}
+   876→   876→              title="Pre-warm the Modal GPU container so the first generation doesn't pay cold-start latency"
+   877→   877→              className={cn(
+   878→   878→                "flex items-center justify-center gap-1.5 rounded-xl border px-3 py-3 font-mono text-[11px] uppercase tracking-wider transition",
+   879→   879→                modalWarm === true
+   880→   880→                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+   881→   881→                  : modalWarm === false
+   882→   882→                    ? "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+   883→   883→                    : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+   884→   884→              )}
+   885→   885→            >
+   886→   886→              {warming ? (
+   887→   887→                <Loader2 className="h-4 w-4 animate-spin" />
+   888→   888→              ) : (
+   889→   889→                <Flame className="h-4 w-4" />
+   890→   890→              )}
+   891→   891→              <span className="hidden sm:inline">
+   892→   892→                {warming ? "Warming…" : modalWarm === true ? "Warm" : modalWarm === false ? "Cold" : "Warm up"}
+   893→   893→              </span>
+   894→   894→            </button>
+   895→   895→            {(result || error) && !running ? (
+   896→   896→              <button
+   897→   897→                onClick={clearResult}
+   898→   898→                className="rounded-xl border border-border/60 px-3 py-3 text-muted-foreground transition hover:text-foreground"
+   899→   899→                title="Clear"
+   900→   900→              >
+   901→   901→                <RotateCcw className="h-4 w-4" />
+   902→   902→              </button>
+   903→   903→            ) : null}
+   904→   904→          </div>
+   905→   905→
+   906→   906→          {/* Modal warm-up status strip */}
+   907→   907→          {modalWarm !== null && !running ? (
+   908→   908→            <div
+   909→   909→              className={cn(
+   910→   910→                "flex items-center gap-2 rounded-lg border px-3 py-2 text-[11px]",
+   911→   911→                modalWarm
+   912→   912→                  ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-300"
+   913→   913→                  : "border-amber-500/30 bg-amber-500/5 text-amber-300"
+   914→   914→              )}
+   915→   915→            >
+   916→   916→              <Cloud className="h-3.5 w-3.5 shrink-0" />
+   917→   917→              <span className="flex-1">
+   918→   918→                {modalWarm
+   919→   919→                  ? "Modal GPU container is warm — generation will be ~1.5–2s."
+   920→   920→                  : "Modal container is cold. First generation may take 1–7 min, or use z-ai fallback."}
+   921→   921→              </span>
+   922→   922→            </div>
+   923→   923→          ) : null}
+   924→   924→
+   925→   925→          {error ? (
+   926→   926→            <div className="nexus-rise rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-300">
+   927→   927→              <div className="mb-1 flex items-center gap-1.5 font-semibold">
+   928→   928→                <XCircle className="h-3.5 w-3.5" /> Pipeline Error
+   929→   929→              </div>
+   930→   930→              {error}
+   931→   931→            </div>
+   932→   932→          ) : null}
+   933→   933→        </div>
+   934→   934→
+   935→   935→        {/* RIGHT: pipeline + result */}
+   936→   936→        <div className="space-y-4">
+   937→   937→          {/* Pipeline progress */}
+   938→   938→          <div className="nexus-card relative overflow-hidden rounded-2xl p-4">
+   939→   939→            <div className="mb-3 flex items-center justify-between">
+   940→   940→              <h3 className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+   941→   941→                <span className="text-primary">◆</span> Pipeline Stages
+   942→   942→              </h3>
+   943→   943→              <div className="flex items-center gap-2">
+   944→   944→                {running ? (
+   945→   945→                  <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-cyan-400">
+   946→   946→                    <Clock className="h-3 w-3" /> {(elapsed / 1000).toFixed(1)}s
+   947→   947→                  </span>
+   948→   948→                ) : null}
+   949→   949→                {running ? (
+   950→   950→                  <span className="font-mono text-[10px] text-cyan-400">live · running</span>
+   951→   951→                ) : null}
+   952→   952→              </div>
+   953→   953→            </div>
+   954→   954→            {running ? <div className="absolute inset-x-0 top-0 h-0.5 nexus-sweep" /> : null}
+   955→   955→            <ol className="space-y-1.5">
+   956→   956→              {stages.map((st, i) => {
+   957→   957→                const def = pipelineStages.find((p) => p.id === st.id)!;
+   958→   958→                const Icon = stageIcon(st.id);
+   959→   959→                return (
+   960→   960→                  <motion.li
+   961→   961→                    key={st.id}
+   962→   962→                    layout
+   963→   963→                    initial={{ opacity: 0, x: -8 }}
+   964→   964→                    animate={{ opacity: 1, x: 0 }}
+   965→   965→                    transition={{ duration: 0.25, delay: i * 0.04 }}
+   966→   966→                    className={cn(
+   967→   967→                      "flex items-center gap-3 rounded-lg border px-3 py-2 transition",
+   968→   968→                      st.status === "running"
+   969→   969→                        ? "border-cyan-500/40 bg-cyan-500/5"
+   970→   970→                        : st.status === "done"
+   971→   971→                          ? "border-emerald-500/30 bg-emerald-500/5"
+   972→   972→                          : st.status === "error"
+   973→   973→                            ? "border-rose-500/40 bg-rose-500/5"
+   974→   974→                            : "border-border/40 bg-background/30"
+   975→   975→                    )}
+   976→   976→                  >
+   977→   977→                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-background/60">
+   978→   978→                      <Icon className="h-3.5 w-3.5" />
+   979→   979→                    </span>
+   980→   980→                    <div className="min-w-0 flex-1">
+   981→   981→                      <div className="flex items-center gap-2">
+   982→   982→                        <span className="font-mono text-[10px] text-muted-foreground">
+   983→   983→                          {String(i + 1).padStart(2, "0")}
+   984→   984→                        </span>
+   985→   985→                        <span className="truncate text-sm font-medium">{def.label}</span>
+   986→   986→                      </div>
+   987→   987→                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+   988→   988→                        <span className="font-mono">{def.model}</span>
+   989→   989→                        <span>·</span>
+   990→   990→                        <span>{def.params}</span>
+   991→   991→                      </div>
+   992→   992→                    </div>
+   993→   993→                    <div className="flex shrink-0 items-center gap-2">
+   994→   994→                      {st.message ? (
+   995→   995→                        <span className="hidden text-[10px] text-muted-foreground sm:inline">{st.message}</span>
+   996→   996→                      ) : null}
+   997→   997→                      {typeof st.ms === "number" ? (
+   998→   998→                        <span className="font-mono text-[10px] text-primary">
+   999→   999→                          {st.ms < 1000 ? `${st.ms}ms` : `${(st.ms / 1000).toFixed(1)}s`}
+  1000→  1000→                        </span>
+  1001→  1001→                      ) : null}
+  1002→  1002→                      {st.status === "running" ? (
+  1003→  1003→                        <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+  1004→  1004→                      ) : (
+  1005→  1005→                        <StatusDot status={st.status} />
+  1006→  1006→                      )}
+  1007→  1007→                    </div>
+  1008→  1008→                  </motion.li>
+  1009→  1009→                );
+  1010→  1010→              })}
+  1011→  1011→            </ol>
+  1012→  1012→          </div>
+  1013→  1013→
+  1014→  1014→          {/* Result */}
+  1015→  1015→          {result ? (
+  1016→  1016→            <ResultPanel
+  1017→  1017→              result={result}
+  1018→  1018→              onGallery={() => setView("gallery")}
+  1019→  1019→              onCompliance={() => setView("compliance")}
+  1020→  1020→              onRerun={() => {
+  1021→  1021→                loadSettings({
+  1022→  1022→                  prompt: result.prompt,
+  1023→  1023→                  style: result.style,
+  1024→  1024→                  aspect: result.aspect,
+  1025→  1025→                  wardrobe: result.wardrobe ?? "",
+  1026→  1026→                });
+  1027→  1027→                clearResult();
+  1028→  1028→                toast.info("Settings loaded — press Run to re-weave");
+  1029→  1029→              }}
+  1030→  1030→              onArtisticRetry={() => {
+  1031→  1031→                // M3: re-run the same prompt with artisticOverride=true
+  1032→  1032→                loadSettings({
+  1033→  1033→                  prompt: result.prompt,
+  1034→  1034→                  style: result.style,
+  1035→  1035→                  aspect: result.aspect,
+  1036→  1036→                  wardrobe: result.wardrobe ?? "",
+  1037→  1037→                });
+  1038→  1038→                clearResult();
+  1039→  1039→                // set the artistic override flag + auto-run on next tick
+  1040→  1040→                setArtisticOverride(true);
+  1041→  1041→                setTimeout(() => run(), 50);
+  1042→  1042→              }}
+  1043→  1043→            />
+  1044→  1044→          ) : null}
+  1045→  1045→          {!result && !running ? (
+  1046→  1046→            <EmptyState
+  1047→  1047→              onQuickStart={(p, s, a) => {
+  1048→  1048→                loadSettings({ prompt: p, style: s, aspect: a });
+  1049→  1049→                toast.success(`Loaded "${s}" template — press Run to weave`);
+  1050→  1050→              }}
+  1051→  1051→            />
+  1052→  1052→          ) : null}
+  1053→  1053→
+  1054→  1054→          {/* Recent Generations strip — always visible when there's history */}
+  1055→  1055→          <RecentGenerations
+  1056→  1056→            onPick={(g) => {
+  1057→  1057→              loadSettings({
+  1058→  1058→                prompt: g.prompt,
+  1059→  1059→                style: g.style,
+  1060→  1060→                aspect: g.aspect,
+  1061→  1061→                wardrobe: g.wardrobe ?? "",
+  1062→  1062→              });
+  1063→  1063→              toast.success("Loaded prior prompt — press Run to re-weave");
+  1064→  1064→            }}
+  1065→  1065→          />
+  1066→  1066→        </div>
+  1067→  1067→      </div>
+  1068→  1068→    </div>
+  1069→  1069→  );
+  1070→  1070→}
+  1071→  1071→
+  1072→  1072→/**
+  1073→  1073→ * RecentGenerations — horizontal thumbnail strip of the last 8 generations.
+  1074→  1074→ * Lets the user quickly re-load a prior prompt+settings into the form.
+  1075→  1075→ */
+  1076→  1076→function RecentGenerations({ onPick }: { onPick: (g: RecentGen) => void }) {
+  1077→  1077→  const { data, isLoading } = useQuery({
+  1078→  1078→    queryKey: ["nexus-recent-gens"],
+  1079→  1079→    queryFn: async () => {
+  1080→  1080→      const res = await fetch("/api/gallery?limit=8", { cache: "no-store" });
+  1081→  1081→      if (!res.ok) throw new Error("gallery");
+  1082→  1082→      const d = (await res.json()) as { items: RecentGen[] };
+  1083→  1083→      return d.items;
+  1084→  1084→    },
+  1085→  1085→    refetchInterval: 15000,
+  1086→  1086→  });
+  1087→  1087→
+  1088→  1088→  const items = data ?? [];
+  1089→  1089→  if (isLoading && items.length === 0) {
+  1090→  1090→    return (
+  1091→  1091→      <div className="nexus-card rounded-2xl p-4">
+  1092→  1092→        <div className="mb-3 flex items-center gap-1.5">
+  1093→  1093→          <Clock3 className="h-3.5 w-3.5 text-primary" />
+  1094→  1094→          <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+  1095→  1095→            Recent Generations
+  1096→  1096→          </span>
+  1097→  1097→        </div>
+  1098→  1098→        <div className="flex gap-2 overflow-hidden">
+  1099→  1099→          {[1, 2, 3, 4].map((i) => (
+  1100→  1100→            <div key={i} className="nexus-skeleton h-20 w-24 shrink-0 rounded-lg" />
+  1101→  1101→          ))}
+  1102→  1102→        </div>
+  1103→  1103→      </div>
+  1104→  1104→    );
+  1105→  1105→  }
+  1106→  1106→
+  1107→  1107→  if (items.length === 0) return null;
+  1108→  1108→
+  1109→  1109→  return (
+  1110→  1110→    <div className="nexus-card rounded-2xl p-4">
+  1111→  1111→      <div className="mb-3 flex items-center justify-between">
+  1112→  1112→        <div className="flex items-center gap-1.5">
+  1113→  1113→          <Clock3 className="h-3.5 w-3.5 text-primary" />
+  1114→  1114→          <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+  1115→  1115→            Recent Generations
+  1116→  1116→          </span>
+  1117→  1117→          <span className="font-mono text-[9px] text-muted-foreground/60">· {items.length}</span>
+  1118→  1118→        </div>
+  1119→  1119→        <span className="font-mono text-[9px] text-muted-foreground/60">
+  1120→  1120→          click to load prompt
+  1121→  1121→        </span>
+  1122→  1122→      </div>
+  1123→  1123→      <div className="flex gap-2 overflow-x-auto nexus-scroll pb-1">
+  1124→  1124→        {items.map((g) => (
+  1125→  1125→          <button
+  1126→  1126→            key={g.id}
+  1127→  1127→            onClick={() => onPick(g)}
+  1128→  1128→            className="group nexus-card-hover relative h-20 w-24 shrink-0 overflow-hidden rounded-lg border border-border/40 bg-background/40 transition hover:border-primary/40"
+  1129→  1129→            title={g.prompt}
+  1130→  1130→          >
+  1131→  1131→            {g.imagePath ? (
+  1132→  1132→               
+  1133→  1133→              <img
+  1134→  1134→                src={g.imagePath}
+  1135→  1135→                alt={g.prompt}
+  1136→  1136→                className="h-full w-full object-cover transition group-hover:scale-105"
+  1137→  1137→                loading="lazy"
+  1138→  1138→              />
+  1139→  1139→            ) : (
+  1140→  1140→              <div className="grid h-full w-full place-items-center text-muted-foreground">
+  1141→  1141→                <ImageIcon className="h-4 w-4" />
+  1142→  1142→              </div>
+  1143→  1143→            )}
+  1144→  1144→            {/* gradient overlay with verdict + score */}
+  1145→  1145→            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+  1146→  1146→            <div className="absolute bottom-1 left-1 right-1 flex items-center justify-between">
+  1147→  1147→              <span
+  1148→  1148→                className={cn(
+  1149→  1149→                  "rounded px-1 py-0.5 font-mono text-[8px] uppercase tracking-wider backdrop-blur",
+  1150→  1150→                  g.verdict === "approved"
+  1151→  1151→                    ? "bg-emerald-500/30 text-emerald-200"
+  1152→  1152→                    : g.verdict === "rejected"
+  1153→  1153→                      ? "bg-rose-500/30 text-rose-200"
+  1154→  1154→                      : "bg-amber-500/30 text-amber-200"
+  1155→  1155→                )}
+  1156→  1156→              >
+  1157→  1157→                {g.verdict?.slice(0, 4) ?? "—"}
+  1158→  1158→              </span>
+  1159→  1159→              {typeof g.overallScore === "number" ? (
+  1160→  1160→                <span className="rounded bg-black/60 px-1 py-0.5 font-mono text-[8px] text-foreground backdrop-blur">
+  1161→  1161→                  {Math.round(g.overallScore)}
+  1162→  1162→                </span>
+  1163→  1163→              ) : null}
+  1164→  1164→            </div>
+  1165→  1165→            {/* hover hint */}
+  1166→  1166→            <div className="absolute inset-0 grid place-items-center bg-black/40 opacity-0 transition group-hover:opacity-100">
+  1167→  1167→              <span className="flex items-center gap-1 rounded-md bg-primary/80 px-1.5 py-0.5 font-mono text-[9px] text-primary-foreground">
+  1168→  1168→                Load <ArrowRight className="h-2.5 w-2.5" />
+  1169→  1169→              </span>
+  1170→  1170→            </div>
+  1171→  1171→          </button>
+  1172→  1172→        ))}
+  1173→  1173→      </div>
+  1174→  1174→    </div>
+  1175→  1175→  );
+  1176→  1176→}
+  1177→  1177→
+  1178→  1178→interface RecentGen {
+  1179→  1179→  id: string;
+  1180→  1180→  prompt: string;
+  1181→  1181→  style: string;
+  1182→  1182→  aspect: string;
+  1183→  1183→  wardrobe?: string | null;
+  1184→  1184→  imagePath?: string | null;
+  1185→  1185→  verdict?: string | null;
+  1186→  1186→  overallScore?: number | null;
+  1187→  1187→  createdAt: string;
+  1188→  1188→}
+  1189→  1189→
+  1190→  1190→function stageIcon(id: StageId) {
+  1191→  1191→  switch (id) {
+  1192→  1192→    case "prompt":
+  1193→  1193→      return Sparkles;
+  1194→  1194→    case "flux":
+  1195→  1195→      return ImageIcon;
+  1196→  1196→    case "st3gg":
+  1197→  1197→      return ShieldMark;
+  1198→  1198→    case "judge":
+  1199→  1199→      return ScanEye;
+  1200→  1200→    case "nemotron":
+  1201→  1201→      return FileJson;
+  1202→  1202→    case "output":
+  1203→  1203→      return CheckCircle2;
+  1204→  1204→  }
+  1205→  1205→}
+  1206→  1206→
+  1207→  1207→function ShieldMark() {
+  1208→  1208→  return <AlertTriangle className="h-3.5 w-3.5" />;
+  1209→  1209→}
+  1210→  1210→
+  1211→  1211→function TemplateCard({ tpl, onUse }: { tpl: PromptTemplate; onUse: () => void }) {
+  1212→  1212→  return (
+  1213→  1213→    <button
+  1214→  1214→      onClick={onUse}
+  1215→  1215→      className="group nexus-card-hover rounded-lg border border-border/40 bg-background/30 p-2.5 text-left"
+  1216→  1216→    >
+  1217→  1217→      <div className="mb-1 flex items-center justify-between">
+  1218→  1218→        <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wider text-primary">
+  1219→  1219→          {tpl.category}
+  1220→  1220→        </span>
+  1221→  1221→        {tpl.style ? (
+  1222→  1222→          <span className="font-mono text-[8px] text-muted-foreground">{tpl.style}</span>
+  1223→  1223→        ) : null}
+  1224→  1224→      </div>
+  1225→  1225→      <div className="text-[11px] font-semibold leading-tight text-foreground">{tpl.title}</div>
+  1226→  1226→      <p className="mt-1 line-clamp-2 text-[9px] leading-snug text-muted-foreground">{tpl.prompt}</p>
+  1227→  1227→    </button>
+  1228→  1228→  );
+  1229→  1229→}
+  1230→  1230→
+  1231→  1231→function EmptyState({ onQuickStart }: { onQuickStart?: (prompt: string, style: string, aspect: string) => void }) {
+  1232→  1232→  const quickStarts: { prompt: string; style: string; aspect: string; label: string; emoji: string }[] = [
+  1233→  1233→    { prompt: "A lone astronaut discovering a bioluminescent forest on an alien moon, cinematic lighting", style: "cinematic", aspect: "16:9", label: "Astronaut", emoji: "🧑‍🚀" },
+  1234→  1234→    { prompt: "Portrait of a cyberpunk street vendor in neon-lit Tokyo rain, reflective puddles", style: "cyberpunk", aspect: "1:1", label: "Cyberpunk", emoji: "🌃" },
+  1235→  1235→    { prompt: "A majestic airship docked at a floating island at golden hour, volumetric clouds", style: "digital-art", aspect: "16:9", label: "Airship", emoji: "🛩️" },
+  1236→  1236→    { prompt: "Cozy bookshop interior with a sleeping cat, warm afternoon light through dusty windows", style: "oil-painting", aspect: "4:3", label: "Bookshop", emoji: "📚" },
+  1237→  1237→    { prompt: "A samurai standing in cherry blossom storm, ink-wash painting style", style: "watercolor", aspect: "3:4", label: "Samurai", emoji: "🌸" },
+  1238→  1238→    { prompt: "Abstract liquid metal sculpture on a black pedestal, studio lighting, hyper-detailed", style: "3d-render", aspect: "1:1", label: "Sculpture", emoji: "🗿" },
+  1239→  1239→  ];
+  1240→  1240→  return (
+  1241→  1241→    <div className="nexus-card relative overflow-hidden rounded-2xl p-6 sm:p-8">
+  1242→  1242→      <div className="absolute inset-0 nexus-scanline pointer-events-none opacity-20" />
+  1243→  1243→      <div className="relative grid min-h-[280px] place-items-center text-center">
+  1244→  1244→        <div className="nexus-rise w-full">
+  1245→  1245→          <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary nexus-glow nexus-float">
+  1246→  1246→            <Wand2 className="h-7 w-7" />
+  1247→  1247→            <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-amber-400 nexus-pulse" />
+  1248→  1248→          </div>
+  1249→  1249→          <h3 className="font-mono text-sm font-semibold">Awaiting first job</h3>
+  1250→  1250→          <p className="mx-auto mt-1.5 max-w-sm text-xs text-muted-foreground">
+  1251→  1251→            Enter a prompt, pick a style, and run the pipeline. Or launch a curated quick-start
+  1252→  1252→            below. The multi-model chain produces a governed image with structured evidence.
+  1253→  1253→          </p>
+  1254→  1254→          <div className="mx-auto mt-4 grid max-w-xs grid-cols-3 gap-2">
+  1255→  1255→            {[
+  1256→  1256→              { k: "Generate", v: "FLUX.1" },
+  1257→  1257→              { k: "Scan", v: "ST3GG" },
+  1258→  1258→              { k: "Judge", v: "CPM-V" },
+  1259→  1259→            ].map((s) => (
+  1260→  1260→              <div key={s.k} className="rounded-lg border border-border/40 bg-background/40 px-2 py-1.5">
+  1261→  1261→                <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{s.k}</div>
+  1262→  1262→                <div className="font-mono text-[10px] text-primary">{s.v}</div>
+  1263→  1263→              </div>
+  1264→  1264→            ))}
+  1265→  1265→          </div>
+  1266→  1266→
+  1267→  1267→          {onQuickStart ? (
+  1268→  1268→            <div className="mx-auto mt-6 max-w-2xl">
+  1269→  1269→              <div className="mb-2 flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1270→  1270→                <Zap className="h-3 w-3 text-amber-400" /> Quick Start
+  1271→  1271→              </div>
+  1272→  1272→              <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+  1273→  1273→                {quickStarts.map((q) => (
+  1274→  1274→                  <button
+  1275→  1275→                    key={q.label}
+  1276→  1276→                    onClick={() => onQuickStart(q.prompt, q.style, q.aspect)}
+  1277→  1277→                    className="nexus-press nexus-card-hover group rounded-lg border border-border/50 bg-background/40 p-2.5 text-left transition hover:border-primary/40"
+  1278→  1278→                  >
+  1279→  1279→                    <div className="mb-1 flex items-center gap-1.5">
+  1280→  1280→                      <span className="text-base">{q.emoji}</span>
+  1281→  1281→                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground group-hover:text-primary">
+  1282→  1282→                        {q.label}
+  1283→  1283→                      </span>
+  1284→  1284→                    </div>
+  1285→  1285→                    <div className="truncate text-[10px] text-muted-foreground/80" title={q.prompt}>
+  1286→  1286→                      {q.prompt.slice(0, 42)}…
+  1287→  1287→                    </div>
+  1288→  1288→                    <div className="mt-1 flex items-center gap-1">
+  1289→  1289→                      <span className="rounded bg-primary/10 px-1 py-0.5 font-mono text-[8px] text-primary">{q.style}</span>
+  1290→  1290→                      <span className="rounded bg-foreground/10 px-1 py-0.5 font-mono text-[8px] text-muted-foreground">{q.aspect}</span>
+  1291→  1291→                    </div>
+  1292→  1292→                  </button>
+  1293→  1293→                ))}
+  1294→  1294→              </div>
+  1295→  1295→            </div>
+  1296→  1296→          ) : null}
+  1297→  1297→        </div>
+  1298→  1298→      </div>
+  1299→  1299→    </div>
+  1300→  1300→  );
+  1301→  1301→}
+  1302→  1302→
+  1303→  1303→function ResultPanel({
+  1304→  1304→  result,
+  1305→  1305→  onGallery,
+  1306→  1306→  onCompliance,
+  1307→  1307→  onRerun,
+  1308→  1308→  onArtisticRetry,
+  1309→  1309→}: {
+  1310→  1310→  result: NonNullable<ReturnType<typeof useNexus.getState>["result"]>;
+  1311→  1311→  onGallery: () => void;
+  1312→  1312→  onCompliance: () => void;
+  1313→  1313→  onRerun: () => void;
+  1314→  1314→  onArtisticRetry: () => void;
+  1315→  1315→}) {
+  1316→  1316→  const totalMs = result.timings
+  1317→  1317→    ? Object.values(result.timings).reduce<number>((a, b) => a + (typeof b === "number" ? b : 0), 0)
+  1318→  1318→    : 0;
+  1319→  1319→
+  1320→  1320→  // M4: image-approval → video step-2 flow.
+  1321→  1321→  // `approved` flips to true when the user clicks either the "Approve &
+  1322→  1322→  // Animate →" affordance on the image, or the "Animate →" button inside the
+  1323→  1323→  // VideoStepCard. Once approved, a ✓ Approved badge appears on the image and
+  1324→  1324→  // the VideoStepCard is rendered (below the ProvenanceCard).
+  1325→  1325→  const [approved, setApproved] = useState(false);
+  1326→  1326→  const [videoPulse, setVideoPulse] = useState(false);
+  1327→  1327→  const videoCardRef = useRef<HTMLDivElement | null>(null);
+  1328→  1328→
+  1329→  1329→  const handleApproveAndAnimate = useCallback(() => {
+  1330→  1330→    setApproved(true);
+  1331→  1331→    setVideoPulse(true);
+  1332→  1332→    // Brief emerald ring pulse on the VideoStepCard so the user's eye lands on it.
+  1333→  1333→    window.setTimeout(() => setVideoPulse(false), 1500);
+  1334→  1334→    // Defer the scroll until the card has actually rendered.
+  1335→  1335→    window.setTimeout(() => {
+  1336→  1336→      videoCardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  1337→  1337→    }, 60);
+  1338→  1338→  }, []);
+  1339→  1339→
+  1340→  1340→  // Policy refusal — dedicated blocked-state UI (not an error).
+  1341→  1341→  if (result.status === "blocked") {
+  1342→  1342→    return (
+  1343→  1343→      <div className="space-y-4 nexus-rise">
+  1344→  1344→        <div className="nexus-card rounded-2xl border border-rose-500/40 bg-rose-500/5 p-5 sm:p-6">
+  1345→  1345→          <div className="flex items-start gap-3">
+  1346→  1346→            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-rose-500/15 text-rose-400 nexus-glow">
+  1347→  1347→              <ShieldAlert className="h-5 w-5" />
+  1348→  1348→            </div>
+  1349→  1349→            <div className="min-w-0 flex-1">
+  1350→  1350→              <div className="flex flex-wrap items-center gap-2">
+  1351→  1351→                <h3 className="font-mono text-sm font-semibold text-rose-200">
+  1352→  1352→                  Run blocked by safety policy
+  1353→  1353→                </h3>
+  1354→  1354→                {result.maturityTier ? (
+  1355→  1355→                  <span className="rounded bg-rose-500/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-rose-300">
+  1356→  1356→                    tier: {result.maturityTier}
+  1357→  1357→                  </span>
+  1358→  1358→                ) : null}
+  1359→  1359→              </div>
+  1360→  1360→              <p className="mt-1.5 text-sm text-rose-100/80">
+  1361→  1361→                {result.blockReason ?? "The pipeline refused to render this prompt."}
+  1362→  1362→              </p>
+  1363→  1363→              {result.safety ? (
+  1364→  1364→                <div className="mt-3 rounded-lg border border-rose-500/20 bg-background/40 p-2.5">
+  1365→  1365→                  <div className="mb-1.5 flex items-center justify-between">
+  1366→  1366→                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1367→  1367→                      ST3GG safety scan
+  1368→  1368→                    </span>
+  1369→  1369→                    <span className="font-mono text-[10px] text-rose-300">
+  1370→  1370→                      risk: {result.safety.riskLevel} · score {result.safety.score}
+  1371→  1371→                    </span>
+  1372→  1372→                  </div>
+  1373→  1373→                  <p className="text-[11px] leading-snug text-muted-foreground">
+  1374→  1374→                    {result.safety.rationale}
+  1375→  1375→                  </p>
+  1376→  1376→                  {result.safety.flags.length > 0 ? (
+  1377→  1377→                    <div className="mt-1.5 flex flex-wrap gap-1">
+  1378→  1378→                      {result.safety.flags.map((f) => (
+  1379→  1379→                        <span
+  1380→  1380→                          key={f}
+  1381→  1381→                          className="rounded border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 font-mono text-[9px] text-rose-300"
+  1382→  1382→                        >
+  1383→  1383→                          {f}
+  1384→  1384→                        </span>
+  1385→  1385→                      ))}
+  1386→  1386→                    </div>
+  1387→  1387→                  ) : null}
+  1388→  1388→                </div>
+  1389→  1389→              ) : null}
+  1390→  1390→              <div className="mt-3 flex flex-wrap gap-1.5">
+  1391→  1391→                <button
+  1392→  1392→                  type="button"
+  1393→  1393→                  onClick={onCompliance}
+  1394→  1394→                  className="inline-flex items-center gap-1.5 rounded-md border border-rose-500/40 bg-rose-500/10 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-rose-200 transition hover:bg-rose-500/20"
+  1395→  1395→                >
+  1396→  1396→                  <ShieldAlert className="h-3 w-3" /> Review policy in Compliance
+  1397→  1397→                  <ArrowRight className="h-3 w-3" />
+  1398→  1398→                </button>
+  1399→  1399→                <button
+  1400→  1400→                  type="button"
+  1401→  1401→                  onClick={onRerun}
+  1402→  1402→                  className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-background/40 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1403→  1403→                >
+  1404→  1404→                  <RotateCcw className="h-3 w-3" /> Adjust &amp; retry
+  1405→  1405→                </button>
+  1406→  1406→                {result.safety && result.safety.score >= 40 ? (
+  1407→  1407→                  <button
+  1408→  1408→                    type="button"
+  1409→  1409→                    onClick={() => {
+  1410→  1410→                      // M3: artistic-override retry — re-runs with a temporary
+  1411→  1411→                      // policy override that lowers the minSafetyScore threshold.
+  1412→  1412→                      // The HARD blocklist (csam, nonconsensual, real-person, etc.)
+  1413→  1413→                      // is ALWAYS enforced and cannot be overridden.
+  1414→  1414→                      toast.info("Retrying as artistic reference…", {
+  1415→  1415→                        description: "Hard blocklist still enforced. Non-distributable.",
+  1416→  1416→                      });
+  1417→  1417→                      onArtisticRetry();
+  1418→  1418→                    }}
+  1419→  1419→                    className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-amber-200 transition hover:bg-amber-500/20"
+  1420→  1420→                    title="Re-runs with a lowered safety threshold for artistic/editorial work. The hard blocklist (CSAM, nonconsensual, real-person) is always enforced."
+  1421→  1421→                  >
+  1422→  1422→                    <Palette className="h-3 w-3" /> Retry as artistic
+  1423→  1423→                  </button>
+  1424→  1424→                ) : null}
+  1425→  1425→              </div>
+  1426→  1426→            </div>
+  1427→  1427→          </div>
+  1428→  1428→        </div>
+  1429→  1429→
+  1430→  1430→        <ProvenanceCard result={result} />
+  1431→  1431→      </div>
+  1432→  1432→    );
+  1433→  1433→  }
+  1434→  1434→
+  1435→  1435→  return (
+  1436→  1436→    <div className="space-y-4 nexus-rise">
+  1437→  1437→      {/* Image + verdict */}
+  1438→  1438→      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,280px)]">
+  1439→  1439→        <div className="nexus-card group relative overflow-hidden rounded-2xl">
+  1440→  1440→          {result.imagePath ? (
+  1441→  1441→             
+  1442→  1442→            <img src={result.imagePath} alt={result.prompt} className="w-full object-cover" />
+  1443→  1443→          ) : (
+  1444→  1444→            <div className="grid aspect-square place-items-center text-muted-foreground">
+  1445→  1445→              <XCircle className="h-8 w-8" />
+  1446→  1446→            </div>
+  1447→  1447→          )}
+  1448→  1448→          {/* M4: ✓ Approved badge — top-right corner of the image, visible once the
+  1449→  1449→              user clicks either "Approve & Animate →" on the image or "Animate →"
+  1450→  1450→              in the VideoStepCard. Signifies the still was approved for I2V. */}
+  1451→  1451→          {result.imagePath && approved ? (
+  1452→  1452→            <div className="pointer-events-none absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded-md border border-emerald-500/50 bg-emerald-500/20 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-emerald-200 backdrop-blur-sm">
+  1453→  1453→              <CheckCircle2 className="h-3 w-3" /> Approved
+  1454→  1454→            </div>
+  1455→  1455→          ) : null}
+  1456→  1456→          {result.imagePath ? (
+  1457→  1457→            <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-1.5 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 transition group-hover:opacity-100">
+  1458→  1458→              {/* M4: Approve & Animate → scrolls to / pulses the VideoStepCard */}
+  1459→  1459→              <button
+  1460→  1460→                type="button"
+  1461→  1461→                onClick={handleApproveAndAnimate}
+  1462→  1462→                className="inline-flex items-center gap-1 rounded-md bg-primary/90 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-primary-foreground transition hover:bg-primary"
+  1463→  1463→                title="Approve this image and jump to the I2V video step"
+  1464→  1464→              >
+  1465→  1465→                <Film className="h-3 w-3" /> Approve &amp; Animate →
+  1466→  1466→              </button>
+  1467→  1467→              <button
+  1468→  1468→                onClick={() => downloadImage(result.imagePath!, `nexus-${result.id.slice(-8)}.png`)}
+  1469→  1469→                className="inline-flex items-center gap-1 rounded-md nexus-glass px-2 py-1 font-mono text-[10px] text-foreground transition hover:text-primary"
+  1470→  1470→              >
+  1471→  1471→                <Download className="h-3 w-3" /> PNG
+  1472→  1472→              </button>
+  1473→  1473→            </div>
+  1474→  1474→          ) : null}
+  1475→  1475→        </div>
+  1476→  1476→        <div className="nexus-card flex flex-col gap-3 p-4">
+  1477→  1477→          <div className="flex items-center justify-between">
+  1478→  1478→            <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Verdict</span>
+  1479→  1479→            <VerdictBadge verdict={result.verdict} size="sm" />
+  1480→  1480→          </div>
+  1481→  1481→          <div className="flex items-center gap-3">
+  1482→  1482→            <ScoreRing value={result.overallScore} size={76} label="Overall" />
+  1483→  1483→            <div className="flex-1 space-y-1.5">
+  1484→  1484→              {result.judge ? (
+  1485→  1485→                <>
+  1486→  1486→                  <ScoreBar label="Prompt adherence" value={result.judge.promptAdherence} />
+  1487→  1487→                  <ScoreBar label="Visual quality" value={result.judge.visualQuality} />
+  1488→  1488→                  <ScoreBar label="Aesthetic" value={result.judge.aestheticScore} />
+  1489→  1489→                  <ScoreBar label="Safety" value={result.judge.safetyScore} />
+  1490→  1490→                </>
+  1491→  1491→              ) : null}
+  1492→  1492→            </div>
+  1493→  1493→          </div>
+  1494→  1494→          {totalMs > 0 ? (
+  1495→  1495→            <div className="flex items-center justify-between rounded-lg border border-border/40 bg-background/30 px-2.5 py-1.5 text-[10px]">
+  1496→  1496→              <span className="flex items-center gap-1 text-muted-foreground">
+  1497→  1497→                <Clock className="h-3 w-3" /> Total
+  1498→  1498→              </span>
+  1499→  1499→              <span className="font-mono text-primary">{(totalMs / 1000).toFixed(1)}s</span>
+  1500→  1500→            </div>
+  1501→  1501→          ) : null}
+  1502→  1502→          <div className="mt-auto grid grid-cols-2 gap-1.5">
+  1503→  1503→            <button
+  1504→  1504→              onClick={onRerun}
+  1505→  1505→              className="rounded-lg border border-border/60 bg-background/40 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1506→  1506→            >
+  1507→  1507→              <RotateCcw className="mr-1 inline h-3 w-3" /> Re-run
+  1508→  1508→            </button>
+  1509→  1509→            <button
+  1510→  1510→              onClick={onGallery}
+  1511→  1511→              className="rounded-lg border border-border/60 bg-background/40 px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1512→  1512→            >
+  1513→  1513→              Gallery →
+  1514→  1514→            </button>
+  1515→  1515→          </div>
+  1516→  1516→        </div>
+  1517→  1517→      </div>
+  1518→  1518→
+  1519→  1519→      {/* Safety + Judge detail */}
+  1520→  1520→      <div className="grid gap-4 md:grid-cols-2">
+  1521→  1521→        {result.safety ? (
+  1522→  1522→          <DetailCard title="ST3GG Safety Scan" icon={<ShieldMark />} tone={result.safety.passed ? "ok" : "warn"}>
+  1523→  1523→            <div className="mb-3 flex items-center justify-between">
+  1524→  1524→              <span className="font-mono text-xs text-muted-foreground">Risk: {result.safety.riskLevel}</span>
+  1525→  1525→              <ScoreRing value={result.safety.score} size={48} />
+  1526→  1526→            </div>
+  1527→  1527→            <p className="text-xs text-muted-foreground">{result.safety.rationale}</p>
+  1528→  1528→            {result.safety.flags.length > 0 ? (
+  1529→  1529→              <div className="mt-2 flex flex-wrap gap-1">
+  1530→  1530→                {result.safety.flags.map((f) => (
+  1531→  1531→                  <span key={f} className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] text-amber-300">
+  1532→  1532→                    {f}
+  1533→  1533→                  </span>
+  1534→  1534→                ))}
+  1535→  1535→              </div>
+  1536→  1536→            ) : (
+  1537→  1537→              <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-400">
+  1538→  1538→                <CheckCircle2 className="h-3 w-3" /> No flags raised
+  1539→  1539→              </div>
+  1540→  1540→            )}
+  1541→  1541→          </DetailCard>
+  1542→  1542→        ) : null}
+  1543→  1543→
+  1544→  1544→        {result.judge ? (
+  1545→  1545→          <DetailCard
+  1546→  1546→            title="MiniCPM-V Judge Report"
+  1547→  1547→            icon={<ScanEye className="h-4 w-4" />}
+  1548→  1548→            tone={result.judge.verdict === "approved" ? "ok" : result.judge.verdict === "rejected" ? "bad" : "warn"}
+  1549→  1549→          >
+  1550→  1550→            <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+  1551→  1551→              <ScoreBar label="Wardrobe match" value={result.judge.wardrobeMatch} />
+  1552→  1552→              <ScoreBar label="Prompt adherence" value={result.judge.promptAdherence} />
+  1553→  1553→            </div>
+  1554→  1554→            {result.judge.strengths.length > 0 ? (
+  1555→  1555→              <div className="mt-3">
+  1556→  1556→                <div className="mb-1 text-[10px] uppercase tracking-wider text-emerald-400">Strengths</div>
+  1557→  1557→                <ul className="space-y-0.5 text-[11px] text-muted-foreground">
+  1558→  1558→                  {result.judge.strengths.map((s, i) => (
+  1559→  1559→                    <li key={i} className="flex gap-1.5">
+  1560→  1560→                      <span className="text-emerald-400">+</span>
+  1561→  1561→                      {s}
+  1562→  1562→                    </li>
+  1563→  1563→                  ))}
+  1564→  1564→                </ul>
+  1565→  1565→              </div>
+  1566→  1566→            ) : null}
+  1567→  1567→            {result.judge.weaknesses.length > 0 ? (
+  1568→  1568→              <div className="mt-2">
+  1569→  1569→                <div className="mb-1 text-[10px] uppercase tracking-wider text-rose-400">Weaknesses</div>
+  1570→  1570→                <ul className="space-y-0.5 text-[11px] text-muted-foreground">
+  1571→  1571→                  {result.judge.weaknesses.map((s, i) => (
+  1572→  1572→                    <li key={i} className="flex gap-1.5">
+  1573→  1573→                      <span className="text-rose-400">−</span>
+  1574→  1574→                      {s}
+  1575→  1575→                    </li>
+  1576→  1576→                  ))}
+  1577→  1577→                </ul>
+  1578→  1578→              </div>
+  1579→  1579→            ) : null}
+  1580→  1580→          </DetailCard>
+  1581→  1581→        ) : null}
+  1582→  1582→      </div>
+  1583→  1583→
+  1584→  1584→      {/* Nemotron evidence */}
+  1585→  1585→      {result.evidence ? (
+  1586→  1586→        <DetailCard
+  1587→  1587→          title="Nemotron Structured Evidence"
+  1588→  1588→          icon={<FileJson className="h-4 w-4" />}
+  1589→  1589→          action={
+  1590→  1590→            <button
+  1591→  1591→              onClick={() =>
+  1592→  1592→                downloadFile(
+  1593→  1593→                  `nexus-evidence-${result.id.slice(-8)}.json`,
+  1594→  1594→                  JSON.stringify(result.evidence, null, 2),
+  1595→  1595→                  "application/json"
+  1596→  1596→                )
+  1597→  1597→              }
+  1598→  1598→              className="inline-flex items-center gap-1 rounded-md border border-border/50 px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+  1599→  1599→            >
+  1600→  1600→              <Download className="h-3 w-3" /> Export
+  1601→  1601→            </button>
+  1602→  1602→          }
+  1603→  1603→        >
+  1604→  1604→          <div className="mb-3 flex flex-wrap items-center gap-2">
+  1605→  1605→            <VerdictBadge verdict={(result.evidence.finalVerdict as string) ?? result.verdict} size="sm" />
+  1606→  1606→            {typeof result.evidence.confidence === "number" ? (
+  1607→  1607→              <span className="font-mono text-[10px] text-muted-foreground">
+  1608→  1608→                confidence {String(result.evidence.confidence)}
+  1609→  1609→              </span>
+  1610→  1610→            ) : null}
+  1611→  1611→          </div>
+  1612→  1612→          {typeof result.evidence.summary === "string" ? (
+  1613→  1613→            <p className="mb-3 text-sm text-foreground">{result.evidence.summary}</p>
+  1614→  1614→          ) : null}
+  1615→  1615→          {Array.isArray(result.evidence.keyFindings) ? (
+  1616→  1616→            <div className="mb-3">
+  1617→  1617→              <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Key Findings</div>
+  1618→  1618→              <ul className="space-y-0.5 text-xs text-muted-foreground">
+  1619→  1619→                {result.evidence.keyFindings.map((f, i) => (
+  1620→  1620→                  <li key={i}>• {String(f)}</li>
+  1621→  1621→                ))}
+  1622→  1622→              </ul>
+  1623→  1623→            </div>
+  1624→  1624→          ) : null}
+  1625→  1625→          <details className="rounded-lg border border-border/40 bg-background/40">
+  1626→  1626→            <summary className="cursor-pointer px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1627→  1627→              Raw evidence JSON
+  1628→  1628→            </summary>
+  1629→  1629→            <pre className="nexus-scroll max-h-72 overflow-auto px-3 pb-3 text-[10px] leading-relaxed text-foreground/80">
+  1630→  1630→{JSON.stringify(result.evidence, null, 2)}
+  1631→  1631→            </pre>
+  1632→  1632→          </details>
+  1633→  1633→        </DetailCard>
+  1634→  1634→      ) : null}
+  1635→  1635→
+  1636→  1636→      {/* v4: OCR tool — extracts every text element from the generated image */}
+  1637→  1637→      {result.imagePath ? <OcrTool imagePath={result.imagePath} /> : null}
+  1638→  1638→
+  1639→  1639→      {/* v3: Provenance — calibration + LoRA + maturity tier */}
+  1640→  1640→      <ProvenanceCard result={result} />
+  1641→  1641→
+  1642→  1642→      {/* M4: image-approval → video step-2 (I2V). Renders only when the still
+  1643→  1643→          image is complete + on disk. The user can either click "Approve &
+  1644→  1644→          Animate →" on the image above (which scrolls to this card) or click
+  1645→  1645→          "Animate →" directly inside the card. */}
+  1646→  1646→      {result.status === "completed" && result.imagePath ? (
+  1647→  1647→        <VideoStepCard
+  1648→  1648→          result={result}
+  1649→  1649→          cardRef={videoCardRef}
+  1650→  1650→          pulse={videoPulse}
+  1651→  1651→          onApproved={() => setApproved(true)}
+  1652→  1652→        />
+  1653→  1653→      ) : null}
+  1654→  1654→    </div>
+  1655→  1655→  );
+  1656→  1656→}
+  1657→  1657→
+  1658→  1658→/**
+  1659→  1659→ * VideoStepCard (M4) — image-approval → video step-2 flow.
+  1660→  1660→ *
+  1661→  1661→ * Rendered inside ResultPanel after the still image is generated + approved.
+  1662→  1662→ * Lets the user pick a video engine, edit the motion prompt, choose a duration,
+  1663→  1663→ * and POST to /api/video/run. The backend is intentionally a stub in this
+  1664→  1664→ * sandbox (the Modal endpoint serves FLUX.1-schnell image only — no video GPU),
+  1665→  1665→ * so the card gracefully surfaces the structured errorMessage in a rose callout
+  1666→  1666→ * with a one-click link to Cost Lab.
+  1667→  1667→ */
+  1668→  1668→function VideoStepCard({
+  1669→  1669→  result,
+  1670→  1670→  cardRef,
+  1671→  1671→  pulse,
+  1672→  1672→  onApproved,
+  1673→  1673→}: {
+  1674→  1674→  result: RunResult;
+  1675→  1675→  cardRef: React.RefObject<HTMLDivElement | null>;
+  1676→  1676→  pulse: boolean;
+  1677→  1677→  onApproved: () => void;
+  1678→  1678→}) {
+  1679→  1679→  const videoEngines = enginesByType("video");
+  1680→  1680→  const [selectedEngineId, setSelectedEngineId] = useState<string>(
+  1681→  1681→    DEFAULT_VIDEO_ENGINE_ID
+  1682→  1682→  );
+  1683→  1683→  const [durationSec, setDurationSec] = useState<number>(4);
+  1684→  1684→  const [motionPrompt, setMotionPrompt] = useState<string>(
+  1685→  1685→    `${result.prompt} cinematic motion, smooth camera pan`
+  1686→  1686→  );
+  1687→  1687→  const [videoResult, setVideoResult] = useState<{
+  1688→  1688→    videoPath: string | null;
+  1689→  1689→    errorMessage: string | null;
+  1690→  1690→    loading: boolean;
+  1691→  1691→  }>({ videoPath: null, errorMessage: null, loading: false });
+  1692→  1692→  const abortRef = useRef<AbortController | null>(null);
+  1693→  1693→  const setView = useNexus((s) => s.setView);
+  1694→  1694→
+  1695→  1695→  const activeEngine = getEngine(selectedEngineId);
+  1696→  1696→
+  1697→  1697→  // Re-seed the motion prompt when the underlying image prompt changes
+  1698→  1698→  // (e.g. user re-runs with a new prompt and the same ResultPanel re-mounts).
+  1699→  1699→  useEffect(() => {
+  1700→  1700→    setMotionPrompt(`${result.prompt} cinematic motion, smooth camera pan`);
+  1701→  1701→  }, [result.prompt]);
+  1702→  1702→
+  1703→  1703→  // Cancel any in-flight video request when the card unmounts (e.g. user
+  1704→  1704→  // starts a new image run while the previous video is still animating).
+  1705→  1705→  useEffect(() => {
+  1706→  1706→    return () => {
+  1707→  1707→      abortRef.current?.abort();
+  1708→  1708→    };
+  1709→  1709→  }, []);
+  1710→  1710→
+  1711→  1711→  const handleAnimate = async () => {
+  1712→  1712→    if (!result.imagePath || !motionPrompt.trim()) return;
+  1713→  1713→    // Mark the image as approved for video step-2 (drives the ✓ Approved badge).
+  1714→  1714→    onApproved();
+  1715→  1715→
+  1716→  1716→    abortRef.current?.abort();
+  1717→  1717→    const ctrl = new AbortController();
+  1718→  1718→    abortRef.current = ctrl;
+  1719→  1719→    // Same 300s timeout pattern as the image pipeline run.
+  1720→  1720→    const timer = setTimeout(() => ctrl.abort(), 300_000);
+  1721→  1721→
+  1722→  1722→    setVideoResult({ videoPath: null, errorMessage: null, loading: true });
+  1723→  1723→
+  1724→  1724→    try {
+  1725→  1725→      const res = await fetch("/api/video/run", {
+  1726→  1726→        method: "POST",
+  1727→  1727→        headers: { "Content-Type": "application/json" },
+  1728→  1728→        body: JSON.stringify({
+  1729→  1729→          sourceImagePath: result.imagePath,
+  1730→  1730→          prompt: motionPrompt,
+  1731→  1731→          engineId: selectedEngineId,
+  1732→  1732→          durationSec,
+  1733→  1733→        }),
+  1734→  1734→        signal: ctrl.signal,
+  1735→  1735→      });
+  1736→  1736→
+  1737→  1737→      const data = (await res.json()) as {
+  1738→  1738→        videoPath?: string | null;
+  1739→  1739→        errorMessage?: string | null;
+  1740→  1740→        error?: string;
+  1741→  1741→      };
+  1742→  1742→
+  1743→  1743→      if (!res.ok) {
+  1744→  1744→        const errMsg =
+  1745→  1745→          (typeof data.error === "string" && data.error) ||
+  1746→  1746→          (typeof data.errorMessage === "string" && data.errorMessage) ||
+  1747→  1747→          `HTTP ${res.status}`;
+  1748→  1748→        throw new Error(errMsg);
+  1749→  1749→      }
+  1750→  1750→
+  1751→  1751→      setVideoResult({
+  1752→  1752→        videoPath: data.videoPath ?? null,
+  1753→  1753→        errorMessage: data.errorMessage ?? null,
+  1754→  1754→        loading: false,
+  1755→  1755→      });
+  1756→  1756→
+  1757→  1757→      if (data.videoPath) {
+  1758→  1758→        toast.success("Video generated", {
+  1759→  1759→          description: `${activeEngine.shortName} · ${durationSec}s · backend OK`,
+  1760→  1760→        });
+  1761→  1761→      } else if (data.errorMessage) {
+  1762→  1762→        toast.error("Video backend not available", {
+  1763→  1763→          description: data.errorMessage.slice(0, 140),
+  1764→  1764→        });
+  1765→  1765→      }
+  1766→  1766→    } catch (err) {
+  1767→  1767→      const msg = err instanceof Error ? err.message : String(err);
+  1768→  1768→      const aborted =
+  1769→  1769→        msg.toLowerCase().includes("abort") ||
+  1770→  1770→        msg.toLowerCase().includes("timeout");
+  1771→  1771→      const finalMsg = aborted
+  1772→  1772→        ? "Animation timed out after 5 minutes. Modal video runs typically take 30-120s warm; cold starts can take several minutes."
+  1773→  1773→        : msg;
+  1774→  1774→      setVideoResult({
+  1775→  1775→        videoPath: null,
+  1776→  1776→        errorMessage: finalMsg,
+  1777→  1777→        loading: false,
+  1778→  1778→      });
+  1779→  1779→      toast.error("Animation failed", {
+  1780→  1780→        description: finalMsg.slice(0, 140),
+  1781→  1781→      });
+  1782→  1782→    } finally {
+  1783→  1783→      clearTimeout(timer);
+  1784→  1784→    }
+  1785→  1785→  };
+  1786→  1786→
+  1787→  1787→  const loading = videoResult.loading;
+  1788→  1788→  const warmSec = Math.round(activeEngine.estWarmMs / 1000);
+  1789→  1789→
+  1790→  1790→  return (
+  1791→  1791→    <div
+  1792→  1792→      ref={cardRef}
+  1793→  1793→      className={cn(
+  1794→  1794→        "nexus-card rounded-2xl p-4 transition-all duration-500 sm:p-6",
+  1795→  1795→        pulse && "ring-2 ring-emerald-500/60 ring-offset-2 ring-offset-background"
+  1796→  1796→      )}
+  1797→  1797→    >
+  1798→  1798→      {/* Header */}
+  1799→  1799→      <div className="mb-3 flex items-start gap-3">
+  1800→  1800→        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary nexus-glow">
+  1801→  1801→          <Film className="h-4 w-4" />
+  1802→  1802→        </div>
+  1803→  1803→        <div className="min-w-0 flex-1">
+  1804→  1804→          <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1805→  1805→            Step 2 · Animate this image
+  1806→  1806→          </div>
+  1807→  1807→          <div className="text-sm font-semibold text-foreground">
+  1808→  1808→            Image-to-Video (I2V)
+  1809→  1809→          </div>
+  1810→  1810→        </div>
+  1811→  1811→        <Badge
+  1812→  1812→          variant="outline"
+  1813→  1813→          className="border-primary/40 text-primary"
+  1814→  1814→        >
+  1815→  1815→          <Video className="h-3 w-3" /> I2V
+  1816→  1816→        </Badge>
+  1817→  1817→      </div>
+  1818→  1818→
+  1819→  1819→      <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+  1820→  1820→        Send the approved still to a video engine for image-to-video (I2V)
+  1821→  1821→        generation. The image becomes the first frame of the output clip.
+  1822→  1822→      </p>
+  1823→  1823→
+  1824→  1824→      {/* Engine picker (radio chips) */}
+  1825→  1825→      <div className="mb-4">
+  1826→  1826→        <div className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1827→  1827→          Video engine
+  1828→  1828→        </div>
+  1829→  1829→        <div className="flex max-h-32 flex-wrap gap-1.5 overflow-y-auto nexus-scroll pr-1">
+  1830→  1830→          {videoEngines.map((eng) => {
+  1831→  1831→            const selected = eng.id === selectedEngineId;
+  1832→  1832→            const engWarmSec = Math.round(eng.estWarmMs / 1000);
+  1833→  1833→            return (
+  1834→  1834→              <button
+  1835→  1835→                key={eng.id}
+  1836→  1836→                type="button"
+  1837→  1837→                onClick={() => setSelectedEngineId(eng.id)}
+  1838→  1838→                aria-pressed={selected}
+  1839→  1839→                title={eng.description}
+  1840→  1840→                className={cn(
+  1841→  1841→                  "inline-flex items-center gap-1 rounded-md border px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition",
+  1842→  1842→                  selected
+  1843→  1843→                    ? "border-primary bg-primary/10 text-primary"
+  1844→  1844→                    : "border-border/60 bg-background/40 text-muted-foreground hover:border-primary/40 hover:text-foreground"
+  1845→  1845→                )}
+  1846→  1846→              >
+  1847→  1847→                {eng.shortName} · ~{engWarmSec}s warm
+  1848→  1848→              </button>
+  1849→  1849→            );
+  1850→  1850→          })}
+  1851→  1851→        </div>
+  1852→  1852→      </div>
+  1853→  1853→
+  1854→  1854→      {/* Motion prompt */}
+  1855→  1855→      <div className="mb-4">
+  1856→  1856→        <div className="mb-1.5 flex items-center justify-between">
+  1857→  1857→          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1858→  1858→            Motion prompt
+  1859→  1859→          </span>
+  1860→  1860→          <span className="font-mono text-[9px] text-muted-foreground/60">
+  1861→  1861→            {motionPrompt.length} chars
+  1862→  1862→          </span>
+  1863→  1863→        </div>
+  1864→  1864→        <Textarea
+  1865→  1865→          value={motionPrompt}
+  1866→  1866→          onChange={(e) => setMotionPrompt(e.target.value)}
+  1867→  1867→          rows={3}
+  1868→  1868→          maxLength={2000}
+  1869→  1869→          placeholder="Describe the desired motion…"
+  1870→  1870→          className="font-mono text-xs"
+  1871→  1871→          disabled={loading}
+  1872→  1872→        />
+  1873→  1873→      </div>
+  1874→  1874→
+  1875→  1875→      {/* Duration */}
+  1876→  1876→      <div className="mb-4">
+  1877→  1877→        <div className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+  1878→  1878→          Duration
+  1879→  1879→        </div>
+  1880→  1880→        <Select
+  1881→  1881→          value={String(durationSec)}
+  1882→  1882→          onValueChange={(v) => setDurationSec(Number(v))}
+  1883→  1883→          disabled={loading}
+  1884→  1884→        >
+  1885→  1885→          <SelectTrigger className="w-full sm:w-44" size="sm">
+  1886→  1886→            <SelectValue />
+  1887→  1887→          </SelectTrigger>
+  1888→  1888→          <SelectContent>
+  1889→  1889→            <SelectItem value="2">2 seconds</SelectItem>
+  1890→  1890→            <SelectItem value="4">4 seconds</SelectItem>
+  1891→  1891→            <SelectItem value="6">6 seconds</SelectItem>
+  1892→  1892→            <SelectItem value="10">10 seconds</SelectItem>
+  1893→  1893→          </SelectContent>
+  1894→  1894→        </Select>
+  1895→  1895→      </div>
+  1896→  1896→
+  1897→  1897→      {/* Animate button + warm estimate */}
+  1898→  1898→      <div className="flex flex-wrap items-center gap-2">
+  1899→  1899→        <Button
+  1900→  1900→          type="button"
+  1901→  1901→          onClick={handleAnimate}
+  1902→  1902→          disabled={loading || !motionPrompt.trim() || !result.imagePath}
+  1903→  1903→          className="gap-1.5"
+  1904→  1904→        >
+  1905→  1905→          {loading ? (
+  1906→  1906→            <>
+  1907→  1907→              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+  1908→  1908→              Animating on {activeEngine.shortName}…
+  1909→  1909→            </>
+  1910→  1910→          ) : (
+  1911→  1911→            <>
+  1912→  1912→              <Sparkles className="h-3.5 w-3.5" />
+  1913→  1913→              Animate →
+  1914→  1914→            </>
+  1915→  1915→          )}
+  1916→  1916→        </Button>
+  1917→  1917→        {!loading ? (
+  1918→  1918→          <span className="font-mono text-[10px] text-muted-foreground">
+  1919→  1919→            ~{warmSec}s warm · 30-120s total · cold starts longer
+  1920→  1920→          </span>
+  1921→  1921→        ) : null}
+  1922→  1922→      </div>
+  1923→  1923→
+  1924→  1924→      {/* Loading hint */}
+  1925→  1925→      {loading ? (
+  1926→  1926→        <div className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/5 px-2.5 py-1.5 text-[10px] leading-snug text-amber-200/90">
+  1927→  1927→          Animating on <strong>{activeEngine.shortName}</strong>… this can take
+  1928→  1928→          30-120s (cold starts longer). The page is still working — please don&apos;t
+  1929→  1929→          close it.
+  1930→  1930→        </div>
+  1931→  1931→      ) : null}
+  1932→  1932→
+  1933→  1933→      {/* Success result */}
+  1934→  1934→      {!loading && videoResult.videoPath ? (
+  1935→  1935→        <div className="mt-4 rounded-lg border border-emerald-500/40 bg-emerald-500/5 p-3">
+  1936→  1936→          <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-emerald-300">
+  1937→  1937→            <CheckCircle2 className="h-3 w-3" /> Video ready · {activeEngine.shortName} · {durationSec}s
+  1938→  1938→          </div>
+  1939→  1939→          <video
+  1940→  1940→            src={videoResult.videoPath}
+  1941→  1941→            controls
+  1942→  1942→            autoPlay
+  1943→  1943→            loop
+  1944→  1944→            muted
+  1945→  1945→            playsInline
+  1946→  1946→            className="w-full rounded-md border border-border/40 bg-black"
+  1947→  1947→          >
+  1948→  1948→            <track kind="captions" />
+  1949→  1949→          </video>
+  1950→  1950→          <div className="mt-2 flex flex-wrap gap-1.5">
+  1951→  1951→            <a
+  1952→  1952→              href={videoResult.videoPath}
+  1953→  1953→              download
+  1954→  1954→              className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-background/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1955→  1955→            >
+  1956→  1956→              <Download className="h-3 w-3" /> Download MP4
+  1957→  1957→            </a>
+  1958→  1958→            <button
+  1959→  1959→              type="button"
+  1960→  1960→              onClick={() => setView("gallery")}
+  1961→  1961→              className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-background/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1962→  1962→            >
+  1963→  1963→              <Play className="h-3 w-3" /> Open in Gallery
+  1964→  1964→            </button>
+  1965→  1965→          </div>
+  1966→  1966→        </div>
+  1967→  1967→      ) : null}
+  1968→  1968→
+  1969→  1969→      {/* Error result */}
+  1970→  1970→      {!loading && videoResult.errorMessage && !videoResult.videoPath ? (
+  1971→  1971→        <div className="mt-4 rounded-lg border border-rose-500/40 bg-rose-500/5 p-3">
+  1972→  1972→          <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-rose-300">
+  1973→  1973→            <ShieldAlert className="h-3 w-3" /> Video not available
+  1974→  1974→          </div>
+  1975→  1975→          <p className="text-xs leading-relaxed text-rose-100/90">
+  1976→  1976→            {videoResult.errorMessage}
+  1977→  1977→          </p>
+  1978→  1978→          <div className="mt-2 flex flex-wrap gap-1.5">
+  1979→  1979→            <button
+  1980→  1980→              type="button"
+  1981→  1981→              onClick={() => setView("costlab")}
+  1982→  1982→              className="inline-flex items-center gap-1 rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-rose-200 transition hover:bg-rose-500/20"
+  1983→  1983→            >
+  1984→  1984→              <ExternalLink className="h-3 w-3" /> Deploy a video Modal app in Cost Lab
+  1985→  1985→              <ArrowRight className="h-3 w-3" />
+  1986→  1986→            </button>
+  1987→  1987→            <a
+  1988→  1988→              href={activeEngine.hfUrl}
+  1989→  1989→              target="_blank"
+  1990→  1990→              rel="noopener noreferrer"
+  1991→  1991→              className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-background/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+  1992→  1992→            >
+  1993→  1993→              <ExternalLink className="h-3 w-3" /> {activeEngine.shortName} weights
+  1994→  1994→            </a>
+  1995→  1995→          </div>
+  1996→  1996→        </div>
+  1997→  1997→      ) : null}
+  1998→  1998→    </div>
+  1999→  1999→  );
+  2000→  2000→}
+
+[showing lines 1-2000 of 2002; use offset=2001 with limit to continue reading]

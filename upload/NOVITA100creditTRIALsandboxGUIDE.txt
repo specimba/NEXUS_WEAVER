@@ -1,0 +1,2083 @@
+"
+Sandbox
+Template
+Usage
+Quotas & Limits
+QUICK ACCESS
+Billing
+Pricing
+docs
+Docs
+Sandbox
+Credits Remaining:$0.0000
+canberkkaraerkek Personal
+Build Stateful Agents with Novita Sandbox
+
+    Run AI-generated code, tools, and browsers in secure cloud sandboxes
+    Scale from one sandbox to thousands for coding, data analysis, and RL workloads
+    Zero infrastructure management
+
+1
+Create API KEY
+2
+Install SDK
+
+You can install the SDK by executing the following commands.
+
+pip install novita-sandbox
+
+3
+Use SDK to Start Agent Sandbox
+
+Below is a simple example showing how to create a sandbox through the SDK and run specified commands.
+
+# main.py
+from novita_sandbox.code_interpreter import Sandbox
+
+# create sandbox
+sandbox = Sandbox.create()
+execution = sandbox.run_code("print('hello world')")
+print(execution.logs)
+
+# Close sandbox when no longer needed
+sandbox.kill()
+
+Execute the following commands to run the above code.
+
+export NOVITA_API_KEY=sk_***
+python3 main.py
+
+Voucher details
+Voucher	Effect Date	Expiration Date	Balance / Total	Applicable Products	Status
+Sandbox Free Usage	2026/07/02 00:00:00	2026/09/30 23:59:59	$100.0000 / $100.0000	Agent Sandbox	valid
+"
+
+"
+Home
+Model APIs
+Agent SandboxUpdate
+GPUs
+QUICK ACCESS
+Pricing
+Billing
+Quotas & Limits
+Account Settings
+docs
+Docs
+Pricing
+Credits Remaining:$0.0000
+canberkkaraerkek Personal
+CPU
+vCPUs	Unit Price
+1X CPU	$0.0000098/s
+2X CPU	$0.0000196/s
+3X CPU	$0.0000294/s
+4X CPU	$0.0000392/s
+5X CPU	$0.000049/s
+6X CPU	$0.0000588/s
+7X CPU	$0.0000686/s
+8X CPU	$0.0000784/s
+Memory
+Memory	Unit Price
+Valid values: multiples of 512 MiB, from 512 MiB to 8192 MiB	$0.0000032/GiB/s
+512 MiB	$0.0000016/s
+1 GiB	$0.0000032/s
+2 GiB	$0.0000064/s
+Storage
+Storage	Unit Price
+Each account includes 60 GB of free storage. Usage beyond this limit is billed on a pay-as-you-go basis.	$0.00009/GB/h
+Pricing - Console | Novita AI
+
+"
+https://novita.ai/docs/guides/sandbox-cli
+"
+# Installing CLI - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/sandbox-cli
+
+# Installing CLI
+
+Novita Agent Sandbox CLI is a command line tool that allows you to list, kill running [sandboxes](/docs/guides/sandbox-lifecycle), and manage [sandbox templates](/docs/guides/sandbox-template-quickstart).
+
+##
+
+[​](#installation)
+
+Installation
+
+You can install the CLI globally using npm:
+
+Bash
+
+```
+npm i -g novita-sandbox-cli
+```
+
+Last modified on June 4, 2026
+
+"
+
+https://novita.ai/docs/guides/sandbox-overview
+"
+# Overview - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/sandbox-overview
+
+# Overview
+
+Novita Agent Sandbox provides isolated, stateful execution environments for AI agents.
+You can use a Sandbox to run code, install dependencies, access files, use browsers, and preserve execution state across sessions without managing infrastructure.
+
+##
+
+[​](#core-concepts)
+
+Core Concepts
+
+Agent Sandbox is built around three core concepts: Sandbox, Template, and Snapshot.
+
+###
+
+[​](#sandbox)
+
+Sandbox
+
+A Sandbox is an isolated execution environment where your agent performs tasks.
+Inside a Sandbox, your agent can run commands, read and write files, install dependencies, and use browser-based workflows. Each Sandbox has its own filesystem and runtime environment.
+
+###
+
+[​](#template)
+
+Template
+
+A Template defines the environment a Sandbox starts with.
+Templates help you create consistent Sandboxes with predefined dependencies, configuration, and setup steps. Use Templates when you want multiple Sandboxes to start from the same prepared environment.
+
+###
+
+[​](#snapshot)
+
+Snapshot
+
+A Snapshot saves the current state of a Sandbox as a reusable environment.
+Snapshots are useful after you have configured a Sandbox, installed dependencies, or generated files that you want to reuse. New Sandboxes can be created from a Snapshot without repeating the same setup steps.
+
+##
+
+[​](#when-to-use-agent-sandbox)
+
+When to Use Agent Sandbox
+
+Agent Sandbox is designed for workloads where agents need an isolated environment to execute tasks, keep state, or reuse prepared environments.
+Common use cases include:
+
+- Coding agents that run code, install packages, and execute tests
+
+- Browser agents that automate web workflows
+
+- Data analysis agents that process files and generate reports
+
+- Research or RL workloads that need many isolated environments
+
+##
+
+[​](#pricing)
+
+Pricing
+
+Agent Sandbox provides per-second billing for CPU and RAM. Storage — encompassing templates, paused sandboxes, and snapshots — is now subject to daily charges. See the [pricing](/docs/guides/sandbox-pricing) page for more details.
+
+##
+
+[​](#getting-started)
+
+Getting Started
+
+You can start and manage your Agent Sandboxes through SDK or CLI. For details, please refer to the [quick start](/docs/guides/sandbox-your-first-agent-sandbox) page.
+
+Last modified on June 8, 2026
+
+"
+
+https://novita.ai/docs/guides/sandbox-pricing
+"
+# Pricing - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/sandbox-pricing
+
+# Pricing
+
+Agent Sandbox supports independent billing for CPU and RAM (memory) by the second, with on-demand usage and flexible billing.
+
+##
+
+[​](#billing-items)
+
+Billing Items
+
+Billing ItemDescriptionCPUBilled based on the number of vCPU cores used and usage duration (accurate to the second). Current pricing can be found on the [here](https://novita.ai/pricing?sandbox=1). No billing occurs after the Sandbox is stopped.RAM (memory)Billed based on allocated memory capacity and usage duration (accurate to the second). Current pricing can be found on the [here](https://novita.ai/pricing?sandbox=1). No billing occurs after the Sandbox is stopped.[Ephemeral Storage](/docs/guides/sandbox-filesystem)Each sandbox includes 20 GB of Ephemeral Storage while running. When a sandbox is paused, its data is retained as Persistent Storage.[Templates](/docs/guides/sandbox-template-quickstart)Currently free.
+
+##
+
+[​](#free-sandbox-usage)
+
+Free Sandbox Usage
+
+New users can complete a quick account setup survey to receive $100 in promotional credits for eligible Agent Sandbox usage. No credit card is required.
+Promotional credits are applied to eligible Agent Sandbox usage first, including CPU, RAM, and billable storage usage where applicable. After the credits are used up or expired, continued usage will be billed on a pay-as-you-go basis according to the current Agent Sandbox pricing.
+Credits may be subject to availability, validity period, usage scope, and quota limits. You can view your available credit balance, expiration date, and usage details on the [Payments](https://novita.ai/en/billing) page.
+Promotional credits do not change the underlying unit prices listed below.
+
+##
+
+[​](#pricing)
+
+Pricing
+
+- CPU
+
+vCPUs (cores)Unit Price1$0.0000098/s2$0.0000196/s3$0.0000294/s4$0.0000392/s5$0.000049/s6$0.0000588/s7$0.0000686/s8$0.0000784/s
+
+- RAM (memory)
+
+Memory (MiB)Unit PriceValid values: multiples of 512 MiB, from 512 MiB to 8192 MiB$0.0000032/GiB/s512 MiB$0.0000016/s1 GiB$0.0000032/s2 GiB$0.0000064/s
+
+- Storage
+
+Each sandbox includes 20 GB of Ephemeral Storage while running. When a sandbox is paused, its data is retained as Persistent Storage. Each account includes 60 GB of free Persistent Storage. Usage beyond the included free storage is billed at the standard rate.
+Storage StateUnit PriceEphemeral Storage for running sandboxesFree (20 GB per sandbox)Persistent Storage for paused sandboxes60 GB free per account, $0.00009/GB/h for usage beyond 60 GB free storage
+
+##
+
+[​](#get-bills)
+
+Get Bills
+
+You can view and export Agent Sandbox bills in “Billing - Billing Details - Usage-based Billing”.
+
+- Go to the [billing details page](https://novita.ai/billing/details);
+
+- Select the “Usage-based Billing” tab on the right, then click the “Agent Sandbox” secondary tab below;
+
+- You can set the “Time Range” and “Group By” filters;
+
+- You can click “Export” button after querying to export bill data as an .xlsx file.
+
+##
+
+[​](#overdue-payment-notice)
+
+Overdue Payment Notice
+
+If the account’s available balance (including available balance and voucher balance) is less than the bill to be paid, the account is considered overdue. Overdue payments will result in sandboxes being terminated and data loss, affecting your service. During usage, please ensure sufficient account balance. After overdue, the system will send relevant notification emails, please recharge promptly.
+You can confirm account balance and vouchers on the [payments](https://novita.ai/billing) page, recharge as needed.
+
+To avoid overdue payments affecting your service, it is recommended that you set up [low balance alerts](https://novita.ai/billing/balance-warning). When your account balance is less than the alert threshold you set, an notification email will be sent.
+
+The specific overdue payment impacts are as follows:
+
+- Unable to start new sandboxes.
+
+- Running sandboxes will be terminated.
+
+Last modified on June 25, 2026
+
+"
+
+https://novita.ai/docs/guides/quickstart
+"
+# Novita AI Get started
+
+> Get started with Novita AI quickly using our comprehensive Quickstart Guide. Hundreds of fast and affordable AI images, video, LLM APIs for 10000+ models. Fastest generation in just 2s, Pay-As-You-Go, a minimum of $0.0015 for each image, you can add your own models and avoid GPU maintenance.
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/quickstart
+
+# Quickstart
+
+Novita AI is the go-to inference platform for AI developers seeking a low-cost, reliable, and simple solution for shipping AI models. This is a quickstart guide to help you set up your account and get started.
+
+If you have questions, please check our [FAQs](/docs/guides/faq) first or [reach out to our support team on Discord](https://discord.gg/YyPRAzwp7P).
+
+##
+
+[​](#1-log-into-novita-ai)
+
+1. Log into [novita.ai](https://novita.ai/user/login?utm_source=getstarted)
+
+You can log in using Google or GitHub authentication, and a new account will be automatically created on your first login. You can also [sign up using your email address](https://novita.ai/user/register?utm_source=getstarted).
+
+##
+
+[​](#2-manage-api-key)
+
+2. Manage API Key
+
+Novita AI authenticates API access using Bearer authentication with an API Key in the request header, e.g., “Authorization: Bearer {API Key}”.
+If you need to access APIs, you can go to [Key Management](https://novita.ai/settings/key-management?utm_source=getstarted) setting page to create or manage your API keys.
+
+##
+
+[​](#3-maintain-sufficient-credit-balance-in-your-account)
+
+3. Maintain sufficient credit balance in your account
+
+We offer new users a voucher with some credit to try our products. To add more credit, please visit [Billing and Payments](https://novita.ai/billing?utm_source=getstarted) and follow the guide on [Payment Methods](/docs/guides/payment-methods).
+Also, to avoid any interruption to your service, please ensure your account has sufficient credit balance, and [Setup Automatic Top-up](/docs/guides/auto-top-up) is a recommended practice.
+
+Last modified on July 7, 2025
+
+"
+
+https://novita.ai/docs/guides/introduction
+"
+# Introduction - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/introduction
+
+# Introduction
+
+Use Novita AI with your agentNo install — paste into your agent chat:
+
+```
+Read https://raw.githubusercontent.com/novitalabs/novita-skills/main/skills/novita-ai/SKILL.md and use Novita AI for this task.
+```
+
+Optional — install once if your agent supports skills:
+
+```
+npx skills add novitalabs/novita-skills --skill novita-ai
+```
+
+The `novita-ai` skill covers model APIs, GPUs, Agent Sandbox, integrations, and troubleshooting. If your agent can run shell commands, you can ask it to install the skill for you.[View on GitHub →](https://github.com/novitalabs/novita-skills)
+
+Novita AI is the AI-Native Cloud for builders and agents: run models, scale GPUs, and build AI agents on one platform.
+
+## Quickstart
+
+Set up your account and get started.
+
+## Model APIs
+
+Ship top AI models with a simple API.
+
+## GPUs
+
+Need help running your own models? Get dedicated GPUs.
+
+## Agent Sandbox
+
+Securely run AI-generated code with full isolation and seamless agent integration.
+
+Last modified on June 8, 2026
+
+"
+
+https://novita.ai/docs/guides/llm-api
+https://novita.ai/docs/guides/llm-vision
+https://novita.ai/docs/guides/llm-recommended
+"
+# Recommended Models - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/llm-recommended
+
+# Recommended Models
+
+A list of recommended open models for common use cases.
+
+##
+
+[​](#which-open-models-should-i-use)
+
+Which open models should I use?
+
+Actually, there’s no single right answer! Here’s a curated list based on Novita internal testing, community feedback, and external benchmarks. We recommend using it as a starting point, and we will update it regularly as new models emerge.
+
+- Model sizes are marked as Small, Medium, or Large
+
+- For best latency, use small or medium models. For best quality, use large models or fine-tune medium or small models.
+
+- You can explore all models in the Novita Model Library
+
+Use CasesRecommended ModelsCode generation & reasoning[Deepseek-r1-0528](https://novita.ai/models/llm/deepseek-deepseek-r1-0528), [Deepseek-v3-0324](https://novita.ai/models/llm/deepseek-deepseek-v3-0324),[Qwen3-Coder-480B-A35B-Instruct](https://novita.ai/models/llm/qwen-qwen3-coder-480b-a35b-instruct)[,Qwen3-235B-A22B-Instruct-2507](https://novita.ai/models/llm/qwen-qwen3-235b-a22b-instruct-2507)_(Large) _[Kimi-K2-Instruct](https://novita.ai/models/llm/moonshotai-kimi-k2-instruct)[,GLM-4.5](https://novita.ai/models/llm/zai-org-glm-4.5)(Medium)General reasoning & planning[Deepseek-r1-0528](https://novita.ai/models/llm/deepseek-deepseek-r1-0528), [Deepseek-v3-0324](https://novita.ai/models/llm/deepseek-deepseek-v3-0324) (Large)
+[Qwen-2.5-72b-instruct](https://novita.ai/models/llm/qwen-qwen-2.5-72b-instruct), [Llama-3.3-70b-instruct](https://novita.ai/models/llm/meta-llama-llama-3.3-70b-instruct) (Medium)Function calling & tool use[Qwen3-235b-a22b-fp8](https://novita.ai/models/llm/qwen-qwen3-235b-a22b-fp8) (Large)
+Qwen 3 Family Models (Large/Medium/Small)Long context & summarization[Llama-4-maverick-17b-128e-instruct-fp8](https://novita.ai/models/llm/meta-llama-llama-4-maverick-17b-128e-instruct-fp8) (Large)
+[Llama-4-scout-17b-16e-instruct](https://novita.ai/models/llm/meta-llama-llama-4-scout-17b-16e-instruct) (Medium)Vision & document understanding[Llama-4-maverick-17b-128e-instruct-fp8](https://novita.ai/models/llm/meta-llama-llama-4-maverick-17b-128e-instruct-fp8) (Large)
+[Qwen2.5-vl-72b-instruct](https://novita.ai/models/llm/qwen-qwen2.5-vl-72b-instruct), [Llama-4-scout-17b-16e-instruct](https://novita.ai/models/llm/meta-llama-llama-4-scout-17b-16e-instruct) (Medium)Low-latency NLU & extraction[Llama-3.1-8b-instruct](https://novita.ai/models/llm/meta-llama-llama-3.1-8b-instruct), [Llama-3.2-3b-instruct](https://novita.ai/models/llm/meta-llama-llama-3.2-3b-instruct), [Llama-3.2-1b-instruct](https://novita.ai/models/llm/meta-llama-llama-3.2-1b-instruct) (Small)
+
+Last updated: August 1, 2025
+
+Last modified on January 19, 2026
+
+"
+
+https://novita.ai/docs/guides/model-apis-v2-to-v3-migration
+"
+# API V2 to V3 Migration Guide - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/model-apis-v2-to-v3-migration
+
+# API V2 to V3 Migration Guide
+
+##
+
+[​](#text-to-image)
+
+Text to Image
+
+###
+
+[​](#request-body-parameter-mapping)
+
+Request Body Parameter Mapping
+
+V2V3Descriptionextraobjectextraobjectenable_nsfw_detection
+booleanenable_nsfw_detection
+booleannsfw_detection_level
+Enum: `0, 1, 2`nsfw_detection_level
+Enum: `0, 1, 2`enable_progress_infoDeprecatedresponse_image_type
+Enum: `png`, `jpeg`response_image_type
+Enum: `png, webp, jpeg`V3 adds support for `webp`image formatrequestobjectNew Field
+All image generation parameters must be passed via the `request`in V3promptstring
+<lora:$sd_name:$weight>promptstringMoved Insidelorasobject[]Moved Inside
+Migrate LoRA usage: From `prompt` to `request.loras` parametermodel_namestringNew Field
+Name of lora, retrieve the corresponding sd_name_in_api value by invoking the [Get Model API](https://novita.ai/docs/api-reference/model-apis-get-model) endpoint with filter.types=lora as the query parameter.strengthnumber(float32)New Field
+The strength value of lora. The larger the value, the more biased the effect is towards lora, Range [0, 1]negative_promptstringnegative_promptstringMoved Insidesampler_namestringsampler_namestringMoved Insidebatch_sizeintegerimage_numintegerChanged
+`num_images` → `request.image_num`n_iterDeprecatedstepsstringstepsstringMoved Insidecfg_scaleintegerguidance_scale
+number(float32)Changed
+`cfg_scale`→ `request.guidance_scale`seedintegerseedintegerMoved InsideheightintegerheightintegerMoved Inside
+Range Change: [128, 2048].widthintegerwidthintegerMoved Inside
+Range Change: [128, 2048].model_namestringmodel_namestringMoved Inside
+This parameter specifies the name of the model checkpoint. Retrieve the corresponding sd_name value by invoking the [Query Model](https://novita.ai/docs/api-reference/model-apis-get-model) API with filter.types=checkpoint as the query parameter.restore_facesboolrestore_facesboolMoved Insiderestore_faces_modelDeprecatedsd_vaestringsd_vaestringMoved Insideclip_skipintegerclip_skipintegerMoved Insideenable_hrbooleanhires_fixobjectChanged
+`enable_hr`→ `request.hires_fix`hr_upscaler
+Enum:
+`Latent`, `ESRGAN_4x`, `R-ESRGAN 4x+`, `R-ESRGAN 4x+ Anime6B`upscaler
+Enum: `RealESRGAN_x4plus_anime_6B`, `RealESRNet_x4plus,Latent`Changed
+`hr_upscaler`→`request.hires_fix.upscaler`hr_scalenumberDeprecatedhr_resize_xintegertarget_widthintegerChanged
+`hr_resize_x`→ `request.hires_fix.target_width`hr_resize_yintegertarget_heightintegerChanged
+`hr_resize_y`→ `request.hires_fix.target_height`img_expire_ttlintegerDeprecated
+Default 3600ssd_refinerobjectrefinerobjectChanged
+`sd_refiner`→ `request.refiner`checkpointstringDeprecatedswitch_at
+number(float32)switch_at
+number(float32)Changed
+`sd_refiner.switch_at`→ `request.refiner.switch_at`controlnet_unitsobject[]Deprecated
+`img2img` Only
+
+###
+
+[​](#response-parameter-mapping)
+
+Response Parameter Mapping
+
+V2V3DescriptioncodeDeprecatedmsgDeprecateddataDeprecatedtask_idtask_idChanged
+`data.task_id`→ `task_id`warnDeprecated
+
+###
+
+[​](#example)
+
+Example
+
+## Text to Image V2
+
+- Request
+
+```
+curl --location "https://api.novita.ai/v2/txt2img" \
+--header "Authorization: Bearer {{API Key}}" \
+--header "Content-Type: application/json" \
+--data '{
+"extra": {
+"enable_nsfw_detection": false,
+"nsfw_detection_level": 0,
+"response_image_type": "jpeg"
+},
+"prompt": "(masterpiece, best quality, ultra-detailed:1.3), , 1girl, mecha armor, futuristic city background, glowing neon lights, dynamic pose, cyberpunk style, intricate mechanical details, (floating holographic interface:1.2), sparkling blue eyes, wind-blown hair, (steam and energy particles:1.1), cinematic lighting",
+"negative_prompt":"(worst quality, low quality:1.4), (deformed, distorted:1.3), disfigured, blurry, bad anatomy, extra limbs, (mutated hands:1.2), (text, watermark:1.5),
+overexposed, underexposed, (cartoonish:1.2), (simplistic background:1.3),
+grainy, (traditional drawing:1.2), (realistic:1.4), (noisy:1.3)",
+"sampler_name":"DPM++ 2M Karras",
+"batch_size": 1,
+"n_iter": 1,
+"steps": 25,
+"cfg_scale": 7,
+"seed": 65531,
+"height": 512,
+"width": 512,
+"model_name": "sd_xl_base_1.0.safetensors",
+"restore_faces": false,
+"restore_faces_model": "",
+"sd_vae": "",
+"clip_skip": 1,
+"enable_hr": true,
+"hr_upscaler": "Latent",
+"hr_scale": 2,
+"hr_resize_x": 1024,
+"hr_resize_y": 1024,
+"img_expire_ttl": 3600
+}'
+```
+
+- Response
+
+```
+{
+"code": 0,
+"msg": "",
+"data": {
+"task_id": "12905b6a-d436-4010-b199-d800130c0aab"
+}
+}
+```
+
+## Text to Image V3
+
+- Reqeust
+
+```
+curl --location 'https://api.novita.ai/v3/async/txt2img' \
+--header 'Authorization: Bearer {{API Key}}' \
+--header 'Content-Type: application/json' \
+--data '{
+"extra": {
+"enable_nsfw_detection": false,
+"nsfw_detection_level": 0,
+"response_image_type": "jpeg"
+},
+"request": {
+"prompt": "(masterpiece, best quality, ultra-detailed:1.3), 1girl, mecha armor, futuristic city background, glowing neon lights, dynamic pose, cyberpunk style, intricate mechanical details,(floating holographic interface:1.2), sparkling blue eyes, wind-blown hair, (steam and energy particles:1.1), cinematic lighting",
+"negative_prompt": "(worst quality, low quality:1.4), (deformed, distorted:1.3), disfigured,blurry, bad anatomy, extra limbs, (mutated hands:1.2), (text, watermark:1.5),overexposed, underexposed,(cartoonish:1.2), (simplistic background:1.3), grainy, (traditional drawing:1.2),(realistic:1.4), (noisy:1.3)",
+"model_name": "sd_xl_base_1.0.safetensors",
+"width": 512,
+"height": 512,
+"image_num": 1,
+"steps": 25,
+"seed": 65531,
+"restore_faces": false,
+"clip_skip": 1,
+"sampler_name":"DPM++ 2M Karras",
+"guidance_scale": 7,
+"hires_fix": {
+"target_width": 1024,
+"target_height": 1024,
+"strength": 0.8,
+"upscaler": "Latent"
+},
+"loras": [
+{
+"model_name": "AnimeStyle_XL_v1_AutoRunMech_103883",
+"strength": 0.8
+}
+]
+}
+}'
+```
+
+- Repspone
+
+```
+{
+"task_id":"0696ce57-22df-4a89-9efc-80c386a82dbd"
+}
+```
+
+##
+
+[​](#image-to-image)
+
+Image to Image
+
+###
+
+[​](#request-body-parameter-mapping-2)
+
+Request Body Parameter Mapping
+
+V2V3Descriptionextraobjectextraobjectenable_nsfw_detection
+booleanenable_nsfw_detection
+booleannsfw_detection_level
+Enum: `0, 1, 2`nsfw_detection_level
+Enum: `0, 1, 2`enable_progress_infoDeprecatedresponse_image_type
+Enum: `png`, `jpeg`response_image_type
+Enum: `png, webp, jpeg`V3 adds support for `webp`image formatrequestobjectNew field
+All image generation parameters must be passed via the `request`in V3promptstring
+<lora:$sd_name:$weight>promptstringMoved Insidelorasobject[]Moved Inside
+Migrate LoRA usage: From `prompt` to `request.loras` parametermodel_namestringNew Field
+Name of lora, retrieve the corresponding sd_name_in_api value by invoking the [Get Model API](https://novita.ai/docs/api-reference/model-apis-get-model) endpoint with filter.types=lora as the query parameter.strength
+number(float32)New Field
+The strength value of lora. The larger the value, the more biased the effect is towards lora, Range [0, 1]negative_promptstringnegative_prompt
+stringMoved Insidesampler_namestringsampler_namestringMoved Insidebatch_sizeintegerimage_numintegerChanged
+`batch_size`→ `request.image_num`n_iterintegerDeprecatedstepsstringstepsstringMoved Insidecfg_scaleintegerguidance_scale
+number(float32)Changed
+`cfg_scale`→ `request.guidance_scale`seedintegerseedintegerMoved InsideheightintegerheightintegerMoved Inside
+Range Change: [128, 2048].widthintegerwidthintegerMoved Inside
+Range Change: [128, 2048].model_namestringmodel_namestringMoved Inside
+This parameter specifies the name of the model checkpoint. Retrieve the corresponding sd_name value by invoking the [Query Model](https://novita.ai/docs/api-reference/model-apis-get-model) API with filter.types=checkpoint as the query parameter.init_imagesstring[]image_base64stringChanged
+`init_images`→ `request.image_base64`denoising_strength
+number(float)strength
+number(float)Changed
+`denoising_strength`→ `request.strength`restore_facesboolDeprecatedsd_vaestringsd_vaestringMoved Insideclip_skipintegerclip_skipintegerMoved InsidemaskstringDeprecated
+Recommendation: Use V3 Inpainting APImask_blurintegerDeprecated
+Recommendation: Use V3 Inpainting APIresize_modeintegerDeprecatedimage_cfg_scaleintegerDeprecatedinpainting_fillintegerDeprecated
+Recommendation: Use V3 Inpainting APIinpaint_full_resintegerDeprecated
+Recommendation: Use V3 Inpainting APIinpaint_full_res_padding
+integerDeprecated
+Recommendation: Use V3 Inpainting APIinpainting_mask_invert
+integerDeprecated
+Recommendation: Use V3 Inpainting APIinitial_noise_multiplier
+number(float32)Deprecatedimg_expire_ttlintegerDeprecated
+Default 3600ssd_refinerobjectrefinerobjectChanged
+`sd_refiner`→ `request.refiner`checkpointDeprecatedswitch_at
+number(float32)switch_at
+number(float32)Moved InsidecontrolnetobjectNew Fieldcontrolnet_unitsobject[]unitsobject[]Changed
+`controlnet_units`→ `request.controlnet.units`modelstringmodel_name
+stringChanged
+`controlnet_units.model`→
+`request.controlnet.units.model_name`weightnumberstrength
+number(float32)Changed
+`controlnet_units.weight`→
+`request.controlnet.units.strength`input_imagestringimage_base64
+stringChanged
+`controlnet_units.input_image`→
+`request.controlnet.units.image_base64`modulestring,Enumpreprocessor
+string,EnumChanged
+`controlnet_units.module`→
+`request.controlnet.units.preprocessor`control_modeDeprecatedmaskDeprecated
+Recommendation: Use V3 Inpainting APIresize_modeDeprecatedprocessor_resDeprecatedthreshold_aDeprecatedthreshold_bDeprecatedguidance_start
+number(float32)guidance_start
+number(float32)Moved Insideguidance_end
+number(float32)guidance_end
+number(float32)Moved Insidepixel_perfectDeprecated
+
+###
+
+[​](#response-parameter-mapping-2)
+
+Response Parameter Mapping
+
+V2V3DescriptioncodeDeprecatedmsgDeprecateddataDeprecatedtask_idtask_idChanged
+`data.task_id`→ `task_id`warnDeprecated
+
+###
+
+[​](#example-2)
+
+Example
+
+## Image to Image V2
+
+- Request
+
+```
+curl --request POST \
+--url https://api.novita.ai/v2/img2img \
+--header 'Authorization: ' \
+--header 'Content-Type: application/json' \
+--data '{
+"extra": {
+"enable_nsfw_detection": false,
+"nsfw_detection_level": 0,
+"response_image_type": "png"
+},
+"prompt": "realistic, photograph, (masterpiece), 8k quality, (detailed eyes:1.2), (highest quality:1.1), highly detailed, majestic, top quality, best quality, newest, ai-generated, (intricate details:1.1), extremely beautiful, elegant, majestic, immersive background+, (detailed face, perfect face), In the heart of a vibrant garden, a girl with red hair and brown eyes sits in contemplation of the nature around her.",
+"negative_prompt": "(worst quality:1.5), (low quality:1.5), (normal quality:1.5), anime, cartoon, painting, drawing, illustration, manga, sketch, nudity, young, child, hairband, headband, horns, lowres, bad anatomy, bad hands, multiple eyebrow, (cropped), extra limb, missing limbs, deformed hands, long neck, long body, long torso, (bad hands), signature, username, artist name, conjoined fingers, deformed fingers, ugly eyes, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, grain, jpeg artifacts",
+"sampler_name":"DPM++ 2M Karras",
+"batch_size": 1,
+"n_iter": 1,
+"steps": 25,
+"cfg_scale": 7.5,
+"seed": 765824,
+"height": 768,
+"width": 512,
+"model_name": "cyberrealistic_v31_62396.safetensors",
+"init_images": [
+""
+],
+"denoising_strength": 0.8,
+"restore_faces": false,
+"clip_skip": 1,
+"img_expire_ttl": 3600,
+"controlnet_units": {
+"model": "control_v11p_sd15_lineart",
+"weight": 1,
+"input_image": "",
+"module": "lineart",
+"guidance_start": 0,
+"guidance_end": 1
+}
+}'
+```
+
+- Response
+
+```
+{
+"code": 0,
+"msg": "",
+"data": {
+"task_id": "a1b0d99b-2ef0-4b20-8eeb-c641ae84ed45"
+}
+}
+```
+
+## Image to Image V3
+
+- Request
+
+```
+curl --request POST \
+--url https://api.novita.ai/v3/async/img2img \
+--header 'Authorization: ' \
+--header 'Content-Type: ' \
+--data '{
+"extra": {
+"enable_nsfw_detection": false,
+"nsfw_detection_level": 0,
+"response_image_type": "png"
+},
+"request": {
+"prompt": "realistic, photograph, (masterpiece), 8k quality, (detailed eyes:1.2), (highest quality:1.1), highly detailed, majestic, top quality, best quality, newest, ai-generated, (intricate details:1.1), extremely beautiful, elegant, majestic, immersive background+, (detailed face, perfect face), In the heart of a vibrant garden, a girl with red hair and brown eyes sits in contemplation of the nature around her.",
+"negative_prompt": "(worst quality:1.5), (low quality:1.5), (normal quality:1.5), anime, cartoon, painting, drawing, illustration, manga, sketch, nudity, young, child, hairband, headband, horns, lowres, bad anatomy, bad hands, multiple eyebrow, (cropped), extra limb, missing limbs, deformed hands, long neck, long body, long torso, (bad hands), signature, username, artist name, conjoined fingers, deformed fingers, ugly eyes, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, grain, jpeg artifacts",
+"sampler_name": "DPM++ 2M Karras",
+"image_num": 1,
+"steps": 25,
+"guidance_scale": 7.5,
+"seed": 765824,
+"height": 768,
+"width": 512,
+"model_name": "cyberrealistic_v31_62396.safetensors",
+"image_base64": "",
+"strength": 0.8,
+"clip_skip": 1,
+"controlnet": {
+"units": [
+{
+"model_name": "control_v11p_sd15_lineart",
+"strength": 1,
+"image_base64": "",
+"preprocessor": "lineart",
+"guidance_start": 0,
+"guidance_end": 1
+}
+]
+}
+}
+}'
+```
+
+- Response
+
+```
+{
+"task_id": "9490dde7-cd28-493e-9db0-8a38a65bf5e6"
+}
+```
+
+Last modified on April 9, 2025
+
+"
+
+https://novita.ai/docs/guides/novitaclaw
+
+"
+# NovitaClaw - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/novitaclaw
+
+# NovitaClaw
+
+Deploy a persistent OpenClaw agent on [Novita Agent Sandbox](https://novita.ai/sandbox) with one command, then manage it from CLI, Web UI, or automation scripts. No session cap — your instance runs 24/7 for as long as you need it.
+
+##
+
+[​](#what’s-new-in-v1-6-0)
+
+What’s New in v1.6.0
+
+- Gateway Config Export / Import — Back up, restore, and migrate your OpenClaw configuration across sandboxes. Export to stdout or file, import with automatic JSON validation and Gateway restart. Supports cross-sandbox migration workflows.
+
+Bash
+
+```
+# Export config
+novitaclaw gateway config export -o config.json
+# Import into another sandbox
+novitaclaw gateway config import config.json
+```
+
+- ClawHub Skill Install — Install OpenClaw extension skills from ClawHub directly into a sandbox. Skills are available immediately with no Gateway restart required.
+
+Bash
+
+```
+novitaclaw skill install sonoscli
+```
+
+###
+
+[​](#previous-releases)
+
+Previous Releases
+
+- Telegram Channel (CLI) — Polling and Webhook modes for connecting your agent to Telegram. [Setup guide](/docs/guides/novitaclaw-configuration#telegram)
+
+- Slack Channel — Socket and HTTP modes for connecting your agent to Slack. [Setup guide](/docs/guides/novitaclaw-configuration#slack)
+
+- Install Script Improvements — Install directory changed to `~/.novitaclaw-cli`, improved `update` command with PEP 668 support and symlink recovery
+
+- On-Demand Mode — Sandbox auto-pauses after idle, resumes on access. Zero billing while paused. [Learn more](/docs/guides/novitaclaw-configuration#on-demand-mode)
+
+- Feishu Channel — Connect your agent to Feishu (Lark) via Webhook or Event mode. [Setup guide](/docs/guides/novitaclaw-configuration#feishu)
+
+- Web Terminal — Browser-based terminal access to your sandbox, no SSH required
+
+- File Manager — Browse and manage workspace files directly from the browser
+
+- systemd Service Management — Gateway, Web Terminal, and File Manager are fully managed by systemd with automatic restart on failure
+
+- Crash Auto-Recovery — Automatic diagnostics, repair, and service restoration on repeated crashes
+
+- Config Auto-Backup — Every config write creates an automatic backup; crash recovery restores from the latest known-good backup
+
+To use the new features, please upgrade your CLI:
+
+macOS / Linux
+
+```
+curl -fsSL https://novitaclaw.novita.ai/install.sh | bash
+```
+
+Windows (PowerShell)
+
+```
+irm https://novitaclaw.novita.ai/install.ps1 | iex
+```
+
+##
+
+[​](#getting-started)
+
+Getting Started
+
+###
+
+[​](#prerequisites)
+
+Prerequisites
+
+- Python installed
+
+- A Novita API key (create/manage keys in [Key Management](https://novita.ai/docs/guides/quickstart#2-manage-api-key))
+
+How to install Python
+
+Windows[Download the Python installer](https://www.python.org/downloads/) and run it. Check “Add Python to PATH” before clicking Install Now — skipping this is the most common reason beginners hit errors later.macOSOpen Terminal and run:
+
+Bash
+
+```
+python3 --version
+```
+
+If you see Python 3.10 or higher, you’re good. If Terminal prompts you to install Command Line Developer Tools, click Install and wait a few minutes.Linux (Ubuntu / Debian)
+
+Bash
+
+```
+sudo apt update && sudo apt install python3 python3-pip -y
+```
+
+###
+
+[​](#step-1-install-novitaclaw)
+
+Step 1: Install NovitaClaw
+
+macOS / Linux
+
+Windows PowerShell
+
+```
+sudo pip3 install novitaclaw
+```
+
+After installation, verify by running `novitaclaw --help`. If you see a list of commands, you’re all set.
+
+Mac users: If you get `zsh: command not found: novitaclaw` after installation, run:
+
+Bash
+
+```
+echo 'export PATH="'$(python3 -m site --user-base)'/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+###
+
+[​](#step-2-set-your-api-key)
+
+Step 2: Set your API key
+
+macOS / Linux
+
+Windows PowerShell
+
+```
+export NOVITA_API_KEY=sk_your_api_key
+```
+
+###
+
+[​](#step-3-launch-your-instance)
+
+Step 3: Launch your instance
+
+Bash
+
+```
+novitaclaw launch
+```
+
+On success, the CLI returns:
+
+- Web UI URL — Chat with your agent
+
+- Gateway WebSocket URL & Token — For programmatic access
+
+- Web Terminal URL — Terminal access to the sandbox in your browser
+
+- File Manager URL — Browse and manage workspace files
+
+- Login credentials — Username and password for Web Terminal & File Manager
+
+![NovitaClaw launch result](https://mintcdn.com/novitaai/ydHruENOsMtbfOFu/guides/images/openclaw-cli/launch-result.png?fit=max&auto=format&n=ydHruENOsMtbfOFu&q=85&s=2ecf75c461fa4b83cba6f949233bc5f2)
+
+Open the returned Web UI URL and go to the `Chat` tab to start using your agent.
+
+###
+
+[​](#web-terminal)
+
+Web Terminal
+
+The Web Terminal provides browser-based terminal access to your sandbox environment. Open the Web Terminal URL returned by the launch command and log in with the provided credentials. This gives you a full shell session — install packages, inspect logs, or debug your agent directly.
+
+###
+
+[​](#file-manager)
+
+File Manager
+
+The File Manager lets you browse, upload, download, and manage files in the sandbox workspace through a web interface. Open the File Manager URL and log in with the same credentials. Use it to view agent workspace files, edit configurations, or transfer files without needing CLI access.
+
+For existing sandboxes launched before these services were available, you can add them retroactively:
+
+Bash
+
+```
+novitaclaw services setup --api-key YOUR_API_KEY
+```
+
+##
+
+[​](#pricing)
+
+Pricing
+
+What you useWhat you paySandbox runtime[Sandbox rates](https://novita.ai/pricing?sandbox=1)Novita-hosted LLMs[Model rates](https://novita.ai/pricing)Third-party LLMsSandbox runtime only
+
+Last modified on April 10, 2026
+
+# Configuration - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/novitaclaw-configuration
+
+# Configuration
+
+Configure models, connect external messaging channels, set up on-demand mode, and understand the service reliability features of your NovitaClaw instance.
+
+##
+
+[​](#on-demand-mode)
+
+On-Demand Mode
+
+On-demand mode automatically pauses your sandbox after a configurable idle period and resumes it on access. Ideal for low-traffic AI assistants, webhook-based IM integrations, and scheduled tasks. Zero billing while paused.
+
+###
+
+[​](#launching-an-on-demand-sandbox)
+
+Launching an On-Demand Sandbox
+
+Bash
+
+```
+# Default idle timeout: 300 seconds
+novitaclaw launch --type on-demand
+
+# Custom idle timeout (60–86400 seconds)
+novitaclaw launch --type on-demand --idle-timeout 600
+```
+
+On-demand mode cannot be combined with `--mode node`.
+
+###
+
+[​](#manual-pause-and-resume)
+
+Manual Pause and Resume
+
+Bash
+
+```
+# Pause a sandbox (zero billing while paused)
+novitaclaw pause
+
+# Resume a sandbox (~1s to restore to pre-pause state)
+novitaclaw resume
+```
+
+###
+
+[​](#runtime-configuration)
+
+Runtime Configuration
+
+Bash
+
+```
+# Update idle timeout (60–86400 seconds)
+novitaclaw config set idle-timeout 600
+
+# Update sandbox lifetime timeout (300–2592000 seconds)
+novitaclaw config set timeout 3600
+```
+
+Changes take effect immediately. The in-sandbox agent picks up the new configuration on its next check cycle.
+
+###
+
+[​](#how-it-works)
+
+How It Works
+
+- Idle detection — An agent daemon inside the sandbox periodically checks OpenClaw session activity and writes status to `/tmp/.novitaclaw-status.json`.
+
+- Auto-pause — The server-side idle monitor reads the agent status. After 2 consecutive idle checks, the sandbox is automatically paused.
+
+- Auto-resume — Incoming webhook requests or Web UI access automatically resume a paused sandbox.
+
+- Cron pre-wakeup — The scheduler scans paused sandboxes for upcoming cron schedules and resumes them ~120 seconds before the next job fires, ensuring cron jobs run on time.
+
+###
+
+[​](#checking-status)
+
+Checking Status
+
+Bash
+
+```
+# View sandbox status (does not trigger resume when paused)
+novitaclaw status
+
+# List shows sandbox_type and state columns
+novitaclaw list
+```
+
+While paused, the `status` command still returns full URL information (read from the database without connecting to the sandbox), so scripts can store addresses without triggering a resume.
+
+##
+
+[​](#configuring-models)
+
+Configuring Models
+
+Your instance is pre-configured with a Novita-hosted model out of the box. To change the models your agent uses, navigate to `Settings → Config`, click Raw to switch to Raw JSON5 view, then click the reveal button next to “secrets redacted” to show the full config.
+Update the following two sections:
+
+###
+
+[​](#step-1-register-the-model-under-your-provider)
+
+Step 1: Register the model under your provider
+
+Add a new object to the `models` array inside `models.providers.novita`:
+
+```
+{
+"models": {
+"providers": {
+"novita": {
+"models": [
+{
+"id": "model-id",
+"name": "display name",
+"reasoning": true,
+"input": ["text"],
+"contextWindow": 200000,
+"maxTokens": 50000
+}
+]
+}
+}
+}
+}
+```
+
+###
+
+[​](#step-2-set-it-as-primary-or-fallback)
+
+Step 2: Set it as primary or fallback
+
+Update the `model` field under `agents.defaults` to reference your model using the `provider/model-id` format:
+
+```
+{
+"agents": {
+"defaults": {
+"model": {
+"primary": "novita/model-id",
+"fallbacks": ["novita/fallback-model-id"]
+}
+}
+}
+}
+```
+
+Click Update to save. Every LLM available on the [Novita platform](https://novita.ai/model-api/product/llm-api) is supported. Third-party providers can also be configured — when you bring your own LLM, you pay only for sandbox runtime, not Novita model usage.
+
+![NovitaClaw model configuration](https://mintcdn.com/novitaai/UCICd0mjDIq4HdU4/guides/images/openclaw-cli/model-config.png?fit=max&auto=format&n=UCICd0mjDIq4HdU4&q=85&s=b961be53828d072ddacb61b5d7e8ff73)
+
+##
+
+[​](#connecting-channels)
+
+Connecting Channels
+
+OpenClaw supports external messaging channels so your agent is reachable outside the Web UI. Channels are disabled by default and must be configured.
+
+###
+
+[​](#telegram)
+
+Telegram
+
+Connect your agent to Telegram as a messaging channel. Two connection modes are supported: Polling (default, long-poll — no public URL needed) and Webhook (HTTP push — best for on-demand sandboxes).
+Step 1: Create a Telegram Bot
+
+- Open Telegram and find [@BotFather](https://t.me/BotFather).
+
+- Send `/newbot` and follow the prompts to name your bot.
+
+- Copy the bot token BotFather provides.
+
+####
+
+[​](#mode-1-polling)
+
+Mode 1: Polling
+
+Polling mode uses long-poll connections. No public URL required — simplest to configure.
+
+Polling mode is not recommended for on-demand sandboxes. When the sandbox auto-pauses, the connection drops and incoming messages are lost. Use Webhook mode for on-demand sandboxes.
+
+Bash
+
+```
+novitaclaw pair telegram \
+--bot-token
+```
+
+####
+
+[​](#mode-2-webhook)
+
+Mode 2: Webhook
+
+Webhook mode requires the sandbox to expose an HTTP port for receiving Telegram push events. Best suited for on-demand sandboxes — incoming webhook requests automatically trigger resume.
+
+The `--webhook-url` is the public URL assigned to your sandbox. Run the following command to retrieve it:
+
+Bash
+
+```
+novitaclaw status --json | jq -r '.telegram_webhook_url'
+```
+
+Bash
+
+```
+novitaclaw pair telegram \
+--bot-token \
+--mode webhook \
+--webhook-url \
+--webhook-secret
+```
+
+####
+
+[​](#optional-webhook-parameters)
+
+Optional Webhook Parameters
+
+ParameterDefaultDescription`--webhook-host``0.0.0.0`Webhook server bind address`--webhook-port``8787`Webhook listen port`--webhook-path``/webhook/telegram`Webhook URL path`--dm-policy``pairing`DM policy
+
+####
+
+[​](#pairing-flow)
+
+Pairing Flow
+
+On first conversation, the bot replies with a pairing code:
+
+Bash
+
+```
+# List pending pairing requests
+novitaclaw pair list --channel telegram
+
+# Approve a pairing request
+novitaclaw pair approve --channel telegram --code `
+```
+
+####
+
+[​](#mode-comparison)
+
+Mode Comparison
+
+PollingWebhookConnectionOutbound (long-poll)Inbound (HTTP push)Public portNot requiredRequiredSetup complexityLowMedium (additional secrets)On-demand auto-resumeNot supported (connection drops on pause)Supported (webhook triggers resume)Recommended forAlways-on sandboxes, developmentOn-demand sandboxes, production IM
+
+###
+
+[​](#slack)
+
+Slack
+
+Connect your agent to Slack as a messaging channel. Two connection modes are supported: Socket (default, WebSocket — no public URL needed) and HTTP (Events API webhook — best for on-demand sandboxes).
+
+####
+
+[​](#mode-1-socket)
+
+Mode 1: Socket
+
+Socket mode uses a WebSocket connection. No public URL required — simplest to configure.
+
+Socket mode is not recommended for on-demand sandboxes. When the sandbox auto-pauses, the WebSocket connection drops and incoming messages are lost. Use HTTP mode for on-demand sandboxes.
+
+Bash
+
+```
+novitaclaw pair slack \
+--bot-token xoxb-... \
+--app-token xapp-...
+```
+
+####
+
+[​](#mode-2-http)
+
+Mode 2: HTTP
+
+HTTP mode uses Slack Events API webhooks. Best suited for on-demand sandboxes — incoming webhook requests automatically trigger resume.
+
+Bash
+
+```
+novitaclaw pair slack \
+--bot-token xoxb-... \
+--mode http \
+--signing-secret
+```
+
+####
+
+[​](#optional-http-parameters)
+
+Optional HTTP Parameters
+
+ParameterDefaultDescription--webhook-host``0.0.0.0`Webhook server bind address`--webhook-port``8788`Webhook listen port`--webhook-path``/webhook/slack`Webhook URL path
+
+####
+
+[​](#pairing-flow-2)
+
+Pairing Flow
+
+On first conversation, the bot replies with a pairing code:
+
+Bash
+
+```
+# List pending pairing requests
+novitaclaw pair list --channel slack
+
+# Approve a pairing request
+novitaclaw pair approve --channel slack --code `
+```
+
+####
+
+[​](#mode-comparison-2)
+
+Mode Comparison
+
+SocketHTTPConnectionWebSocket (outbound)HTTP push (inbound)Public portNot requiredRequiredSetup complexityLowMedium (additional secrets)On-demand auto-resumeNot supported (connection drops on pause)Supported (webhook triggers resume)Recommended forAlways-on sandboxes, developmentOn-demand sandboxes, production IM
+
+###
+
+[​](#channel-status)
+
+Channel Status
+
+novitaclaw status` displays webhook URLs for all configured channels:
+
+Bash
+
+```
+novitaclaw status
+# Shows: Feishu Webhook, Telegram Webhook, Slack Webhook (when configured)
+
+# JSON mode
+novitaclaw status --json | jq -r '.feishu_webhook_url'
+novitaclaw status --json | jq -r '.telegram_webhook_url'
+novitaclaw status --json | jq -r '.slack_webhook_url'
+```
+
+###
+
+[​](#feishu)
+
+Feishu
+
+Connect your agent to Feishu (Lark) as a messaging channel. Two connection modes are supported: Webhook (HTTP push) and Event (WebSocket long-poll).
+
+####
+
+[​](#prerequisites-create-a-feishu-app)
+
+Prerequisites: Create a Feishu App
+
+-
+Open the [Feishu Open Platform](https://open.feishu.cn/app), log in and click Create Custom App.
+
+-
+On the Credentials & Basic Info page, copy:
+
+App ID (format: `cli_xxx`)
+
+- App Secret
+
+-
+Go to Permission Management, click Batch Import, and paste the following permissions:
+
+```
+{
+"scopes": {
+"tenant": [
+"im:message", "im:message:send_as_bot", "im:message:readonly",
+"im:message.p2p_msg:readonly", "im:message.group_at_msg:readonly",
+"im:resource", "im:chat.access_event.bot_p2p_chat:read",
+"im:chat.members:bot_access"
+],
+"user": ["im:chat.access_event.bot_p2p_chat:read"]
+}
+}
+```
+
+-
+Go to App Capabilities > Bot and enable bot capability.
+
+-
+Create a version and publish the app.
+
+####
+
+[​](#mode-1-webhook)
+
+Mode 1: Webhook
+
+Webhook mode requires the sandbox to expose an HTTP port for receiving Feishu push events. Best suited for on-demand sandboxes — incoming webhook requests automatically trigger resume.
+Additional credentials: On the Feishu Open Platform, go to Development Configuration > Events & Callbacks > Encryption Strategy and copy:
+
+- Verification Token
+
+- Encrypt Key
+
+Bash
+
+```
+novitaclaw pair feishu \
+--app-id cli_xxx \
+--app-secret secret_xxx \
+--mode webhook \
+--verification-token tok_xxx \
+--encrypt-key key_xxx
+```
+
+On the Feishu Open Platform Event Subscription page:
+
+- Select Request URL Configuration
+
+- Enter the Webhook URL — get it via:
+
+Bash
+
+```
+novitaclaw status --json | jq -r '.feishu_webhook_url'
+```
+
+- Add event: `im.message.receive_v1`
+
+####
+
+[​](#mode-2-event)
+
+Mode 2: Event
+
+Event mode uses a Feishu WebSocket long-poll connection. No public URL required — simplest to configure.
+
+Event mode is not recommended for on-demand sandboxes. When the sandbox auto-pauses, the WebSocket connection drops and incoming messages are lost. Use Webhook mode for on-demand sandboxes.
+
+Bash
+
+```
+novitaclaw pair feishu \
+--app-id cli_xxx \
+--app-secret secret_xxx
+```
+
+After configuration, on the Feishu Open Platform Event Subscription page:
+
+- Select Use Long Connection to Receive Events
+
+- Add event: `im.message.receive_v1`
+
+Ensure the gateway is running (`novitaclaw status <SANDBOX_ID>`) before saving, otherwise Feishu may fail to save the long connection configuration.
+
+####
+
+[​](#optional-webhook-parameters-2)
+
+Optional Webhook Parameters
+
+ParameterDefaultDescription`--webhook-host``0.0.0.0`Webhook server bind address`--webhook-port``3000`Webhook listen port`--webhook-path``/feishu/events`Webhook URL path
+
+####
+
+[​](#pairing-flow-3)
+
+Pairing Flow
+
+Feishu uses a `pairing` strategy by default. On first conversation, the bot replies with a pairing code that must be approved via CLI:
+
+Bash
+
+```
+# List pending pairing requests
+novitaclaw pair list --channel feishu
+
+# Approve a pairing request
+novitaclaw pair approve --channel feishu --code
+```
+
+####
+
+[​](#mode-comparison-3)
+
+Mode Comparison
+
+EventWebhookConnectionWebSocket long-poll (outbound)HTTP push (inbound)Public portNot requiredRequired (default 3000)Setup complexityLow (App ID + Secret only)Medium (additional Token + Key)On-demand auto-resumeNot supportedSupported (webhook triggers resume)Recommended forAlways-on sandboxes, developmentOn-demand sandboxes, production IM
+
+##
+
+[​](#service-reliability)
+
+Service Reliability
+
+All core services in the sandbox are managed by systemd for production-grade reliability:
+
+ServiceDescriptionAuto-RestartOpenClaw GatewayAgent runtime and WebSocket server✅Web Terminal (ttyd)Browser-based terminal access✅File Manager (gohttpserver)Web-based file management✅
+
+Crash auto-recovery: If the Gateway crashes repeatedly, the system automatically runs diagnostics, attempts repair, and restores the last known-good configuration from backup — no manual intervention required.
+Config auto-backup: Every configuration write creates an automatic backup. If a bad config causes a crash, the recovery process restores from the most recent valid backup.
+
+Last modified on April 10, 2026
+
+
+# Command Reference - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/novitaclaw-commands
+
+# Command Reference
+
+Complete reference for all NovitaClaw CLI commands.
+
+##
+
+[​](#launch)
+
+`launch`
+
+Create a new sandbox instance.
+
+Bash
+
+```
+novitaclaw launch [OPTIONS]
+```
+
+OptionDescription`--api-key`Novita API key`--gateway-token`Custom gateway token (optional, auto-generated by default)`--timeout`Creation timeout in seconds (default: `60`)`--type`Sandbox type: `persistent` (default) or `on-demand``--idle-timeout`Idle timeout in seconds for on-demand mode (default: `300`, range: 60–86400)
+
+##
+
+[​](#list)
+
+`list`
+
+List active sandbox instances.
+
+Bash
+
+```
+novitaclaw list --api-key YOUR_API_KEY
+```
+
+OptionDescription`--api-key`Novita API key`--quiet`, `-q`Only print sandbox IDs, one per line (useful for scripting)
+
+##
+
+[​](#status)
+
+`status`
+
+Check a sandbox instance status. Displays webhook URLs for all configured channels.
+
+Bash
+
+```
+novitaclaw status --api-key YOUR_API_KEY
+```
+
+OptionDescription`--api-key`Novita API key`--json`Output in JSON format (useful for extracting webhook URLs)
+
+##
+
+[​](#stop)
+
+`stop`
+
+Terminate a sandbox instance.
+
+Bash
+
+```
+novitaclaw stop --api-key YOUR_API_KEY
+```
+
+OptionDescription`--api-key`Novita API key`--yes`, `-y`Skip confirmation prompt
+
+##
+
+[​](#pause)
+
+`pause`
+
+Pause a sandbox instance. Zero billing while paused.
+
+Bash
+
+```
+novitaclaw pause --api-key YOUR_API_KEY
+```
+
+##
+
+[​](#resume)
+
+`resume`
+
+Resume a paused sandbox instance (~1s to restore).
+
+Bash
+
+```
+novitaclaw resume --api-key YOUR_API_KEY
+```
+
+##
+
+[​](#config-set)
+
+`config set`
+
+Update sandbox runtime configuration.
+
+Bash
+
+```
+# Update idle timeout (60–86400 seconds)
+novitaclaw config set idle-timeout 600
+
+# Update sandbox lifetime timeout (300–2592000 seconds)
+novitaclaw config set timeout 3600
+```
+
+##
+
+[​](#tui)
+
+`tui`
+
+Connect to a sandbox via terminal UI.
+
+Bash
+
+```
+novitaclaw tui --token
+```
+
+##
+
+[​](#doctor)
+
+`doctor`
+
+Run diagnostics and repair checks on a sandbox instance.
+
+Bash
+
+```
+novitaclaw doctor --api-key YOUR_API_KEY
+```
+
+OptionDescription`--api-key`Novita API key`--deep`Scan system services for extra gateway installs`--fix`Apply recommended repairs (alias for `--repair`)`--force`Apply aggressive repairs (overwrites custom service config)`--generate-gateway-token`Generate and configure a gateway token`--no-workspace-suggestions`Disable workspace memory system suggestions`--repair`Apply recommended repairs without prompting`--yes`Accept defaults without prompting
+
+##
+
+[​](#gateway-update)
+
+`gateway update`
+
+Update OpenClaw to the latest version inside a sandbox.
+
+Bash
+
+```
+novitaclaw gateway update --api-key YOUR_API_KEY
+```
+
+OptionDescription`--api-key`Novita API key`--restart`Restart gateway after update
+
+##
+
+[​](#gateway-restart)
+
+`gateway restart`
+
+Restart the OpenClaw Gateway in a sandbox.
+
+Bash
+
+```
+novitaclaw gateway restart --api-key YOUR_API_KEY
+```
+
+##
+
+[​](#services-setup)
+
+`services setup`
+
+Install and start Web Terminal and File Manager on an existing sandbox. Use this to add services to older sandboxes that were launched before these services were included.
+
+Bash
+
+```
+novitaclaw services setup --api-key YOUR_API_KEY
+```
+
+##
+
+[​](#pair-list)
+
+`pair list`
+
+List pending pairing requests for a channel.
+
+Bash
+
+```
+novitaclaw pair list --channel --api-key YOUR_API_KEY
+```
+
+##
+
+[​](#pair-approve)
+
+`pair approve`
+
+Approve a pairing request for a channel.
+
+Bash
+
+```
+novitaclaw pair approve --channel --code --api-key YOUR_API_KEY
+```
+
+##
+
+[​](#pair-feishu)
+
+`pair feishu`
+
+Configure Feishu (Lark) as a messaging channel.
+
+Bash
+
+```
+novitaclaw pair feishu \
+--app-id cli_xxx \
+--app-secret secret_xxx \
+--mode webhook \
+--verification-token tok_xxx \
+--encrypt-key key_xxx
+```
+
+OptionDescription`--app-id`Feishu app ID`--app-secret`Feishu app secret`--mode``event` (default) or `webhook``--verification-token`Webhook verification token (webhook mode only)`--encrypt-key`Webhook encrypt key (webhook mode only)`--webhook-host`Webhook bind address (default: `0.0.0.0`)`--webhook-port`Webhook listen port (default: `3000`)`--webhook-path`Webhook URL path (default: `/feishu/events`)
+
+##
+
+[​](#pair-telegram)
+
+`pair telegram`
+
+Configure Telegram as a messaging channel.
+
+Bash
+
+```
+# Polling mode (default)
+novitaclaw pair telegram \
+--bot-token
+
+# Webhook mode
+novitaclaw pair telegram \
+--bot-token \
+--mode webhook \
+--webhook-url https://example.com/webhook/telegram \
+--webhook-secret
+```
+
+OptionDescription`--bot-token`Telegram bot token from BotFather`--mode``polling` (default) or `webhook``--webhook-url`Public webhook URL (webhook mode only)`--webhook-secret`Webhook secret (webhook mode only)`--webhook-host`Webhook bind address (default: `0.0.0.0`)`--webhook-port`Webhook listen port (default: `8787`)`--webhook-path`Webhook URL path (default: `/webhook/telegram`)`--dm-policy`DM policy (default: `pairing`)
+
+##
+
+[​](#pair-slack)
+
+`pair slack`
+
+Configure Slack as a messaging channel.
+
+Bash
+
+```
+# Socket mode (default)
+novitaclaw pair slack \
+--bot-token xoxb-... \
+--app-token xapp-...
+
+# HTTP mode
+novitaclaw pair slack \
+--bot-token xoxb-... \
+--mode http \
+--signing-secret
+```
+
+OptionDescription`--bot-token`Slack bot token (`xoxb-...`)`--app-token`Slack app token (`xapp-...`, socket mode only)`--mode``socket` (default) or `http``--signing-secret`Slack signing secret (HTTP mode only)`--webhook-host`Webhook bind address (default: `0.0.0.0`)`--webhook-port`Webhook listen port (default: `8788`)`--webhook-path`Webhook URL path (default: `/webhook/slack`)
+
+##
+
+[​](#update)
+
+`update`
+
+Check for CLI updates and upgrade to the latest version.
+
+Bash
+
+```
+novitaclaw update
+```
+
+##
+
+[​](#programmatic-usage)
+
+Programmatic Usage
+
+Use JSON output for automation:
+
+Bash
+
+```
+novitaclaw -j launch --api-key YOUR_API_KEY
+```
+
+Example response:
+
+```
+{
+"success": true,
+"data": {
+"sandbox_id": "xxx",
+"webui": "https://xxx.sandbox.novita.ai?token=xxx",
+"gateway_ws": "wss://xxx.sandbox.novita.ai",
+"gateway_token": "xxx",
+"terminal_url": "https://7681-xxx.sandbox.novita.ai",
+"filemanager_url": "https://7682-xxx.sandbox.novita.ai",
+"services_username": "admin",
+"services_password": "xxx"
+}
+}
+```
+
+##
+
+[​](#environment-variables)
+
+Environment Variables
+
+VariableDescription`NOVITA_API_KEY`API key, eliminates the need for `--api-key` flag`OPENCLAW_GATEWAY_TOKEN`Preset gateway token
+
+##
+
+[​](#troubleshooting)
+
+Troubleshooting
+
+###
+
+[​](#command-not-found)
+
+Command not found
+
+Try one of these:
+
+Bash
+
+```
+# Use full path (Linux)
+~/.local/bin/novitaclaw launch
+
+# Typical macOS user path
+~/Library/Python/3.x/bin/novitaclaw launch
+```
+
+###
+
+[​](#connection-timeout)
+
+Connection timeout
+
+Increase launch timeout:
+
+Bash
+
+```
+novitaclaw launch --timeout 180 --api-key YOUR_API_KEY
+```
+
+##
+
+[​](#frequently-asked-questions)
+
+Frequently Asked Questions
+
+ProblemWhy it happensWhat to do”Command not found” / “Not recognized”Python PATH not configured during installReinstall Python and check “Add to PATH”, or add the bin directory manually”Permission Denied”Insufficient permissionsWindows: Run Terminal as Administrator. Mac/Linux: prefix with `sudo`”Invalid API Key”Key copied incorrectlyCheck for extra spaces around the `sk_` string, or generate a new keySandbox won’t stopRequires confirmation to prevent accidental deletionType `y` when prompted, or use `--yes` to skip confirmationMac: `pip` command not foundmacOS uses `pip3` by defaultUse `pip3 install novitaclaw` instead of `pip`
+
+Last modified on April 8, 2026
+
+"
+
+https://novita.ai/docs/guides/sandbox-overview
+"
+# Overview - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/sandbox-overview
+
+# Overview
+
+Novita Agent Sandbox provides isolated, stateful execution environments for AI agents.
+You can use a Sandbox to run code, install dependencies, access files, use browsers, and preserve execution state across sessions without managing infrastructure.
+
+##
+
+[​](#core-concepts)
+
+Core Concepts
+
+Agent Sandbox is built around three core concepts: Sandbox, Template, and Snapshot.
+
+###
+
+[​](#sandbox)
+
+Sandbox
+
+A Sandbox is an isolated execution environment where your agent performs tasks.
+Inside a Sandbox, your agent can run commands, read and write files, install dependencies, and use browser-based workflows. Each Sandbox has its own filesystem and runtime environment.
+
+###
+
+[​](#template)
+
+Template
+
+A Template defines the environment a Sandbox starts with.
+Templates help you create consistent Sandboxes with predefined dependencies, configuration, and setup steps. Use Templates when you want multiple Sandboxes to start from the same prepared environment.
+
+###
+
+[​](#snapshot)
+
+Snapshot
+
+A Snapshot saves the current state of a Sandbox as a reusable environment.
+Snapshots are useful after you have configured a Sandbox, installed dependencies, or generated files that you want to reuse. New Sandboxes can be created from a Snapshot without repeating the same setup steps.
+
+##
+
+[​](#when-to-use-agent-sandbox)
+
+When to Use Agent Sandbox
+
+Agent Sandbox is designed for workloads where agents need an isolated environment to execute tasks, keep state, or reuse prepared environments.
+Common use cases include:
+
+- Coding agents that run code, install packages, and execute tests
+
+- Browser agents that automate web workflows
+
+- Data analysis agents that process files and generate reports
+
+- Research or RL workloads that need many isolated environments
+
+##
+
+[​](#pricing)
+
+Pricing
+
+Agent Sandbox provides per-second billing for CPU and RAM. Storage — encompassing templates, paused sandboxes, and snapshots — is now subject to daily charges. See the [pricing](/docs/guides/sandbox-pricing) page for more details.
+
+##
+
+[​](#getting-started)
+
+Getting Started
+
+You can start and manage your Agent Sandboxes through SDK or CLI. For details, please refer to the [quick start](/docs/guides/sandbox-your-first-agent-sandbox) page.
+
+Last modified on June 8, 2026
+
+"
+
+https://novita.ai/docs/guides/sandbox-cli
+"
+# Installing CLI - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/sandbox-cli
+
+# Installing CLI
+
+Novita Agent Sandbox CLI is a command line tool that allows you to list, kill running [sandboxes](/docs/guides/sandbox-lifecycle), and manage [sandbox templates](/docs/guides/sandbox-template-quickstart).
+
+##
+
+[​](#installation)
+
+Installation
+
+You can install the CLI globally using npm:
+
+Bash
+
+```
+npm i -g novita-sandbox-cli
+```
+
+Last modified on June 4, 2026
+
+"
+
+https://novita.ai/docs/guides/sandbox-cli-spawn-sandbox
+"
+# Create sandbox and connect to terminal - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/sandbox-cli-spawn-sandbox
+
+# Create sandbox and connect to terminal
+
+With the following command, you can use the command line tool to start a sandbox and connect to the terminal.
+
+Bash
+
+```
+novita-sandbox-cli sandbox create
+```
+
+You can interact with the sandbox directly from the terminal. Run `exit` to exit the connection. Once disconnected, the sandbox will be killed automatically.
+
+Last modified on June 24, 2026
+# Authentication in CLI - Documentation
+
+> For the complete documentation index, see [llms.txt](/llms.txt). Markdown is available with `Accept: text/markdown` and `.md` URL variants.
+
+Source: /docs/guides/sandbox-cli-auth
+
+# Authentication in CLI
+
+Before using the CLI, you must first authenticate. Run the following command to sign in to your Novita account:
+
+After executing the command below, a third-party authorization page will open in your browser (with URL format `https://novita.ai/oauth/authorize?xxx`). Follow the instructions to complete the subsequent authorization steps.
+
+Bash
+
+```
+novita-sandbox-cli auth login
+```
+
+Last modified on June 5, 2026
+
+"

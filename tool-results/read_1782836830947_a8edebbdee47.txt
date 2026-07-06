@@ -1,0 +1,789 @@
+     1→import { db } from "@/lib/db";
+     2→import { getZai, isSupportedSize, SUPPORTED_SIZES } from "@/lib/zai";
+     3→import {
+     4→  isModalEnabled,
+     5→  generateImageViaModal,
+     6→  checkModalHealth,
+     7→} from "@/lib/modal-client";
+     8→import type {
+     9→  JudgeResult,
+    10→  SafetyResult,
+    11→} from "@/lib/nexus-types";
+    12→import type { TimingMap } from "@/lib/metrics";
+    13→import { ASPECTS } from "@/lib/nexus-types";
+    14→import {
+    15→  resolveCalibration,
+    16→  type ResolvedCalibration,
+    17→  type CalibrationPreset,
+    18→} from "@/lib/calibration";
+    19→import {
+    20→  getActivePolicy,
+    21→  getConsent,
+    22→  resolveMaturityTier,
+    23→  HARD_BLOCKLIST,
+    24→  type ActivePolicy,
+    25→  type MaturityTier,
+    26→} from "@/lib/policy";
+    27→import { getLora } from "@/lib/lora-library";
+    28→import { getEngine } from "@/lib/engines";
+    29→import { getBrain, BRAIN_ROLE_PROMPTS } from "@/lib/brain";
+    30→import fs from "fs";
+    31→import path from "path";
+    32→
+    33→const GALLERY_DIR = path.join(process.cwd(), "public", "gallery");
+    34→
+    35→function ensureGalleryDir() {
+    36→  if (!fs.existsSync(GALLERY_DIR)) {
+    37→    fs.mkdirSync(GALLERY_DIR, { recursive: true });
+    38→  }
+    39→}
+    40→
+    41→function sizeForAspect(aspect: string): string {
+    42→  const found = ASPECTS.find((a) => a.id === aspect);
+    43→  if (found && isSupportedSize(found.size)) return found.size;
+    44→  return "1024x1024";
+    45→}
+    46→
+    47→/** Parse "WxH" → { width, height }. Falls back to 1024x1024. */
+    48→function parseSize(size: string): { width: number; height: number } {
+    49→  const m = /^(\d+)x(\d+)$/.exec(size);
+    50→  if (m) return { width: Number(m[1]), height: Number(m[2]) };
+    51→  return { width: 1024, height: 1024 };
+    52→}
+    53→
+    54→function nowMs(): number {
+    55→  return Date.now();
+    56→}
+    57→
+    58→function elapsed(start: number): number {
+    59→  return nowMs() - start;
+    60→}
+    61→
+    62→// Robustly extract a JSON object from an LLM response that may contain
+    63→// prose / markdown fences around the JSON.
+    64→function extractJson<T = unknown>(raw: string): T | null {
+    65→  if (!raw) return null;
+    66→  // strip code fences
+    67→  let s = raw.trim();
+    68→  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    69→  if (fence) s = fence[1].trim();
+    70→  // find first { ... last }
+    71→  const first = s.indexOf("{");
+    72→  const last = s.lastIndexOf("}");
+    73→  if (first !== -1 && last !== -1 && last > first) {
+    74→    s = s.slice(first, last + 1);
+    75→  }
+    76→  // also try first [ ... last ]
+    77→  if (first === -1) {
+    78→    const a = s.indexOf("[");
+    79→    const b = s.lastIndexOf("]");
+    80→    if (a !== -1 && b !== -1 && b > a) s = s.slice(a, b + 1);
+    81→  }
+    82→  try {
+    83→    return JSON.parse(s) as T;
+    84→  } catch {
+    85→    return null;
+    86→  }
+    87→}
+    88→
+    89→function clamp(n: unknown, lo = 0, hi = 100): number {
+    90→  const v = typeof n === "number" ? n : typeof n === "string" ? parseFloat(n) : NaN;
+    91→  if (Number.isNaN(v)) return lo;
+    92→  return Math.max(lo, Math.min(hi, v));
+    93→}
+    94→
+    95→function strArr(v: unknown): string[] {
+    96→  if (Array.isArray(v)) return v.map((x) => String(x)).filter(Boolean);
+    97→  if (typeof v === "string" && v.trim()) return [v.trim()];
+    98→  return [];
+    99→}
+   100→
+   101→// ----------------------------------------------------------------------------
+   102→// Stage 1 — FLUX image generation
+   103→// ----------------------------------------------------------------------------
+   104→// Two backends, selected by MODAL_USE env var:
+   105→//   • Modal (default when MODAL_USE=true): calls the user's deployed
+   106→//     `nexus-visual` Modal app → real FLUX.1-schnell on H100 GPU.
+   107→//     Warm calls ~1.5–2s; cold start up to ~7min.
+   108→//   • z-ai-web-dev-sdk (fallback): calls zai.images.generations.create.
+   109→//     No GPU, hosted inference, ~20–30s per call.
+   110→// ----------------------------------------------------------------------------
+   111→export async function stageFlux(
+   112→  prompt: string,
+   113→  style: string,
+   114→  aspect: string,
+   115→  wardrobe: string | null,
+   116→  generationId: string,
+   117→  calibration: ResolvedCalibration,
+   118→  loraIds: string[],
+   119→  engineId?: string
+   120→): Promise<{ imagePath: string; size: string; ms: number; backend: "modal" | "zai"; engineId: string; backendMismatch: boolean }> {
+   121→  const start = nowMs();
+   122→  const selectedEngine = getEngine(engineId);
+   123→
+   124→  // Resolve the target size: prefer the calibration resolution when supported,
+   125→  // otherwise fall back to the aspect-derived size.
+   126→  const aspectSize = sizeForAspect(aspect);
+   127→  const size = isSupportedSize(calibration.resolution) ? calibration.resolution : aspectSize;
+   128→
+   129→  // Build the enriched prompt: base intent + style + wardrobe + LoRA triggers
+   130→  // + the preset's quality tokens (these carry the CFG/sampler intent for the
+   131→  // z-ai backend, which has no step/cfg knobs).
+   132→  const loraTriggers = loraIds
+   133→    .map((id) => getLora(id))
+   134→    .filter(Boolean)
+   135→    .map((l) => l!.name.toLowerCase());
+   136→
+   137→  const enriched = [
+   138→    prompt,
+   139→    `style: ${style}`,
+   140→    wardrobe ? `wardrobe: ${wardrobe}` : "",
+   141→    loraTriggers.length ? `lora triggers: ${loraTriggers.join(", ")}` : "",
+   142→    ...calibration.qualityTokens,
+   143→  ]
+   144→    .filter(Boolean)
+   145→    .join(", ");
+   146→
+   147→  ensureGalleryDir();
+   148→  const filename = `${generationId}.png`;
+   149→  const filepath = path.join(GALLERY_DIR, filename);
+   150→
+   151→  let backend: "modal" | "zai" = "zai";
+   152→  let base64: string | null = null;
+   153→
+   154→  // Try Modal first if enabled. Modal receives the real diffusion params
+   155→  // (steps from calibration; cfg/sampler/denoise are recorded as provenance
+   156→  // and the Modal app applies its own defaults if it doesn't accept them).
+   157→  if (isModalEnabled()) {
+   158→    try {
+   159→      const { width, height } = parseSize(size);
+   160→      const result = await generateImageViaModal({
+   161→        prompt: enriched,
+   162→        width,
+   163→        height,
+   164→        steps: calibration.steps,
+   165→        isFirstCall: true, // allow long cold-start timeout
+   166→      });
+   167→      base64 = result.imageBase64;
+   168→      backend = "modal";
+   169→      await logEvent(
+   170→        "stage_complete",
+   171→        `Modal /generate ok — ${result.ms}ms (round-trip ${result.latencyMs}ms) · engine=${selectedEngine.shortName} steps=${calibration.steps} cfg=${calibration.cfg}`,
+   172→        "success",
+   173→        generationId
+   174→      );
+   175→    } catch (modalErr) {
+   176→      // Log and fall through to z-ai fallback
+   177→      const msg = modalErr instanceof Error ? modalErr.message : String(modalErr);
+   178→      await logEvent(
+   179→        "error",
+   180→        `Modal /generate failed, falling back to z-ai: ${truncate(msg, 200)}`,
+   181→        "warn",
+   182→        generationId
+   183→      );
+   184→      base64 = null;
+   185→    }
+   186→  } else {
+   187→    await logEvent(
+   188→      "error",
+   189→      `MODAL_USE is not true — generation will use the z-ai hosted fallback instead of the Modal GPU. Set MODAL_USE=true in .env.`,
+   190→      "warn",
+   191→      generationId
+   192→    );
+   193→  }
+   194→
+   195→  // Fallback (or primary when Modal disabled): z-ai-web-dev-sdk
+   196→  if (!base64) {
+   197→    const zai = await getZai();
+   198→    const response = await zai.images.generations.create({
+   199→      prompt: enriched,
+   200→      size: size as (typeof SUPPORTED_SIZES)[number],
+   201→    });
+   202→    base64 = response.data?.[0]?.base64 ?? null;
+   203→    backend = "zai";
+   204→    await logEvent(
+   205→      "stage_complete",
+   206→      `z-ai image generated · quality-tokens injected (cfg=${calibration.cfg} sampler=${calibration.sampler} recorded as provenance)`,
+   207→      "info",
+   208→      generationId
+   209→    );
+   210→  }
+   211→
+   212→  if (!base64) throw new Error("Image generation returned no base64 payload (both Modal + z-ai failed)");
+   213→
+   214→  fs.writeFileSync(filepath, Buffer.from(base64, "base64"));
+   215→
+   216→  // Detect backend mismatch: the user selected an engine (e.g. Krea 2 Turbo)
+   217→  // but the Modal endpoint serves FLUX.1-schnell. This is recorded as
+   218→  // provenance so the user knows the actual model used ≠ the selected one.
+   219→  // When they deploy the optimized app from Cost Lab, the endpoint will serve
+   220→  // the selected engine and this mismatch disappears.
+   221→  const backendMismatch = backend === "modal" && selectedEngine.id !== "flux1-schnell" && selectedEngine.family !== "FLUX.1";
+   222→  if (backendMismatch) {
+   223→    await logEvent(
+   224→      "warn",
+   225→      `Backend mismatch: selected engine "${selectedEngine.name}" but Modal endpoint serves FLUX.1-schnell. The generated image uses FLUX.1-schnell weights. Deploy the optimized app from Cost Lab to serve ${selectedEngine.name}.`,
+   226→      "warn",
+   227→      generationId
+   228→    );
+   229→  }
+   230→
+   231→  return {
+   232→    imagePath: `/gallery/${filename}`,
+   233→    size,
+   234→    ms: elapsed(start),
+   235→    backend,
+   236→    engineId: selectedEngine.id,
+   237→    backendMismatch,
+   238→  };
+   239→}
+   240→
+   241→// ----------------------------------------------------------------------------
+   242→// Stage 2 — ST3GG security scan (z-ai chat completions, structured)
+   243→// ----------------------------------------------------------------------------
+   244→export async function stageSt3gg(
+   245→  prompt: string,
+   246→  style: string,
+   247→  wardrobe: string | null,
+   248→  brainId?: string
+   249→): Promise<SafetyResult> {
+   250→  const start = nowMs();
+   251→  const zai = await getZai();
+   252→  const brain = getBrain(brainId);
+   253→  const sys = BRAIN_ROLE_PROMPTS.safety + " (Running on " + brain.shortName + ".)";
+   254→  const user = `Evaluate this image generation request for safety.
+   255→Prompt: "${prompt}"
+   256→Style: ${style}
+   257→Wardrobe notes: ${wardrobe || "none"}
+   258→
+   259→Consider: violence, explicit sexual content, real-person likeness abuse, self-harm,
+   260→hate symbols, CSAM risk, and wardrobe/undress risk. Score 0-100 where 100 is perfectly safe.
+   261→
+   262→Emit flags from this catalogue when relevant (use these exact slugs):
+   263→- HARD BLOCK (always refused): csam, minors, underage, nonconsensual, deepfake-real-person, real-person-likeness, extreme-violence, gore, hate-symbol, self-harm, bestiality, terrorism
+   264→- POLICY CATEGORIES: explicit-nudity, suggestual, wardrobe-risk, violence-mild, violence-graphic, weapons, substance, political, religious
+   265→
+   266→Respond as JSON exactly in this shape:
+   267→{
+   268→  "passed": boolean,            // true if risk is low/medium or below and no critical flags
+   269→  "score": number,              // 0-100 safety score
+   270→  "riskLevel": "safe"|"low"|"medium"|"high"|"critical",
+   271→  "flags": string[],            // flag codes from the catalogue above
+   272→  "rationale": string           // one short sentence
+   273→}`;
+   274→
+   275→  const completion = await zai.chat.completions.create({
+   276→    messages: [
+   277→      { role: "assistant", content: sys },
+   278→      { role: "user", content: user },
+   279→    ],
+   280→    thinking: { type: "disabled" },
+   281→  });
+   282→
+   283→  const raw = completion.choices?.[0]?.message?.content ?? "";
+   284→  const parsed = extractJson<{
+   285→    passed?: boolean;
+   286→    score?: number;
+   287→    riskLevel?: string;
+   288→    flags?: unknown;
+   289→    rationale?: string;
+   290→  }>(raw);
+   291→
+   292→  const score = clamp(parsed?.score ?? 60);
+   293→  const riskLevel = (parsed?.riskLevel ?? "low") as SafetyResult["riskLevel"];
+   294→  const passed =
+   295→    parsed?.passed ?? (riskLevel === "safe" || riskLevel === "low" || riskLevel === "medium");
+   296→
+   297→  return {
+   298→    passed: !!passed,
+   299→    score,
+   300→    riskLevel,
+   301→    flags: strArr(parsed?.flags),
+   302→    rationale: parsed?.rationale ?? "No rationale provided.",
+   303→    stageMs: elapsed(start),
+   304→  };
+   305→}
+   306→
+   307→// ----------------------------------------------------------------------------
+   308→// Stage 3 — MiniCPM-V visual judge (z-ai vision completions on generated image)
+   309→// ----------------------------------------------------------------------------
+   310→export async function stageJudge(
+   311→  imagePath: string,
+   312→  prompt: string,
+   313→  style: string,
+   314→  wardrobe: string | null,
+   315→  brainId?: string
+   316→): Promise<JudgeResult> {
+   317→  const start = nowMs();
+   318→  const zai = await getZai();
+   319→  const brain = getBrain(brainId);
+   320→
+   321→  // Read the generated PNG from disk and base64-encode it
+   322→  const abs = path.join(process.cwd(), "public", imagePath);
+   323→  const buf = fs.existsSync(abs) ? fs.readFileSync(abs) : null;
+   324→  if (!buf) throw new Error(`Judge stage: image not found at ${abs}`);
+   325→  const dataUrl = `data:image/png;base64,${buf.toString("base64")}`;
+   326→
+   327→  const sys = BRAIN_ROLE_PROMPTS.judge + " (Running on " + brain.shortName + ".)";
+   328→
+   329→  const user = `You are judging a generated image.
+   330→Original prompt: "${prompt}"
+   331→Intended style: ${style}
+   332→Wardrobe notes: ${wardrobe || "none"}
+   333→
+   334→Score each dimension 0-100:
+   335→- promptAdherence: how faithfully the image matches the prompt
+   336→- visualQuality: sharpness, artifacts, coherence
+   337→- aestheticScore: composition, color, appeal
+   338→- safetyScore: presence of unsafe content (100 = clean)
+   339→- wardrobeMatch: how well wardrobe notes (if any) are reflected
+   340→- overallScore: weighted overall
+   341→
+   342→Then set verdict: "approved" (overall >= 70 and safety >= 80), "rejected" (overall < 45 or safety < 50), else "needs_review".
+   343→Provide 2-4 short observations, strengths and weaknesses arrays.
+   344→
+   345→Respond as JSON exactly:
+   346→{
+   347→  "promptAdherence": number,
+   348→  "visualQuality": number,
+   349→  "aestheticScore": number,
+   350→  "safetyScore": number,
+   351→  "wardrobeMatch": number,
+   352→  "overallScore": number,
+   353→  "verdict": "approved"|"rejected"|"needs_review",
+   354→  "observations": string[],
+   355→  "strengths": string[],
+   356→  "weaknesses": string[]
+   357→}`;
+   358→
+   359→  const response = await zai.chat.completions.createVision({
+   360→    model: "glm-4.6v",
+   361→    messages: [
+   362→      { role: "assistant", content: sys },
+   363→      {
+   364→        role: "user",
+   365→        content: [
+   366→          { type: "text", text: user },
+   367→          { type: "image_url", image_url: { url: dataUrl } },
+   368→        ],
+   369→      },
+   370→    ],
+   371→    thinking: { type: "disabled" },
+   372→  });
+   373→
+   374→  const raw = response.choices?.[0]?.message?.content ?? "";
+   375→  const parsed = extractJson<{
+   376→    promptAdherence?: number;
+   377→    visualQuality?: number;
+   378→    aestheticScore?: number;
+   379→    safetyScore?: number;
+   380→    wardrobeMatch?: number;
+   381→    overallScore?: number;
+   382→    verdict?: string;
+   383→    observations?: unknown;
+   384→    strengths?: unknown;
+   385→    weaknesses?: unknown;
+   386→  }>(raw);
+   387→
+   388→  const overall = clamp(parsed?.overallScore ?? 0);
+   389→  const safety = clamp(parsed?.safetyScore ?? 0);
+   390→  let verdict = parsed?.verdict as JudgeResult["verdict"];
+   391→  if (verdict !== "approved" && verdict !== "rejected" && verdict !== "needs_review") {
+   392→    verdict = overall >= 70 && safety >= 80 ? "approved" : overall < 45 || safety < 50 ? "rejected" : "needs_review";
+   393→  }
+   394→
+   395→  return {
+   396→    promptAdherence: clamp(parsed?.promptAdherence),
+   397→    visualQuality: clamp(parsed?.visualQuality),
+   398→    aestheticScore: clamp(parsed?.aestheticScore),
+   399→    safetyScore: safety,
+   400→    wardrobeMatch: clamp(parsed?.wardrobeMatch),
+   401→    overallScore: overall,
+   402→    verdict,
+   403→    observations: strArr(parsed?.observations),
+   404→    strengths: strArr(parsed?.strengths),
+   405→    weaknesses: strArr(parsed?.weaknesses),
+   406→    stageMs: elapsed(start),
+   407→  };
+   408→}
+   409→
+   410→// ----------------------------------------------------------------------------
+   411→// Stage 4 — Nemotron evidence parse (aggregate into structured evidence)
+   412→// ----------------------------------------------------------------------------
+   413→export async function stageNemotron(
+   414→  prompt: string,
+   415→  style: string,
+   416→  aspect: string,
+   417→  wardrobe: string | null,
+   418→  safety: SafetyResult,
+   419→  judge: JudgeResult,
+   420→  brainId?: string
+   421→): Promise<{ evidence: Record<string, unknown>; ms: number }> {
+   422→  const start = nowMs();
+   423→  const zai = await getZai();
+   424→  const brain = getBrain(brainId);
+   425→
+   426→  const sys = BRAIN_ROLE_PROMPTS.evidence + " (Running on " + brain.shortName + ".)";
+   427→
+   428→  const user = `Aggregate this pipeline run into structured evidence.
+   429→
+   430→INPUTS:
+   431→- prompt: "${prompt}"
+   432→- style: ${style}
+   433→- aspect: ${aspect}
+   434→- wardrobe: ${wardrobe || "none"}
+   435→
+   436→SAFETY_SCAN:
+   437→${JSON.stringify(safety, null, 2)}
+   438→
+   439→VISUAL_JUDGE:
+   440→${JSON.stringify(judge, null, 2)}
+   441→
+   442→Produce evidence JSON exactly:
+   443→{
+   444→  "summary": string,                  // one sentence executive summary
+   445→  "modelChain": ["FLUX.2","ST3GG","MiniCPM-V","Nemotron"],
+   446→  "provenance": {
+   447→    "generator": "FLUX.2 Klein (via z-ai images.generations)",
+   448→    "safetyModel": "ST3GG (via z-ai chat completions)",
+   449→    "judgeModel": "MiniCPM-V 2.6 (via z-ai vision)",
+   450→    "aggregator": "Nemotron-Nano (via z-ai chat completions)"
+   451→  },
+   452→  "finalVerdict": "approved"|"rejected"|"needs_review",
+   453→  "confidence": number,               // 0-100
+   454→  "keyFindings": string[],            // 3-5 bullets
+   455→  "recommendations": string[],        // 1-3 next-step suggestions
+   456→  "riskProfile": {
+   457→    "contentRisk": "low"|"medium"|"high",
+   458→    "qualityRisk": "low"|"medium"|"high",
+   459→    "overallRisk": "low"|"medium"|"high"
+   460→  },
+   461→  "metrics": {
+   462→    "safetyScore": number,
+   463→    "overallScore": number,
+   464→    "promptAdherence": number,
+   465→    "aestheticScore": number
+   466→  }
+   467→}`;
+   468→
+   469→  const completion = await zai.chat.completions.create({
+   470→    messages: [
+   471→      { role: "assistant", content: sys },
+   472→      { role: "user", content: user },
+   473→    ],
+   474→    thinking: { type: "disabled" },
+   475→  });
+   476→
+   477→  const raw = completion.choices?.[0]?.message?.content ?? "";
+   478→  const evidence = (extractJson(raw) ?? { rawResponse: raw }) as Record<string, unknown>;
+   479→
+   480→  return { evidence, ms: elapsed(start) };
+   481→}
+   482→
+   483→// ----------------------------------------------------------------------------
+   484→// Full pipeline orchestration
+   485→// ----------------------------------------------------------------------------
+   486→export interface PipelineRunInput {
+   487→  prompt: string;
+   488→  style: string;
+   489→  aspect: string;
+   490→  wardrobe: string | null;
+   491→  // v3
+   492→  calibrationId: string;
+   493→  calibrationOverrides?: Record<string, unknown>;
+   494→  loraIds: string[];
+   495→  consentFingerprint?: string;
+   496→  // v4
+   497→  engineId?: string;
+   498→  brainId?: string;
+   499→  videoEnabled?: boolean;
+   500→  // M3: artistic-override — lowers minSafetyScore for artistic/editorial work.
+   501→  // The hard blocklist (csam, nonconsensual, real-person, etc.) is ALWAYS enforced.
+   502→  artisticOverride?: boolean;
+   503→}
+   504→
+   505→export interface PipelineRunOutput {
+   506→  id: string;
+   507→  status: "completed" | "failed" | "blocked";
+   508→  imagePath: string | null;
+   509→  safety: SafetyResult | null;
+   510→  judge: JudgeResult | null;
+   511→  evidence: Record<string, unknown> | null;
+   512→  timings: TimingMap;
+   513→  verdict: string | null;
+   514→  overallScore: number | null;
+   515→  // v3
+   516→  calibration: ResolvedCalibration | null;
+   517→  loraIds: string[];
+   518→  maturityTier: MaturityTier | null;
+   519→  blockReason: string | null;
+   520→  errorMessage: string | null;
+   521→  // v4: engine + backend provenance
+   522→  engineId: string | null;
+   523→  backend: "modal" | "zai" | null;
+   524→  backendMismatch: boolean;
+   525→}
+   526→
+   527→// Quick heuristic: does the prompt text itself signal mature intent?
+   528→// (The authoritative gate is the ST3GG scan; this is a cheap pre-filter for
+   529→// logging and the mature-signal path in resolveMaturityTier.)
+   530→const MATURE_SIGNAL_RE = /\b(nude|nudity|nsfw|explicit|18\+|adult|mature|erotic|lingerie|undress|topless|bottomless)\b/i;
+   531→function promptHasMatureSignal(prompt: string): boolean {
+   532→  return MATURE_SIGNAL_RE.test(prompt);
+   533→}
+   534→
+   535→export async function runPipeline(
+   536→  input: PipelineRunInput
+   537→): Promise<PipelineRunOutput> {
+   538→  const timings: TimingMap = {};
+   539→  const promptStart = nowMs();
+   540→
+   541→  // Resolve calibration up-front (so even a blocked run records what was intended).
+   542→  const calibration = resolveCalibration(
+   543→    input.calibrationId,
+   544→    input.calibrationOverrides as Partial<CalibrationPreset> | undefined
+   545→  );
+   546→
+   547→  // 0. create the Generation row (pending) with calibration + lora provenance
+   548→  const gen = await db.generation.create({
+   549→    data: {
+   550→      prompt: input.prompt,
+   551→      style: input.style,
+   552→      aspect: input.aspect,
+   553→      wardrobe: input.wardrobe,
+   554→      size: isSupportedSize(calibration.resolution) ? calibration.resolution : sizeForAspect(input.aspect),
+   555→      status: "running",
+   556→      calibrationId: input.calibrationId,
+   557→      calibration: JSON.stringify(calibration),
+   558→      loraIds: input.loraIds.join(","),
+   559→    },
+   560→  });
+   561→  await logEvent("pipeline_start", `Pipeline started for "${truncate(input.prompt, 60)}" · engine=${input.engineId ?? "flux2-klein-9b"} preset=${input.calibrationId} brain=${input.brainId ?? "gemma4"} loras=${input.loraIds.length}${input.videoEnabled ? " +video" : ""}`, "info", gen.id);
+   562→
+   563→  try {
+   564→    // Stage: ST3GG safety scan — RUN FIRST so blocked prompts never reach the GPU.
+   565→    const safety = await stageSt3gg(input.prompt, input.style, input.wardrobe, input.brainId);
+   566→    timings.st3gg = safety.stageMs;
+   567→    await db.safetyScan.create({
+   568→      data: {
+   569→        generationId: gen.id,
+   570→        passed: safety.passed,
+   571→        score: safety.score,
+   572→        riskLevel: safety.riskLevel,
+   573→        flags: JSON.stringify(safety.flags),
+   574→        rationale: safety.rationale,
+   575→        stageMs: safety.stageMs,
+   576→      },
+   577→    });
+   578→    await logEvent(
+   579→      "stage_complete",
+   580→      `ST3GG safety scan: ${safety.riskLevel} (score ${safety.score}) flags=[${safety.flags.join(",")}]`,
+   581→      safety.passed ? "success" : "warn",
+   582→      gen.id
+   583→    );
+   584→
+   585→    // Maturity gate: resolve the tier from consent + policy + flags.
+   586→    const policy = await getActivePolicy();
+   587→    let consentStatus: "accepted" | "rejected" | "pending" | "revoked" | null = "pending";
+   588→    if (input.consentFingerprint) {
+   589→      const consent = await getConsent(input.consentFingerprint);
+   590→      consentStatus = (consent?.status as "accepted" | "rejected" | "pending" | "revoked" | null) ?? "pending";
+   591→    }
+   592→    const matureSignal = promptHasMatureSignal(input.prompt);
+   593→    const tier = resolveMaturityTier({
+   594→      consentStatus,
+   595→      policy,
+   596→      safetyFlags: safety.flags,
+   597→      promptHasMatureSignal: matureSignal,
+   598→    });
+   599→
+   600→    // Enforce min safety score as a secondary gate.
+   601→    // M3: artistic-override lowers the effective min score to 30 (from 60 default)
+   602→    // for artistic/editorial work. The HARD blocklist always applies — only the
+   603→    // tunable min-score threshold is relaxed.
+   604→    const effectiveMinScore = input.artisticOverride ? Math.min(30, policy.minSafetyScore) : policy.minSafetyScore;
+   605→    const belowMinScore = safety.score < effectiveMinScore && safety.riskLevel !== "safe";
+   606→
+   607→    if (tier === "blocked" || belowMinScore) {
+   608→      const blockReason = tier === "blocked"
+   609→        ? `Maturity gate blocked this request (tier=blocked). Flags: ${safety.flags.join(",") || "none"}. Mature-enabled=${policy.matureEnabled}, consent=${consentStatus}.`
+   610→        : `Safety score ${safety.score} below minimum ${effectiveMinScore}${input.artisticOverride ? " (artistic override applied)" : ""} (risk ${safety.riskLevel}).`;
+   611→      await db.generation.update({
+   612→        where: { id: gen.id },
+   613→        data: {
+   614→          status: "failed",
+   615→          verdict: "rejected",
+   616→          maturityTier: tier,
+   617→          timings: JSON.stringify(timings),
+   618→          errorMessage: blockReason,
+   619→        },
+   620→      });
+   621→      await logEvent("policy_block", blockReason, "error", gen.id);
+   622→      timings.output = elapsed(promptStart) - (timings.st3gg ?? 0);
+   623→      if (timings.output < 0) timings.output = 0;
+   624→      return {
+   625→        id: gen.id,
+   626→        status: "blocked",
+   627→        imagePath: null,
+   628→        safety,
+   629→        judge: null,
+   630→        evidence: null,
+   631→        timings,
+   632→        verdict: "rejected",
+   633→        overallScore: null,
+   634→        calibration,
+   635→        loraIds: input.loraIds,
+   636→        maturityTier: tier,
+   637→        blockReason,
+   638→        errorMessage: blockReason,
+   639→        engineId: input.engineId ?? null,
+   640→        backend: null,
+   641→        backendMismatch: false,
+   642→      };
+   643→    }
+   644→
+   645→    // Stage: FLUX image generation (Modal H100 or z-ai fallback) with calibration
+   646→    const flux = await stageFlux(input.prompt, input.style, input.aspect, input.wardrobe, gen.id, calibration, input.loraIds, input.engineId);
+   647→    timings.flux = flux.ms;
+   648→    await db.generation.update({
+   649→      where: { id: gen.id },
+   650→      data: { imagePath: flux.imagePath, maturityTier: tier },
+   651→    });
+   652→    await logEvent(
+   653→      "stage_complete",
+   654→      `FLUX image generated via ${flux.backend.toUpperCase()} (${flux.ms}ms) · tier=${tier}`,
+   655→      "success",
+   656→      gen.id
+   657→    );
+   658→
+   659→    // Stage: MiniCPM-V visual judge
+   660→    const judge = await stageJudge(flux.imagePath, input.prompt, input.style, input.wardrobe, input.brainId);
+   661→    timings.judge = judge.stageMs;
+   662→    await db.judgeReport.create({
+   663→      data: {
+   664→        generationId: gen.id,
+   665→        promptAdherence: judge.promptAdherence,
+   666→        visualQuality: judge.visualQuality,
+   667→        aestheticScore: judge.aestheticScore,
+   668→        safetyScore: judge.safetyScore,
+   669→        wardrobeMatch: judge.wardrobeMatch,
+   670→        overallScore: judge.overallScore,
+   671→        verdict: judge.verdict,
+   672→        observations: JSON.stringify(judge.observations),
+   673→        strengths: JSON.stringify(judge.strengths),
+   674→        weaknesses: JSON.stringify(judge.weaknesses),
+   675→        stageMs: judge.stageMs,
+   676→      },
+   677→    });
+   678→    await logEvent(
+   679→      "stage_complete",
+   680→      `MiniCPM-V judged: ${judge.verdict} (overall ${judge.overallScore})`,
+   681→      judge.verdict === "approved" ? "success" : judge.verdict === "rejected" ? "warn" : "info",
+   682→      gen.id
+   683→    );
+   684→
+   685→    // Stage: Nemotron evidence parse
+   686→    const nem = await stageNemotron(input.prompt, input.style, input.aspect, input.wardrobe, safety, judge, input.brainId);
+   687→    timings.nemotron = nem.ms;
+   688→    await logEvent("stage_complete", `Nemotron structured evidence parsed (${nem.ms}ms)`, "success", gen.id);
+   689→
+   690→    timings.prompt = elapsed(promptStart) - (timings.flux + timings.st3gg + timings.judge + timings.nemotron);
+   691→    if (timings.prompt < 0) timings.prompt = 0;
+   692→    timings.output = 1;
+   693→
+   694→    await db.generation.update({
+   695→      where: { id: gen.id },
+   696→      data: {
+   697→        status: "completed",
+   698→        verdict: judge.verdict,
+   699→        overallScore: judge.overallScore,
+   700→        evidence: JSON.stringify(nem.evidence),
+   701→        timings: JSON.stringify(timings),
+   702→      },
+   703→    });
+   704→    await logEvent(
+   705→      "pipeline_complete",
+   706→      `Pipeline complete — verdict: ${judge.verdict}, score: ${judge.overallScore}, tier: ${tier}`,
+   707→      "success",
+   708→      gen.id
+   709→    );
+   710→
+   711→    return {
+   712→      id: gen.id,
+   713→      status: "completed",
+   714→      imagePath: flux.imagePath,
+   715→      safety,
+   716→      judge,
+   717→      evidence: nem.evidence,
+   718→      timings,
+   719→      verdict: judge.verdict,
+   720→      overallScore: judge.overallScore,
+   721→      calibration,
+   722→      loraIds: input.loraIds,
+   723→      maturityTier: tier,
+   724→      blockReason: null,
+   725→      errorMessage: null,
+   726→      engineId: flux.engineId,
+   727→      backend: flux.backend,
+   728→      backendMismatch: flux.backendMismatch,
+   729→    };
+   730→  } catch (err) {
+   731→    const message = err instanceof Error ? err.message : String(err);
+   732→    timings.output = elapsed(promptStart);
+   733→    await db.generation.update({
+   734→      where: { id: gen.id },
+   735→      data: {
+   736→        status: "failed",
+   737→        timings: JSON.stringify(timings),
+   738→        errorMessage: message,
+   739→      },
+   740→    });
+   741→    await logEvent("error", `Pipeline failed: ${truncate(message, 200)}`, "error", gen.id);
+   742→    return {
+   743→      id: gen.id,
+   744→      status: "failed",
+   745→      imagePath: null,
+   746→      safety: null,
+   747→      judge: null,
+   748→      evidence: null,
+   749→      timings,
+   750→      verdict: null,
+   751→      overallScore: null,
+   752→      calibration,
+   753→      loraIds: input.loraIds,
+   754→      maturityTier: null,
+   755→      blockReason: null,
+   756→      errorMessage: message,
+   757→      engineId: input.engineId ?? null,
+   758→      backend: null,
+   759→      backendMismatch: false,
+   760→    };
+   761→  }
+   762→}
+   763→
+   764→export async function logEvent(
+   765→  kind: string,
+   766→  message: string,
+   767→  severity: "info" | "warn" | "error" | "success" = "info",
+   768→  generationId: string | null = null,
+   769→  meta: Record<string, unknown> | null = null
+   770→) {
+   771→  try {
+   772→    await db.auditEvent.create({
+   773→      data: {
+   774→        kind,
+   775→        message,
+   776→        severity,
+   777→        generationId,
+   778→        meta: meta ? JSON.stringify(meta) : null,
+   779→      },
+   780→    });
+   781→  } catch {
+   782→    // never let logging fail the pipeline
+   783→  }
+   784→}
+   785→
+   786→function truncate(s: string, n: number): string {
+   787→  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+   788→}
+   789→

@@ -1,0 +1,40 @@
+{
+  "summary": "High-fashion editorial image approved with strong photorealistic quality and aesthetic appeal, though with minor deviations in wardrobe elements and background lighting.",
+  "modelChain": [
+    "FLUX.2",
+    "ST3GG",
+    "MiniCPM-V",
+    "Nemotron"
+  ],
+  "provenance": {
+    "generator": "Modal H100 GPU (Krea 2 Turbo)",
+    "safetyModel": "ST3GG (via z-ai chat completions)",
+    "judgeModel": "MiniCPM-V 2.6 (via z-ai vision)",
+    "aggregator": "Nemotron-Nano (via z-ai chat completions)"
+  },
+  "finalVerdict": "approved",
+  "confidence": 84,
+  "keyFindings": [
+    "Exceptional photorealistic quality with high detail in skin texture and hair",
+    "Strong adherence to the requested luxury fashion aesthetic",
+    "Minor deviations in wardrobe elements, particularly the faux fur trim",
+    "Background elements don't fully match the described stained glass windows",
+    "Overall safety score of 100 with no explicit content violations"
+  ],
+  "recommendations": [
+    "Refine the prompt to better specify background elements and lighting conditions",
+    "Consider additional guidance for wardrobe details to improve match accuracy",
+    "Experiment with different aspect ratios for better composition"
+  ],
+  "riskProfile": {
+    "contentRisk": "low",
+    "qualityRisk": "low",
+    "overallRisk": "low"
+  },
+  "metrics": {
+    "safetyScore": 100,
+    "overallScore": 84,
+    "promptAdherence": 85,
+    "aestheticScore": 88
+  }
+}
