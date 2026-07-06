@@ -17,8 +17,8 @@
 
 import { assessBudgetStatus, DEFAULT_WORKSPACE_BUDGET_USD, DEFAULT_CONTRACT, type SpendRecord, type ModalGpu } from "@/lib/modal-budget";
 import {
-  MODAL_TOKEN_ID,
-  MODAL_TOKEN_SECRET,
+  MODAL_PROXY_KEY,
+  MODAL_PROXY_SECRET,
   MODAL_FLUX2_GENERATE_URL,
   MODAL_FLUX2_HEALTH_URL,
   MODAL_BRAIN_URL,
@@ -307,10 +307,11 @@ export function getModalBaseUrl(): string {
 // through to z-ai — so the pipeline always works, even before the brain is ready.
 
 export function isBrainEndpointConfigured(): boolean {
-  // Brain endpoint is "configured" if we have the URL AND auth tokens.
-  // Tokens come from secrets.ts (hardcoded fallback) so this is always true
-  // unless someone explicitly clears the secrets.ts file.
-  return MODAL_BRAIN_URL.length > 0 && MODAL_TOKEN_ID.length > 0 && MODAL_TOKEN_SECRET.length > 0;
+  // Brain endpoint is "configured" if we have the URL AND proxy auth tokens.
+  // Proxy tokens (wk-/ws-) are created via `modal workspace proxy-tokens create`
+  // and are DIFFERENT from API tokens (ak-/as-). API tokens don't work for
+  // endpoint proxy auth.
+  return MODAL_BRAIN_URL.length > 0 && MODAL_PROXY_KEY.length > 0 && MODAL_PROXY_SECRET.length > 0;
 }
 
 export function getModalBrainUrl(): string {
@@ -349,10 +350,11 @@ export async function callModalBrain(
     const res = await fetch(`${MODAL_BRAIN_URL}/v1/chat/completions`, {
       method: "POST",
       // Modal Auto Endpoints require proxy auth: Modal-Key + Modal-Secret headers.
+      // These must be PROXY tokens (wk-/ws-), NOT API tokens (ak-/as-).
       headers: {
         "Content-Type": "application/json",
-        "Modal-Key": MODAL_TOKEN_ID,
-        "Modal-Secret": MODAL_TOKEN_SECRET,
+        "Modal-Key": MODAL_PROXY_KEY,
+        "Modal-Secret": MODAL_PROXY_SECRET,
       },
       body: JSON.stringify({
         model: MODAL_BRAIN_MODEL,
