@@ -16,21 +16,20 @@
  */
 
 import { assessBudgetStatus, DEFAULT_WORKSPACE_BUDGET_USD, DEFAULT_CONTRACT, type SpendRecord, type ModalGpu } from "@/lib/modal-budget";
+import {
+  MODAL_TOKEN_ID,
+  MODAL_TOKEN_SECRET,
+  MODAL_FLUX2_GENERATE_URL,
+  MODAL_FLUX2_HEALTH_URL,
+  MODAL_BRAIN_URL,
+  MODAL_BRAIN_MODEL,
+  MODAL_COLD_START_TIMEOUT as _COLD,
+  MODAL_WARM_TIMEOUT as _WARM,
+} from "@/lib/secrets";
 
-// FLUX.2 Klein 9B endpoint — the GENERATE webhook URL
-// (deployed via modal-apps/nexus_flux2_klein9b.py as @modal.fastapi_endpoint(method="POST"))
-const MODAL_FLUX2_URL = process.env.MODAL_FLUX2_URL || "";
-// FLUX.2 HEALTH endpoint — derived from the generate URL by replacing
-// `-generate.modal.run` with `-health.modal.run`. The Modal app exposes TWO
-// separate fastapi_endpoint methods (health GET + generate POST), each with
-// its own URL. The .env only sets the generate URL; we derive the health URL
-// so checkModalHealth() actually hits a real endpoint (instead of 404ing on
-// ...generate.modal.run/health).
-const MODAL_FLUX2_HEALTH_URL = (() => {
-  if (process.env.MODAL_FLUX2_HEALTH_URL) return process.env.MODAL_FLUX2_HEALTH_URL;
-  if (!MODAL_FLUX2_URL) return "";
-  return MODAL_FLUX2_URL.replace(/-generate\.modal\.run$/, "-health.modal.run");
-})();
+// FLUX.2 Klein 9B endpoints — from secrets.ts (bulletproof against .env wipes)
+const MODAL_FLUX2_URL = MODAL_FLUX2_GENERATE_URL;
+const MODAL_FLUX2_HEALTH_URL_FINAL = MODAL_FLUX2_HEALTH_URL;
 
 // Use FLUX.2 generate URL as the primary.
 const MODAL_BASE_URL = MODAL_FLUX2_URL;
@@ -44,8 +43,8 @@ const FLUX2_DEFAULT_CFG = 1.0; // klein-9B uses near-zero CFG
 
 // Modal is the PRIMARY generation path. Default TRUE even if .env gets reset.
 const MODAL_USE = process.env.MODAL_USE !== "false";
-const COLD_START_TIMEOUT = Number(process.env.MODAL_COLD_START_TIMEOUT || 300);
-const WARM_TIMEOUT = Number(process.env.MODAL_WARM_TIMEOUT || 120);
+const COLD_START_TIMEOUT = _COLD;
+const WARM_TIMEOUT = _WARM;
 
 export function isFlux2Deployed(): boolean {
   return MODAL_FLUX2_URL.length > 0;
@@ -93,7 +92,7 @@ export async function checkModalHealth(): Promise<ModalHealth> {
   const t0 = Date.now();
   // Use the DERIVED health URL (not ${MODAL_BASE_URL}/health which 404s on
   // the generate webhook URL).
-  const healthUrl = MODAL_FLUX2_HEALTH_URL;
+  const healthUrl = MODAL_FLUX2_HEALTH_URL_FINAL;
   if (!healthUrl) {
     return {
       ok: false,
@@ -290,30 +289,27 @@ export function getModalBaseUrl(): string {
   return MODAL_BASE_URL;
 }
 
-// ── Modal Brain Endpoint (Huihui-Qwen-AgentWorld-35B-A3B-abliterated) ────────
-// This is a Modal Auto Endpoint serving Qwen3.6-35B-A3B (abliterated/uncensored)
-// on a B200 GPU. It exposes an OpenAI-compatible /v1/chat/completions API.
-// Used as the pipeline "brain" for ST3GG safety scan and Nemotron evidence
-// parsing. When configured (MODAL_BRAIN_URL + MODAL_TOKEN_ID + MODAL_TOKEN_SECRET
-// all set), the pipeline prefers this over z-ai for text-based brain stages —
-// it's uncensored and can analyze mature content without refusal.
+// ── Modal Brain Endpoint (Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16) ─────────
+// Modal Auto Endpoint serving AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16
+// on a B200 GPU (EU West). OpenAI-compatible /v1/chat/completions API.
 //
-// AUTH: Modal Auto Endpoints require proxy auth. The MODAL_TOKEN_ID and
-// MODAL_TOKEN_SECRET env vars are sent as Modal-Key and Modal-Secret headers.
-// Get them from: Modal Dashboard → Settings → API Tokens.
+// Used as the pipeline "brain" for ST3GG safety scan, visual judge, and
+// Nemotron evidence parsing. This model has vision + broad uncensored reasoning
+// — it can analyze mature content without refusal AND process images.
 //
-// NOTE: This endpoint does NOT support vision (image understanding) yet. The
-// judge stage (which needs to "see" the generated image) always uses z-ai
-// vision. To enable vision on this endpoint, the Modal deployment would need
-// mmproj packs installed for visual activations (per user's note).
-const MODAL_BRAIN_URL = process.env.MODAL_BRAIN_URL || "";
-const MODAL_TOKEN_ID = process.env.MODAL_TOKEN_ID || "";
-const MODAL_TOKEN_SECRET = process.env.MODAL_TOKEN_SECRET || "";
+// AUTH: Modal Auto Endpoints require proxy auth. MODAL_TOKEN_ID and
+// MODAL_TOKEN_SECRET are sent as Modal-Key and Modal-Secret headers.
+// These are imported from src/lib/secrets.ts (committed to git, bulletproof
+// against .env wipes).
+//
+// The endpoint URL + model name are also from secrets.ts. If the endpoint is
+// still provisioning, callModalBrain returns null and the pipeline falls
+// through to z-ai — so the pipeline always works, even before the brain is ready.
 
 export function isBrainEndpointConfigured(): boolean {
-  // Brain endpoint is only "configured" if we have the URL AND auth tokens.
-  // Without tokens, the endpoint returns 401 "proxy auth required" and we'd
-  // waste 45s on every brain call before falling through to z-ai.
+  // Brain endpoint is "configured" if we have the URL AND auth tokens.
+  // Tokens come from secrets.ts (hardcoded fallback) so this is always true
+  // unless someone explicitly clears the secrets.ts file.
   return MODAL_BRAIN_URL.length > 0 && MODAL_TOKEN_ID.length > 0 && MODAL_TOKEN_SECRET.length > 0;
 }
 
@@ -334,12 +330,12 @@ export interface BrainChatResult {
 
 /**
  * Call the Modal brain endpoint (OpenAI-compatible /v1/chat/completions).
- * Has a 45s timeout — if the brain container is cold-starting (vLLM takes
- * 60-120s to load a 35B model), we abort and let the caller fall through to
+ * Has a 60s timeout — if the brain container is cold-starting (vLLM takes
+ * 60-120s to load a 27B model), we abort and let the caller fall through to
  * z-ai. Without this, ST3GG hangs forever and the pipeline stalls.
  *
- * Returns null on failure (timeout, HTTP error, network error, missing auth)
- * so the caller can gracefully fall through to z-ai. NEVER throws.
+ * Returns null on failure (timeout, HTTP error, network error, endpoint still
+ * provisioning) so the caller can gracefully fall through to z-ai. NEVER throws.
  */
 export async function callModalBrain(
   messages: BrainChatMessage[],
@@ -359,12 +355,12 @@ export async function callModalBrain(
         "Modal-Secret": MODAL_TOKEN_SECRET,
       },
       body: JSON.stringify({
-        model: "huihui-ai/Huihui-Qwen-AgentWorld-35B-A3B-abliterated",
+        model: MODAL_BRAIN_MODEL,
         messages,
         temperature,
         max_tokens: maxTokens,
       }),
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(60_000),
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
@@ -380,11 +376,11 @@ export async function callModalBrain(
     return {
       content,
       ms: Date.now() - t0,
-      model: "Huihui-Qwen-AgentWorld-35B-A3B-abliterated (Modal B200)",
+      model: "Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16 (Modal B200)",
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.log(`[modal-brain] failed: ${msg}`);
+    console.log(`[modal-brain] failed (endpoint may still be provisioning): ${msg}`);
     return null;
   }
 }
