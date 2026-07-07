@@ -156,20 +156,24 @@ export async function stageFlux(
   let base64: string | null = null;
 
   // Build the LoRA array for Modal: map our library IDs to HF repo IDs + weights
-  const modalLoras = loraIds
+  const modalLoras: Array<{ repo: string; adapter: string; weight: number; weightName?: string } | null> = loraIds
     .map((id) => {
       const lora = getLora(id);
       if (!lora) return null;
       // Extract HF repo ID from the URL: https://huggingface.co/NO8D/BodyControl → NO8D/BodyControl
       const repoMatch = lora.url.match(/huggingface\.co\/([^\/]+\/[^\/\?#]+)/);
       if (!repoMatch) return null;
-      return {
+      const entry: { repo: string; adapter: string; weight: number; weightName?: string } = {
         repo: repoMatch[1],
         adapter: lora.id, // use our id as the adapter name
         weight: loraWeights[id] ?? lora.recommendedWeight,
       };
-    })
-    .filter((l): l is { repo: string; adapter: string; weight: number } => l !== null);
+      // Pass weight_name for repos with multiple .safetensors files — prevents
+      // diffusers from loading the wrong weights (quality bug).
+      if (lora.weightName) entry.weightName = lora.weightName;
+      return entry;
+    });
+  const validModalLoras = modalLoras.filter((l): l is { repo: string; adapter: string; weight: number; weightName?: string } => l !== null);
 
   // Modal is the PRIMARY and ONLY image generation path.
   // The H100 serves FLUX.1-schnell with LoRA support.
@@ -183,14 +187,14 @@ export async function stageFlux(
         height,
         steps: calibration.steps,
         cfg: calibration.cfg,
-        loras: modalLoras,
+        loras: validModalLoras,
         isFirstCall: true, // allow long cold-start timeout (300s)
       });
       base64 = result.imageBase64;
       backend = "modal";
       await logEvent(
         "stage_complete",
-        `Modal /generate ok — ${result.ms}ms (round-trip ${result.latencyMs}ms) · engine=${selectedEngine.shortName} steps=${calibration.steps} cfg=${calibration.cfg} loras=${modalLoras.length}`,
+        `Modal /generate ok — ${result.ms}ms (round-trip ${result.latencyMs}ms) · engine=${selectedEngine.shortName} steps=${calibration.steps} cfg=${calibration.cfg} loras=${validModalLoras.length}`,
         "success",
         generationId
       );

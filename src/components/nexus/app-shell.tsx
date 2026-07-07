@@ -297,9 +297,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {LEGAL_DISCLAIMER}
           </p>
           <div className="flex items-center gap-3 font-mono">
-            <span>FLUX.2 → ST3GG → Gemma 4 → Nemotron</span>
+            <span>FLUX.2 → ST3GG → AEON 27B → Nemotron</span>
             <span className="text-muted-foreground/50">·</span>
-            <span className="text-primary">Modal L40S GPU · uncensored brain</span>
+            <span className="text-primary">Modal L40S GPU · AEON uncensored brain</span>
           </div>
         </div>
       </footer>

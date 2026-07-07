@@ -187,7 +187,7 @@ export async function generateImageViaModal(params: {
   steps?: number;
   cfg?: number;
   seed?: number;
-  loras?: Array<{ repo: string; adapter?: string; weight: number }>;
+  loras?: Array<{ repo: string; adapter?: string; weight: number; weightName?: string }>;
   isFirstCall?: boolean;
 }): Promise<ModalGenerateResult> {
   const { prompt, width, height, steps, cfg, seed, loras, isFirstCall } = params;
@@ -227,8 +227,19 @@ export async function generateImageViaModal(params: {
     width: String(width),
   });
   const generateUrl = `${MODAL_FLUX2_URL}?${queryParams.toString()}`;
-  // Body = the loras list (JSON array). When no loras, send an empty array.
-  const lorasBody = JSON.stringify(loras && loras.length > 0 ? loras : []);
+  // Body = the loras list (JSON array). Convert weightName → weight_name for the
+  // Python Modal app (which reads lora.get("weight_name", "")). When no loras,
+  // send an empty array.
+  const lorasBody = JSON.stringify(
+    loras && loras.length > 0
+      ? loras.map((l) => ({
+          repo: l.repo,
+          adapter: l.adapter,
+          weight: l.weight,
+          ...(l.weightName ? { weight_name: l.weightName } : {}),
+        }))
+      : []
+  );
 
   try {
     const res = await fetch(generateUrl, {

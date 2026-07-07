@@ -622,8 +622,8 @@ export function StudioView() {
               Weave a vision through the governed pipeline
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-[15px]">
-              Describe what you want. FLUX generates the image on a Modal H100 GPU,
-              then ST3GG, Gemma 4 and Nemotron scan, judge and structure the result — automatically.
+              Describe what you want. FLUX generates the image on a Modal L40S GPU,
+              then ST3GG, AEON 27B and Nemotron scan, judge and structure the result — automatically.
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-3">
@@ -959,7 +959,7 @@ export function StudioView() {
             modalWarm ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-300" : "border-amber-500/30 bg-amber-500/5 text-amber-300"
           )}>
             <span className={cn("h-1.5 w-1.5 rounded-full", modalWarm ? "bg-emerald-400" : "bg-amber-400 nexus-pulse")} />
-            {modalWarm ? "Modal H100 · Warm" : warming ? "Modal H100 · Warming…" : "Modal H100 · Cold (auto-warming)"}
+            {modalWarm ? "Modal L40S · Warm" : warming ? "Modal L40S · Warming…" : "Modal L40S · Cold (auto-warming)"}
           </div>
 
           {/* Run button + Warm up Modal */}
@@ -2490,7 +2490,7 @@ function CalibrationPanel() {
       </Collapsible>
 
       <p className="mt-2 text-[9px] leading-snug text-muted-foreground/60">
-        Modal H100 backend receives steps/cfg/sampler as real params. The z-ai
+        Modal L40S backend receives steps/cfg/sampler as real params. The z-ai
         fallback injects qualityTokens into the prompt (steps/cfg recorded as
         provenance).
       </p>
@@ -4818,7 +4818,7 @@ function BrainSuggestionRow({
  *
  * Default OFF → the run uses z-ai SDK (always warm, reliable, 20-30s/image).
  * When toggled ON → the run sends modalBoost=true and the route handler
- * temporarily sets MODAL_USE=true for that one request, routing to Modal H100.
+ * temporarily sets MODAL_USE=true for that one request, routing to Modal L40S.
  *
  * Because the Modal endpoint has min_containers=0, max_containers=1, every
  * request to a cold container queues behind a 30-60s weight load. We surface
@@ -4908,7 +4908,7 @@ function GpuBoostToggle({
             </div>
             <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
               {useModalBoost
-                ? "Modal H100 — may cold-start 30-60s. Click Warm up first."
+                ? "Modal L40S — may cold-start 30-60s. Click Warm up first."
                 : "z-ai hosted inference — reliable, 20-30s per image (default)."}
             </p>
           </div>

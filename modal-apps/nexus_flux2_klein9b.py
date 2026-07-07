@@ -67,18 +67,24 @@ class NexusFlux2Generator:
                 repo = lora.get("repo", "")
                 adapter = lora.get("adapter", "")
                 weight = float(lora.get("weight", 0.7))
+                weight_name = lora.get("weight_name", "")  # e.g. "4x-UltraSharpV2.safetensors"
                 if not repo:
                     continue
                 try:
+                    # Pass weight_name when specified — prevents loading the wrong
+                    # .safetensors file when a repo has multiple (e.g. UltraSharp V2
+                    # has both "4x-UltraSharpV2.safetensors" and others).
+                    load_kwargs: dict[str, Any] = {}
                     if adapter:
-                        self.pipe.load_lora_weights(repo, adapter_name=adapter)
-                    else:
-                        self.pipe.load_lora_weights(repo)
+                        load_kwargs["adapter_name"] = adapter
+                    if weight_name:
+                        load_kwargs["weight_name"] = weight_name
+                    self.pipe.load_lora_weights(repo, **load_kwargs)
                     active_adapters.append(adapter or repo.split("/")[-1])
                     active_weights.append(weight)
-                    lora_status.append({"repo": repo, "adapter": adapter, "status": "loaded", "weight": weight})
+                    lora_status.append({"repo": repo, "adapter": adapter, "weight_name": weight_name, "status": "loaded", "weight": weight})
                 except Exception as exc:
-                    lora_status.append({"repo": repo, "adapter": adapter, "status": "failed", "error": str(exc)[:300]})
+                    lora_status.append({"repo": repo, "adapter": adapter, "weight_name": weight_name, "status": "failed", "error": str(exc)[:300]})
             if active_adapters:
                 self.pipe.set_adapters(active_adapters, adapter_weights=active_weights)
 

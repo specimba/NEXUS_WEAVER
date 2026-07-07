@@ -59,6 +59,18 @@ export interface LoraEntry {
   isControl: boolean;
   // curation priority (NO8D focus = high)
   priority?: "high" | "normal";
+  // When a HF repo has multiple .safetensors files, specify which one to load.
+  // Without this, diffusers picks one arbitrarily (alphabetically), which often
+  // loads the WRONG weights — e.g. UltraSharp V2 repo has both
+  // "4x-UltraSharpV2.safetensors" and others; without weight_name, diffusers
+  // might load a non-functional file. The Modal app passes this to
+  // pipe.load_lora_weights(repo, weight_name=...).
+  weightName?: string;
+  // Trigger word(s) that should be added to the prompt when this LoRA is active.
+  // e.g. NO8D's commercial photography LoRA uses "Styles of commercial advertising photography"
+  triggerWord?: string;
+  // Does this LoRA need a reference image? (ControlNet-style LoRAs, face-swap, etc.)
+  needsReference?: boolean;
 }
 
 export const LORA_CATEGORIES: { id: LoraCategory; label: string; description: string }[] = [
@@ -613,12 +625,15 @@ export const LORA_LIBRARY: LoraEntry[] = [
     source: "huggingface",
     url: "https://huggingface.co/DeverStyle/Flux.2-Klein-Loras",
     engineFamilies: ["FLUX.2"],
-    purpose: "Collection of style/character adapters for Klein 9B.",
+    purpose: "Collection of style/character adapters for Klein 9B. Arcane visual style.",
     recommendedWeight: 0.7,
     tags: ["collection", "style", "character", "FLUX.2"],
     mature: false,
     license: "verify",
     isControl: false,
+    // This repo has multiple .safetensors files (dever_arcane_f2k_9b, etc.)
+    // Without weight_name, diffusers picks one arbitrarily.
+    weightName: "dever_arcane_f2k_9b (arcane_visual_style).safetensors",
   },
 
   // ════════════════════════════════════════════════════════════════════════
@@ -638,6 +653,8 @@ export const LORA_LIBRARY: LoraEntry[] = [
     license: "verify",
     isControl: false,
     priority: "high",
+    // This repo has multiple .safetensors files — specify the correct one.
+    weightName: "4x-UltraSharpV2.safetensors",
   },
   {
     id: "ltx2-detailer",
