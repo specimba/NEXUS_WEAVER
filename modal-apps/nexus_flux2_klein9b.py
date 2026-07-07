@@ -89,16 +89,20 @@ class NexusFlux2Generator:
                 self.pipe.set_adapters(active_adapters, adapter_weights=active_weights)
 
         generator = torch.Generator(device="cuda").manual_seed(seed)
-        result = self.pipe(
-            prompt=prompt,
-            negative_prompt=negative_prompt if negative_prompt else None,
-            num_inference_steps=steps,
-            guidance_scale=cfg,
-            height=height,
-            width=width,
-            generator=generator,
-            output_type="pil",
-        ).images[0]
+        # NOTE: Flux2KleinPipeline does NOT accept negative_prompt (unlike FluxPipeline).
+        # The Klein 9B model uses guidance_scale=1.0 (no CFG), so negative prompts
+        # are not applicable. Passing negative_prompt causes:
+        #   TypeError: Flux2KleinPipeline.__call__() got an unexpected keyword argument 'negative_prompt'
+        pipe_kwargs: dict[str, Any] = {
+            "prompt": prompt,
+            "num_inference_steps": steps,
+            "guidance_scale": cfg,
+            "height": height,
+            "width": width,
+            "generator": generator,
+            "output_type": "pil",
+        }
+        result = self.pipe(**pipe_kwargs).images[0]
 
         gen_ms = (time.time() - t0) * 1000
         buf = io.BytesIO()
