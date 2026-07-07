@@ -507,18 +507,15 @@ export function StudioView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [run, running, prompt]);
 
-  // Auto-warm Modal on mount — fire-and-forget. The /api/modal/status endpoint
-  // (60s cached) is used for the initial status display, NOT the warmup POST.
-  // This prevents the UI from flashing while the 60s warmup request is in-flight.
-  // The warmup POST triggers the container to start; the status poll picks up
-  // the result later. Silent on success; subtle toast on cold-start.
+  // Auto-warm Modal on mount — warms BOTH FLUX.2 + AEON brain simultaneously.
+  // Fire-and-forget: the warmup POST pings both containers in parallel.
+  // The /api/modal/status endpoint (60s cached) is used for the initial status
+  // display. This prevents UI flashing while the warmup is in-flight.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        // Fire the warmup POST but DON'T await it — let it run in the background.
-        // The container starts cold-loading; we'll pick up the result via
-        // /api/modal/status (cached, fast) on the next poll.
+        // Fire the warmup POST (warms both FLUX.2 + brain) but DON'T await it.
         fetch("/api/modal/warmup", { method: "POST" }).catch(() => {});
         // Quick status check (cached, returns in <100ms if cache is fresh)
         const sr = await fetch("/api/modal/status", { cache: "no-store" });
@@ -529,7 +526,7 @@ export function StudioView() {
         } else if (sd.enabled && !sd.reachable) {
           setModalWarm(false);
           toast.info("Modal GPU is cold-starting", {
-            description: "First generation takes ~60-90s (cold start). The async pipeline handles it — just run and wait.",
+            description: "Warming FLUX.2 + AEON brain together (~60-120s). The async pipeline handles it — just run and wait.",
           });
         }
       } catch {
@@ -551,8 +548,16 @@ export function StudioView() {
       const data = await res.json();
       if (data.warmed) {
         setModalWarm(true);
-        toast.success(`Modal warm — ${data.latencyMs ?? "?"}ms`, {
-          description: data.model ? `${data.model} on ${data.gpu}` : undefined,
+        // Show combined FLUX.2 + brain status
+        const fluxMs = data.flux?.latencyMs ?? data.latencyMs ?? "?";
+        const brainOk = data.brain?.reachable ?? false;
+        const brainMs = data.brain?.latencyMs ?? "?";
+        toast.success(`FLUX.2 warm — ${fluxMs}ms`, {
+          description: brainOk
+            ? `AEON brain also warm — ${brainMs}ms. Both ready.`
+            : data.brain
+            ? `AEON brain still cold-starting — will fall through to z-ai.`
+            : `${data.model ?? "FLUX.2 Klein 9B"} on ${data.gpu ?? "L40S"}`,
         });
       } else if (!data.enabled) {
         setModalWarm(false);
@@ -560,7 +565,7 @@ export function StudioView() {
       } else {
         setModalWarm(false);
         toast.warning("Modal still cold-starting", {
-          description: "Try again in 1–2 minutes, or run the pipeline and wait.",
+          description: data.message?.slice(0, 140) || "Try again in 1–2 minutes, or run the pipeline and wait.",
         });
       }
     } catch (e) {

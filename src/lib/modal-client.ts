@@ -329,6 +329,51 @@ export function getModalBrainUrl(): string {
   return MODAL_BRAIN_URL;
 }
 
+/**
+ * Check if the AEON brain endpoint is alive (warm). Sends a lightweight
+ * /v1/models request with proxy auth. Returns { ok, latencyMs, error }.
+ *
+ * Used by /api/modal/warmup to warm BOTH the FLUX.2 container AND the brain
+ * endpoint simultaneously — so when the user clicks "Warm up", both are ready.
+ *
+ * Never throws — returns { ok: false } on any error.
+ */
+export async function checkBrainHealth(): Promise<{
+  ok: boolean;
+  latencyMs: number;
+  status: string;
+  error?: string;
+}> {
+  if (!isBrainEndpointConfigured()) {
+    return { ok: false, latencyMs: 0, status: "not_configured", error: "Brain endpoint not configured" };
+  }
+  const t0 = Date.now();
+  try {
+    // Use /v1/models — it's a lightweight GET that vLLM responds to quickly.
+    // A 200 means the container is warm and the model is loaded.
+    // A 503 means the container is still cold-starting (scale-to-zero).
+    const res = await fetch(`${MODAL_BRAIN_URL}/v1/models`, {
+      method: "GET",
+      headers: {
+        "Modal-Key": MODAL_PROXY_KEY,
+        "Modal-Secret": MODAL_PROXY_SECRET,
+      },
+      signal: AbortSignal.timeout(30_000),
+    });
+    const latencyMs = Date.now() - t0;
+    if (res.ok) {
+      return { ok: true, latencyMs, status: "ok" };
+    }
+    if (res.status === 503) {
+      return { ok: false, latencyMs, status: "cold_starting", error: "Container still cold-starting" };
+    }
+    return { ok: false, latencyMs, status: "http_error", error: `HTTP ${res.status}` };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, latencyMs: Date.now() - t0, status: "unreachable", error: msg };
+  }
+}
+
 export interface BrainChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
