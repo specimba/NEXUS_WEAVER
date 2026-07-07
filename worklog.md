@@ -716,3 +716,45 @@ Stage Summary:
 - The Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16 brain endpoint is wired and responding (ST3GG 10.6s).
 - The pipeline runs end-to-end: ST3GG → FLUX.2 → Judge → Nemotron. Image generated successfully.
 - Modal CLI is authenticated — can deploy/manage apps from the sandbox.
+
+---
+Task ID: v5.4-new-tokens+flashing-fix
+Agent: Z.ai Code (main)
+Task: Update Modal tokens (new API + proxy) + fix dashboard flashing in first minutes
+
+TOKENS UPDATED:
+- API token: ak_REDACTED_SEE_GITHUB_SECRETS / as_REDACTED_SEE_GITHUB_SECRETS (for Modal CLI)
+- Proxy token: wk_REDACTED_SEE_GITHUB_SECRETS / ws_REDACTED_SEE_GITHUB_SECRETS (for endpoint auth)
+- Both stored in secrets.ts (committed to git, bulletproof) + .env
+- Modal CLI re-authenticated successfully
+
+BRAIN ENDPOINT ALIVE:
+- Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16 endpoint is now FULLY OPERATIONAL
+- HTTP 200 in 1.5s with valid OpenAI-compatible response
+- Has reasoning capability (reasoning_content field in response)
+- The new proxy token (wk_REDACTED_SEE_GITHUB_SECRETS) authenticates correctly
+
+DASHBOARD FLASHING FIX:
+Root cause: Multiple rapid state changes in the first 1-2 minutes of page load.
+1. Auto-warmup POST (/api/modal/warmup) took up to 60s — modalWarm state was null
+   during that time, then flipped to true/false, causing a visual flash.
+   FIX: Fire-and-forget the warmup POST. Use /api/modal/status (cached, fast)
+   for the initial status display instead.
+2. RecentGenerations refetched every 15s — each refetch showed skeleton→content
+   cycle, causing periodic flashing.
+   FIX: refetchInterval 15s→60s + staleTime 30s to prevent focus-refetch flashing.
+3. Stale text: "z-ai fallback" and "1-7 min" no longer accurate.
+   FIX: Updated to "async pipeline handles it" and "60-90s".
+
+Verification:
+- Brain endpoint: HTTP 200 in 1.5s ✅ (was 503 provisioning before)
+- Agent Browser: page loads clean, no errors, no hydration mismatch ✅
+- HMR connected, Fast Refresh working ✅
+- lint clean, tsc clean ✅
+- Git: committed
+
+Stage Summary:
+- The Qwen3.6-27B-AEON brain is ALIVE and responding in 1.5s. The pipeline will
+  now use it for ST3GG + Nemotron stages (uncensored reasoning + vision).
+- Dashboard flashing is fixed: fire-and-forget warmup + slower gallery refetch.
+- All tokens are bulletproof in secrets.ts (committed to git).
