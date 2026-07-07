@@ -800,3 +800,33 @@ Stage Summary:
 - The brain catalog now shows the AEON 27B model as default/recommended.
 - All Modal tokens are bulletproof in secrets.ts.
 - The brain endpoint is alive and responding (benchmark: 1.9 req/s).
+
+---
+Task ID: v5.8-negative-prompt-fix + prompt-routes
+Agent: Z.ai Code (main)
+Task: Fix HTTP 500 on every generation + fix NO8D Prompt+ section (Expand/Reverse not working)
+
+ROOT CAUSE OF HTTP 500:
+- Flux2KleinPipeline.__call__() does NOT accept 'negative_prompt' (unlike FluxPipeline)
+- The deployed Modal app was passing negative_prompt=negative_prompt if negative_prompt else None
+- This caused: TypeError: Flux2KleinPipeline.__call__() got an unexpected keyword argument 'negative_prompt'
+- → 500 Internal Server Error on EVERY generate call
+- Fix: Removed negative_prompt from pipe() kwargs. Flux2KleinPipeline uses guidance_scale=1.0 (no CFG),
+  so negative prompts are not applicable.
+- Redeployed to Modal: ✓ App deployed in 3.488s
+
+NO8D PROMPT+ SECTION FIXED:
+- /api/prompt/enhance (Expand mode) — was wiped by sandbox reset, recreated + committed to git.
+  Takes { prompt, extraRules, style } → returns { enhanced }.
+  Verified working: returns detailed prompt with camera/lighting/composition details.
+- /api/prompt/reverse (Reverse mode) — never existed, created.
+  Takes { imagePath } or { imageDataUrl } → returns { prompt }.
+  Uses z-ai vision (VLM) to reverse-engineer a FLUX.2 prompt from an image.
+  Supports gallery paths, DB-backed images, and base64 uploads.
+
+VERIFICATION:
+- Prompt enhance: ✅ returns professional enhanced prompt
+- Pipeline: ST3GG done 4.6s → FLUX.2 done 51.5s (no HTTP 500!) → Judge → Nemotron
+- Image generated: public/gallery/cmrap2jbr0001r7s82ygfy64d.png (1.8MB)
+- lint clean, tsc clean
+- Git: committed as 642bf9d
