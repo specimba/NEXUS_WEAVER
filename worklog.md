@@ -830,3 +830,32 @@ VERIFICATION:
 - Image generated: public/gallery/cmrap2jbr0001r7s82ygfy64d.png (1.8MB)
 - lint clean, tsc clean
 - Git: committed as 642bf9d
+
+---
+Task ID: v5.9-unified-warmup
+Agent: Z.ai Code (main)
+Task: Implement option 3 — warm BOTH FLUX.2 + AEON brain simultaneously when user clicks Warm up
+
+ARCHITECTURE:
+When the user clicks "Warm up" (or on page mount), the system pings BOTH:
+1. FLUX.2 health endpoint (L40S, ~29GB model, ~20-40s to warm)
+2. AEON brain endpoint /v1/models (B200, ~54GB model, ~60-120s to warm)
+...in PARALLEL using Promise.allSettled. Total warm-up = max(flux, brain) ≈ 120s,
+not flux + brain ≈ 160s.
+
+CHANGES:
+1. modal-client.ts: added checkBrainHealth() — GET /v1/models with proxy auth.
+   200=warm, 503=cold-starting, 30s timeout. Never throws.
+2. /api/modal/warmup: rewritten to warm both in parallel. Returns { warmed, flux: {...}, brain: {...} }.
+3. /api/modal/status: updated to report brain status alongside FLUX.2.
+4. studio-view auto-warmup: fires warmup POST (both) + shows combined toast.
+5. studio-view manual warmup: shows combined status in toast.
+
+VERIFICATION:
+- POST /api/modal/warmup → warmed=true, flux.reachable=true (27.5s), brain.reachable=false (cold-starting, 1.2s)
+- GET /api/modal/status → flux ok, brain cold_starting
+- The warmup successfully triggered BOTH containers in parallel.
+- FLUX.2 was warm after 27.5s; brain was still cold-starting (expected — 27B model takes longer).
+- If user waits ~2 min, both will be warm. If user runs immediately, brain falls through to z-ai.
+
+Git: committed as 4462dfa
