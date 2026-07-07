@@ -19,16 +19,16 @@
 
 // Modal API tokens — for CLI auth and app management
 // Get from: Modal Dashboard → Settings → API Tokens
-export const MODAL_TOKEN_ID = process.env.MODAL_TOKEN_ID || "***REMOVED***";
-export const MODAL_TOKEN_SECRET = process.env.MODAL_TOKEN_SECRET || "***REMOVED***";
+export const MODAL_TOKEN_ID = process.env.MODAL_TOKEN_ID || "ak_REDACTED_SEE_GITHUB_SECRETS";
+export const MODAL_TOKEN_SECRET = process.env.MODAL_TOKEN_SECRET || "as_REDACTED_SEE_GITHUB_SECRETS";
 
 // Modal PROXY tokens — for authenticating to Modal Auto Endpoints and
 // Web Functions with requires_proxy_auth=True.
 // Proxy tokens use wk-/ws- prefixes (API tokens use ak-/as- prefixes).
 // They CANNOT be interchanged. Created via: modal workspace proxy-tokens create
 // These are sent as Modal-Key + Modal-Secret headers to the brain endpoint.
-export const MODAL_PROXY_KEY = process.env.MODAL_PROXY_KEY || "***REMOVED***";
-export const MODAL_PROXY_SECRET = process.env.MODAL_PROXY_SECRET || "***REMOVED***";
+export const MODAL_PROXY_KEY = process.env.MODAL_PROXY_KEY || "wk_REDACTED_SEE_GITHUB_SECRETS";
+export const MODAL_PROXY_SECRET = process.env.MODAL_PROXY_SECRET || "ws_REDACTED_SEE_GITHUB_SECRETS";
 
 // HuggingFace token — used by Modal apps to download gated models
 // (FLUX.2-klein-9B is gated, requires HF auth)

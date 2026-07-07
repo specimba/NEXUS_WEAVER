@@ -507,24 +507,29 @@ export function StudioView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [run, running, prompt]);
 
-  // Auto-warm Modal on mount — Modal is the PRIMARY generation path now.
-  // Always fires on page load so the container is warm by the time the user
-  // clicks Run. Silent on success; subtle toast on cold-start.
+  // Auto-warm Modal on mount — fire-and-forget. The /api/modal/status endpoint
+  // (60s cached) is used for the initial status display, NOT the warmup POST.
+  // This prevents the UI from flashing while the 60s warmup request is in-flight.
+  // The warmup POST triggers the container to start; the status poll picks up
+  // the result later. Silent on success; subtle toast on cold-start.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        // Always probe Modal on mount (it's the only generation path)
-        const wr = await fetch("/api/modal/warmup", { method: "POST" });
+        // Fire the warmup POST but DON'T await it — let it run in the background.
+        // The container starts cold-loading; we'll pick up the result via
+        // /api/modal/status (cached, fast) on the next poll.
+        fetch("/api/modal/warmup", { method: "POST" }).catch(() => {});
+        // Quick status check (cached, returns in <100ms if cache is fresh)
+        const sr = await fetch("/api/modal/status", { cache: "no-store" });
         if (cancelled) return;
-        const wd = await wr.json();
-        if (wd.warmed) {
+        const sd = await sr.json();
+        if (sd.reachable) {
           setModalWarm(true);
-          // No toast on auto-success — too noisy. Just visual indicator.
-        } else if (wd.enabled && !wd.reachable) {
-          // Cold-starting — let user know they can wait
+        } else if (sd.enabled && !sd.reachable) {
+          setModalWarm(false);
           toast.info("Modal GPU is cold-starting", {
-            description: "First generation may take 1–7 min, or use z-ai fallback.",
+            description: "First generation takes ~60-90s (cold start). The async pipeline handles it — just run and wait.",
           });
         }
       } catch {
@@ -537,7 +542,7 @@ export function StudioView() {
   }, []);
 
   // Pre-emptively warm up the Modal container so the first generation
-  // doesn't pay the 1–7 min cold-start latency.
+  // doesn't pay the cold-start latency.
   const warmupModal = useCallback(async () => {
     setWarming(true);
     setModalWarm(null);
@@ -551,7 +556,7 @@ export function StudioView() {
         });
       } else if (!data.enabled) {
         setModalWarm(false);
-        toast.info("Modal disabled — using z-ai fallback");
+        toast.info("Modal disabled — check .env configuration");
       } else {
         setModalWarm(false);
         toast.warning("Modal still cold-starting", {
@@ -1029,7 +1034,7 @@ export function StudioView() {
               <span className="flex-1">
                 {modalWarm
                   ? "Modal GPU container is warm — generation will be ~1.5–2s."
-                  : "Modal container is cold. First generation may take 1–7 min, or use z-ai fallback."}
+                  : "Modal container is cold. First generation takes ~60-90s (async pipeline handles it — no timeout)."}
               </span>
             </div>
           ) : null}
@@ -1194,7 +1199,12 @@ function RecentGenerations({ onPick }: { onPick: (g: RecentGen) => void }) {
       const d = (await res.json()) as { items: RecentGen[] };
       return d.items;
     },
-    refetchInterval: 15000,
+    // 60s refetch — the gallery doesn't change often, and frequent refetches
+    // cause UI flashing (skeleton → content → skeleton → content). The async
+    // pipeline job completion will trigger a refetch via queryKey invalidation
+    // when a run finishes, so we don't need aggressive polling here.
+    refetchInterval: 60_000,
+    staleTime: 30_000, // don't refetch on window focus if data is < 30s old
   });
 
   const items = data ?? [];
