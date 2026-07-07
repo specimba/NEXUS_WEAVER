@@ -19,6 +19,30 @@ export async function GET(
   const state = await getJobState(id);
   if (!state) return NextResponse.json({ error: "job not found" }, { status: 404 });
 
+  // Stuck-job recovery: if a job has been "running" for >5 minutes, mark it as
+  // failed. This happens when the dev server is reaped (killed) mid-pipeline —
+  // the background worker dies but the DB row stays "running" forever.
+  if (state.status === "running" || state.status === "queued") {
+    const ageMs = Date.now() - new Date(state.createdAt).getTime();
+    const STUCK_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+    if (ageMs > STUCK_THRESHOLD_MS) {
+      await db.pipelineJob.update({
+        where: { id },
+        data: {
+          status: "failed",
+          errorMessage: `Job timed out after ${Math.round(ageMs / 1000)}s. The server may have restarted mid-pipeline. Please retry.`,
+          totalMs: ageMs,
+          currentStage: "error",
+        },
+      });
+      // Return the updated state
+      const updatedState = await getJobState(id);
+      if (updatedState) {
+        return NextResponse.json({ ...updatedState, result: null });
+      }
+    }
+  }
+
   // Hydrate the full pipeline result from the Generation row if available.
   let result: Record<string, unknown> | null = null;
   if (state.generationId) {

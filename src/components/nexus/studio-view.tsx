@@ -1610,10 +1610,10 @@ function ResultPanel({
             <div className="flex-1 space-y-1.5">
               {result.judge ? (
                 <>
-                  <ScoreBar label="Prompt adherence" value={result.judge.promptAdherence} />
-                  <ScoreBar label="Visual quality" value={result.judge.visualQuality} />
-                  <ScoreBar label="Aesthetic" value={result.judge.aestheticScore} />
-                  <ScoreBar label="Safety" value={result.judge.safetyScore} />
+                  <ScoreBar label="Prompt adherence" value={result.judge?.promptAdherence ?? 0} />
+                  <ScoreBar label="Visual quality" value={result.judge?.visualQuality ?? 0} />
+                  <ScoreBar label="Aesthetic" value={result.judge?.aestheticScore ?? 0} />
+                  <ScoreBar label="Safety" value={result.judge?.safetyScore ?? 0} />
                 </>
               ) : null}
             </div>
@@ -1672,17 +1672,17 @@ function ResultPanel({
           <DetailCard
             title="Visual Judge Report"
             icon={<ScanEye className="h-4 w-4" />}
-            tone={result.judge.verdict === "approved" ? "ok" : result.judge.verdict === "rejected" ? "bad" : "warn"}
+            tone={result.judge?.verdict === "approved" ? "ok" : result.judge?.verdict === "rejected" ? "bad" : "warn"}
           >
             <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-              <ScoreBar label="Wardrobe match" value={result.judge.wardrobeMatch} />
-              <ScoreBar label="Prompt adherence" value={result.judge.promptAdherence} />
+              <ScoreBar label="Wardrobe match" value={result.judge?.wardrobeMatch ?? 0} />
+              <ScoreBar label="Prompt adherence" value={result.judge?.promptAdherence ?? 0} />
             </div>
-            {result.judge.strengths.length > 0 ? (
+            {(result.judge?.strengths?.length ?? 0) > 0 ? (
               <div className="mt-3">
                 <div className="mb-1 text-[10px] uppercase tracking-wider text-emerald-400">Strengths</div>
                 <ul className="space-y-0.5 text-[11px] text-muted-foreground">
-                  {result.judge.strengths.map((s, i) => (
+                  {result.judge!.strengths!.map((s, i) => (
                     <li key={i} className="flex gap-1.5">
                       <span className="text-emerald-400">+</span>
                       {s}
@@ -1691,11 +1691,11 @@ function ResultPanel({
                 </ul>
               </div>
             ) : null}
-            {result.judge.weaknesses.length > 0 ? (
+            {(result.judge?.weaknesses?.length ?? 0) > 0 ? (
               <div className="mt-2">
                 <div className="mb-1 text-[10px] uppercase tracking-wider text-rose-400">Weaknesses</div>
                 <ul className="space-y-0.5 text-[11px] text-muted-foreground">
-                  {result.judge.weaknesses.map((s, i) => (
+                  {result.judge!.weaknesses!.map((s, i) => (
                     <li key={i} className="flex gap-1.5">
                       <span className="text-rose-400">−</span>
                       {s}
