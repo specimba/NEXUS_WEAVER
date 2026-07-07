@@ -883,3 +883,33 @@ VERIFICATION:
 - Compliance section renders with all governance content
 - HMR connected, Fast Refresh working
 - Git: committed as f192981
+
+---
+Task ID: v5.13-clean-prompts + correct-params
+Agent: Z.ai Code (main)
+Task: Deep audit + fix the core quality issue — prompt pollution + wrong FLUX.2 params
+
+ROOT CAUSE OF POOR QUALITY:
+1. Prompt pollution: pipeline.ts was appending "style: cinematic, lora triggers:
+   photostyle, analog photography, ultra detailed, sharp focus, professional
+   composition, high dynamic range" to the user's clean prompt. FLUX.2 Klein 9B
+   is a distilled model (4 steps, cfg=1.0) that works best with CLEAN natural
+   language prompts. The token stuffing confused the model → degraded quality,
+   anatomy issues (3-leg artifact).
+
+2. Wrong calibration parameters: ALL presets had FLUX.1 params (steps=20, cfg=9.0)
+   but FLUX.2 Klein 9B needs steps=4, cfg=1.0. The modal-client.ts capped them
+   at runtime, but the UI showed wrong values — misleading the user.
+
+FIXES:
+- pipeline.ts: replaced enriched prompt with cleanPrompt (user prompt + wardrobe only)
+- calibration.ts: all presets now show steps=4, cfg=1.0, model="FLUX.2-klein-9B"
+- studio-view.tsx: replaced all stale "FLUX.1-schnell" and "FLUX.1-dev" references
+
+VERIFICATION:
+- Generated image with clean prompt: "a beautiful woman in a black leather coat"
+- VLM analysis: Overall 8/10, Anatomy 9/10 (NO extra limbs!), Face 8/10, Wardrobe 9/10
+- Previous images had 3-leg artifact and 7/10 quality → now 8/10 with correct anatomy
+- The clean prompt fix eliminated the anatomy issues
+
+Git: committed as 463f7d6

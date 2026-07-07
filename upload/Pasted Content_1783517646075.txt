@@ -1,0 +1,993 @@
+Modal
+
+specimba
+Starter
+/
+
+main
+
+Search
+Ctrl+K
+
+Workspace metrics
+
+Credits
+$217.18
+Community
+Docs
+
+Apps
+Endpoints
+New
+Logs
+Containers
+Secrets
+Storage
+Notebooks
+Overview
+
+Deployment History
+
+App Logs
+
+Usage
+
+Search functions
+
+NexusFlux2Generator.*
+Containers: 0 live
+Calls: 0 running
+nexus-flux2-klein9b / App Logs
+
+Shift ← (A)
+Toggle Pause/Play (T)
+Shift → (D)
+
+1d
+Jul 7, 4:33 PM – now
+GMT+3
+
+Zoom out (Z)
+Add filter
+Expand logs
+Search logs
+/
+Timestamp
+Container ID
+Input ID
+Content
+Settings
+Jul 07  23:19:41.318
+ta-01KWZ2VNMG6FK2NGX3T8A8WQDR	in-01KWZ3F6M24P29R8T9B5D613W9	[modal-client] 2026-07-07T20:19:41+0000 Detected 1 background thread(s) [AnyIO worker thread] still running after container exit. This will prevent runner shutdown for up to 30 seconds.
+Jul 07  23:20:01.834
+ta-01KWZ2VNMG6FK2NGX3T8A8WQDR	in-01KWZ3F6M24P29R8T9B5D613W9	Exception ignored in: <module 'threading' from '/usr/local/lib/python3.12/threading.py'>
+Jul 07  23:20:01.834
+ta-01KWZ2VNMG6FK2NGX3T8A8WQDR	in-01KWZ3F6M24P29R8T9B5D613W9	Traceback (most recent call last):
+Jul 07  23:20:01.834
+ta-01KWZ2VNMG6FK2NGX3T8A8WQDR	in-01KWZ3F6M24P29R8T9B5D613W9	  File "/usr/local/lib/python3.12/threading.py", line 1623, in _shutdown
+Jul 07  23:20:01.835
+ta-01KWZ2VNMG6FK2NGX3T8A8WQDR	in-01KWZ3F6M24P29R8T9B5D613W9	    lock.acquire()
+Jul 07  23:20:01.835
+ta-01KWZ2VNMG6FK2NGX3T8A8WQDR	in-01KWZ3F6M24P29R8T9B5D613W9	KeyboardInterrupt: 
+Jul 07  23:20:11.747
+ta-01KWZ2VNMG6FK2NGX3T8A8WQDR	—	Runner failed with exception: Runner has been shutting down for too long (grace period: 30 seconds)
+Jul 07  23:29:35.759
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 07  23:29:37.475
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Jul 07  23:29:49.890
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:01,  1.51it/s]
+Jul 07  23:29:50.827
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:13<00:15,  7.58s/it]
+Jul 07  23:29:50.898
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:14<00:00,  3.52s/it]
+Jul 07  23:29:50.940
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading pipeline components...:  20%|██        | 1/5 [00:14<00:57, 14.29s/it]
+Jul 07  23:29:52.289
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Jul 07  23:29:52.760
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.35s/it]
+Jul 07  23:29:52.761
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.10it/s]
+Jul 07  23:29:53.093
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	Loading pipeline components...: 100%|██████████| 5/5 [00:16<00:00,  3.30s/it]
+Jul 07  23:30:03.851
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	—	black-forest-labs/FLUX.2-klein-9B loaded in 28.1s
+Jul 07  23:30:04.756
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	in-01KWZ4AWM8G2SGGJAA1AQG81RJ	    GET / -> 200 OK  (duration: 38.2 s, execution: 212.7 ms)
+Jul 07  23:30:05.169
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	in-01KWZ4AWNAHSHSSWNM0YCR5EFX	    GET / -> 200 OK  (duration: 38.6 s, execution: 207.4 ms)
+Jul 07  23:30:05.599
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	in-01KWZ4AWNJR2R0JV7233FE1MR4	    GET / -> 200 OK  (duration: 39.0 s, execution: 207.9 ms)
+Jul 07  23:32:45.174
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	in-01KWZ4GXSRCECWW16TWXX4K0XQ	    GET / -> 200 OK  (duration: 842.1 ms, execution: 609.2 ms)
+Jul 07  23:32:45.587
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	in-01KWZ4GY12GMW7NKBT5W3BAQ48	    GET / -> 200 OK  (duration: 1.02 s, execution: 207.2 ms)
+Jul 07  23:32:46.001
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	in-01KWZ4GY1A1HMSDT3RZ40B8MXZ	    GET / -> 200 OK  (duration: 1.43 s, execution: 206.9 ms)
+Jul 07  23:37:40.610
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	in-01KWZ4SY8DEA02G57N1PECKXRC	    GET / -> 200 OK  (duration: 884.5 ms, execution: 648.5 ms)
+Jul 07  23:37:41.031
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	in-01KWZ4SYA3DYCKZNE2XG9PRYBC	    GET / -> 200 OK  (duration: 1.24 s, execution: 209.8 ms)
+Jul 07  23:37:41.430
+ta-01KWZ4AX74A5NKDEW0MTSR2HTR	in-01KWZ4SYA6NAAG2CWEKMK3YYKX	    GET / -> 200 OK  (duration: 1.67 s, execution: 208.5 ms)
+Jul 07  23:58:53.027
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 07  23:58:54.193
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading pipeline components...:  20%|██        | 1/5 [00:00<00:02,  1.74it/s]
+Jul 07  23:58:56.329
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.05it/s]
+Jul 07  23:58:57.468
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.09s/it]
+Jul 07  23:58:57.572
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.11s/it]
+Jul 07  23:58:57.573
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.18it/s]
+Jul 07  23:58:57.787
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading pipeline components...:  60%|██████    | 3/5 [00:04<00:02,  1.36s/it]
+Jul 07  23:58:59.665
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Jul 07  23:59:01.624
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.88s/it]
+Jul 07  23:59:01.625
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:03<00:00,  1.92s/it]
+Jul 07  23:59:01.647
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	Loading pipeline components...: 100%|██████████| 5/5 [00:08<00:00,  1.66s/it]
+Jul 07  23:59:17.030
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	—	black-forest-labs/FLUX.2-klein-9B loaded in 24.0s
+Jul 07  23:59:17.607
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ60CXCHZ38R7WV0S6QDWZA	    GET / -> 200 OK  (duration: 37.7 s, execution: 28.6 ms)
+Jul 07  23:59:17.646
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ60CY3DW3CM36NP5EBEZG9	    GET / -> 200 OK  (duration: 37.7 s, execution: 22.0 ms)
+Jul 07  23:59:17.686
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ61EF5NCBG7YWBNEEMMMTB	    GET / -> 200 OK  (duration: 3.42 s, execution: 22.3 ms)
+Jul 07  23:59:17.766
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ61ETPGDXMBR7A7S6628CB	    GET / -> 200 OK  (duration: 3.10 s, execution: 21.7 ms)
+Jul 07  23:59:23.539
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ61QDWV2FHEYE6FKGP00WN	    GET / -> 200 OK  (duration: 72.2 ms, execution: 22.2 ms)
+Jul 07  23:59:42.339
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ629T2HBKGQ28G37NFQKN4	    GET / -> 200 OK  (duration: 77.1 ms, execution: 22.4 ms)
+Jul 08  00:01:07.467
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ64WX86JNVXDAMZTB9SQ2F	    GET / -> 200 OK  (duration: 101.2 ms, execution: 19.3 ms)
+Jul 08  00:01:07.497
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ64WW41X18ZP2604Y1MF6Z	    GET / -> 200 OK  (duration: 101.1 ms, execution: 48.4 ms)
+Jul 08  00:04:41.433
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BCTXF8F79K7HXV7E6WB0	Loading r0 was unsuccessful with the following error: 
+Error(s) in loading state_dict for Flux2Transformer2DModel:
+	size mismatch for transformer_blocks.0.attn.to_q.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_q.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.0.attn.to_k.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_k.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.0.attn.to_v.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_v.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.0.attn.to_out.0.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_out.0.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.0.attn.add_q_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.0.attn.add_q_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.0.attn.add_k_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.0.attn.add_k_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.0.attn.add_v_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.0.attn.add_v_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.0.attn.to_add_out.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_add_out.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.1.attn.to_q.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_q.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.1.attn.to_k.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_k.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.1.attn.to_v.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_v.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.1.attn.to_out.0.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_out.0.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.1.attn.add_q_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.1.attn.add_q_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.1.attn.add_k_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.1.attn.add_k_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.1.attn.add_v_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.1.attn.add_v_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.1.attn.to_add_out.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_add_out.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.2.attn.to_q.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_q.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.2.attn.to_k.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_k.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.2.attn.to_v.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_v.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.2.attn.to_out.0.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_out.0.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.2.attn.add_q_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.2.attn.add_q_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.2.attn.add_k_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.2.attn.add_k_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.2.attn.add_v_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.2.attn.add_v_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.2.attn.to_add_out.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_add_out.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.3.attn.to_q.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_q.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.3.attn.to_k.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_k.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.3.attn.to_v.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_v.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.3.attn.to_out.0.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_out.0.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.3.attn.add_q_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.3.attn.add_q_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.3.attn.add_k_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.3.attn.add_k_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.3.attn.add_v_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.3.attn.add_v_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.3.attn.to_add_out.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_add_out.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.4.attn.to_q.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_q.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.4.attn.to_k.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_k.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.4.attn.to_v.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_v.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.4.attn.to_out.0.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_out.0.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.4.attn.add_q_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.4.attn.add_q_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.4.attn.add_k_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.4.attn.add_k_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.4.attn.add_v_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.4.attn.add_v_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.4.attn.to_add_out.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_add_out.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.5.attn.to_q.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_q.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.5.attn.to_k.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_k.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.5.attn.to_v.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_v.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.5.attn.to_out.0.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_out.0.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.5.attn.add_q_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.5.attn.add_q_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.5.attn.add_k_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.5.attn.add_k_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.5.attn.add_v_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.5.attn.add_v_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.5.attn.to_add_out.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_add_out.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.6.attn.to_q.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_q.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.6.attn.to_k.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_k.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.6.attn.to_v.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_v.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.6.attn.to_out.0.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_out.0.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.6.attn.add_q_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.6.attn.add_q_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.6.attn.add_k_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.6.attn.add_k_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.6.attn.add_v_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.6.attn.add_v_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.6.attn.to_add_out.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_add_out.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.7.attn.to_q.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_q.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.7.attn.to_k.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_k.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.7.attn.to_v.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_v.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.7.attn.to_out.0.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_out.0.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.7.attn.add_q_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.7.attn.add_q_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.7.attn.add_k_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.7.attn.add_k_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.7.attn.add_v_proj.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.7.attn.add_v_proj.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+	size mismatch for transformer_blocks.7.attn.to_add_out.lora_A.r0.weight: copying a param with shape torch.Size([32, 3072]) from checkpoint, the shape in current model is torch.Size([32, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_add_out.lora_B.r0.weight: copying a param with shape torch.Size([3072, 32]) from checkpoint, the shape in current model is torch.Size([4096, 32]).
+Jul 08  00:04:43.601
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BCTXF8F79K7HXV7E6WB0	100%|██████████| 4/4 [00:00<00:00,  5.91it/s]
+Jul 08  00:04:45.252
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BCTXF8F79K7HXV7E6WB0	   POST / -> 200 OK  (duration: 4.98 s, execution: 4.93 s)
+Jul 08  00:04:47.814
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BK5VXY861CQASTE91AN0	100%|██████████| 4/4 [00:00<00:00,  8.75it/s]
+Jul 08  00:04:48.045
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BK5VXY861CQASTE91AN0	   POST / -> 200 OK  (duration: 1.28 s, execution: 1.22 s)
+Jul 08  00:04:50.455
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BNWFA0AGS9MQQXZTZVM4	Unsupported keys for Kohya Flux2 LoRA conversion: ['lora_unet_double_blocks_0_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_0_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_0_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_0_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_10_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_10_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_10_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_10_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_11_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_11_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_11_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_11_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_12_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_12_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_12_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_12_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_13_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_13_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_13_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_13_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_14_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_14_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_14_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_14_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_15_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_15_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_15_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_15_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_16_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_16_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_16_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_16_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_17_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_17_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_17_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_17_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_18_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_18_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_18_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_18_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_1_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_1_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_1_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_1_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_2_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_2_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_2_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_2_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_3_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_3_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_3_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_3_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_4_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_4_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_4_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_4_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_5_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_5_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_5_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_5_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_6_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_6_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_6_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_6_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_7_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_7_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_7_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_7_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_8_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_8_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_8_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_8_txt_mod_lin.lora_up.weight', 'lora_unet_double_blocks_9_img_mod_lin.lora_down.weight', 'lora_unet_double_blocks_9_img_mod_lin.lora_up.weight', 'lora_unet_double_blocks_9_txt_mod_lin.lora_down.weight', 'lora_unet_double_blocks_9_txt_mod_lin.lora_up.weight', 'lora_unet_single_blocks_0_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_0_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_10_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_10_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_11_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_11_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_12_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_12_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_13_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_13_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_14_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_14_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_15_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_15_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_16_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_16_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_17_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_17_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_18_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_18_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_19_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_19_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_1_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_1_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_20_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_20_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_21_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_21_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_22_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_22_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_23_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_23_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_24_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_24_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_25_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_25_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_26_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_26_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_27_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_27_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_28_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_28_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_29_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_29_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_2_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_2_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_30_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_30_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_31_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_31_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_32_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_32_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_33_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_33_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_34_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_34_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_35_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_35_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_36_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_36_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_37_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_37_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_3_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_3_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_4_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_4_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_5_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_5_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_6_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_6_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_7_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_7_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_8_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_8_modulation_lin.lora_up.weight', 'lora_unet_single_blocks_9_modulation_lin.lora_down.weight', 'lora_unet_single_blocks_9_modulation_lin.lora_up.weight']
+Jul 08  00:04:50.472
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BNWFA0AGS9MQQXZTZVM4	/usr/local/lib/python3.12/site-packages/peft/tuners/tuners_utils.py:302: UserWarning: Already found a `peft_config` attribute in the model. This will lead to having multiple adapters in the model. Make sure to know what you are doing!
+  warnings.warn(
+Jul 08  00:04:50.623
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BNWFA0AGS9MQQXZTZVM4	Loading r2 was unsuccessful with the following error: 
+Error(s) in loading state_dict for Flux2Transformer2DModel:
+	size mismatch for transformer_blocks.0.attn.to_q.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_q.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.to_k.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_k.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.to_v.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_v.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.to_out.0.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_out.0.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.add_q_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.add_q_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.add_k_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.add_k_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.add_v_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.add_v_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.to_add_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_add_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.ff.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.ff.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.0.ff.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.ff_context.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.ff_context.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.0.ff_context.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_q.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_q.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_k.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_k.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_v.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_v.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_out.0.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_out.0.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.add_q_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.add_q_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.add_k_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.add_k_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.add_v_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.add_v_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_add_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_add_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.ff.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.ff.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.1.ff.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.ff_context.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.ff_context.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.1.ff_context.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_q.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_q.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_k.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_k.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_v.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_v.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_out.0.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_out.0.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.add_q_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.add_q_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.add_k_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.add_k_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.add_v_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.add_v_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_add_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_add_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.ff.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.ff.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.2.ff.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.ff_context.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.ff_context.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.2.ff_context.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_q.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_q.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_k.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_k.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_v.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_v.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_out.0.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_out.0.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.add_q_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.add_q_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.add_k_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.add_k_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.add_v_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.add_v_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_add_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_add_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.ff.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.ff.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.3.ff.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.ff_context.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.ff_context.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.3.ff_context.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_q.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_q.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_k.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_k.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_v.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_v.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_out.0.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_out.0.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.add_q_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.add_q_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.add_k_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.add_k_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.add_v_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.add_v_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_add_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_add_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.ff.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.ff.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.4.ff.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.ff_context.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.ff_context.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.4.ff_context.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_q.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_q.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_k.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_k.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_v.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_v.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_out.0.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_out.0.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.add_q_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.add_q_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.add_k_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.add_k_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.add_v_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.add_v_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_add_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_add_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.ff.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.ff.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.5.ff.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.ff_context.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.ff_context.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.5.ff_context.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_q.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_q.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_k.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_k.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_v.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_v.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_out.0.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_out.0.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.add_q_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.add_q_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.add_k_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.add_k_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.add_v_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.add_v_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_add_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_add_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.ff.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.ff.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.6.ff.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.ff_context.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.ff_context.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.6.ff_context.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_q.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_q.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_k.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_k.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_v.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_v.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_out.0.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_out.0.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.add_q_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.add_q_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.add_k_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.add_k_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.add_v_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.add_v_proj.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_add_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_add_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.ff.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.ff.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.7.ff.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.ff_context.linear_in.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.ff_context.linear_in.lora_B.r2.weight: copying a param with shape torch.Size([12288, 16]) from checkpoint, the shape in current model is torch.Size([24576, 16]).
+	size mismatch for transformer_blocks.7.ff_context.linear_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.0.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.0.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.0.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.0.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.1.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.1.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.1.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.1.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.2.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.2.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.2.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.2.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.3.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.3.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.3.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.3.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.4.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.4.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.4.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.4.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.5.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.5.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.5.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.5.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.6.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.6.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.6.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.6.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.7.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.7.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.7.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.7.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.8.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.8.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.8.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.8.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.9.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.9.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.9.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.9.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.10.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.10.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.10.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.10.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.11.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.11.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.11.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.11.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.12.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.12.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.12.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.12.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.13.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.13.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.13.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.13.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.14.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.14.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.14.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.14.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.15.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.15.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.15.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.15.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.16.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.16.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.16.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.16.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.17.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.17.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.17.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.17.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.18.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.18.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.18.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.18.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.19.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.19.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.19.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.19.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.20.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.20.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.20.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.20.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.21.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.21.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.21.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.21.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.22.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.22.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.22.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.22.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for single_transformer_blocks.23.attn.to_qkv_mlp_proj.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for single_transformer_blocks.23.attn.to_qkv_mlp_proj.lora_B.r2.weight: copying a param with shape torch.Size([21504, 16]) from checkpoint, the shape in current model is torch.Size([36864, 16]).
+	size mismatch for single_transformer_blocks.23.attn.to_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 15360]) from checkpoint, the shape in current model is torch.Size([16, 16384]).
+	size mismatch for single_transformer_blocks.23.attn.to_out.lora_B.r2.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for proj_out.lora_A.r2.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for proj_out.lora_B.r2.weight: copying a param with shape torch.Size([64, 16]) from checkpoint, the shape in current model is torch.Size([128, 16]).
+Jul 08  00:04:51.150
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BNWFA0AGS9MQQXZTZVM4	100%|██████████| 4/4 [00:00<00:00,  8.70it/s]
+Jul 08  00:04:51.369
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BNWFA0AGS9MQQXZTZVM4	   POST / -> 200 OK  (duration: 1.83 s, execution: 1.77 s)
+Jul 08  00:04:54.791
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BS42WMT3S4ZKAXVYWZ0D	100%|██████████| 4/4 [00:00<00:00,  7.14it/s]
+Jul 08  00:04:55.050
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BS42WMT3S4ZKAXVYWZ0D	   POST / -> 200 OK  (duration: 2.18 s, execution: 2.12 s)
+Jul 08  00:04:57.869
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BWPVX6BA5TY6YCRASX85	Loading r4 was unsuccessful with the following error: 
+Error(s) in loading state_dict for Flux2Transformer2DModel:
+	size mismatch for transformer_blocks.0.attn.to_q.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_q.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.to_k.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_k.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.to_v.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_v.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.to_out.0.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_out.0.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.add_q_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.add_q_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.add_k_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.add_k_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.add_v_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.add_v_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.0.attn.to_add_out.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.0.attn.to_add_out.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_q.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_q.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_k.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_k.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_v.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_v.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_out.0.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_out.0.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.add_q_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.add_q_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.add_k_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.add_k_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.add_v_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.add_v_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.1.attn.to_add_out.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.1.attn.to_add_out.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_q.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_q.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_k.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_k.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_v.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_v.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_out.0.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_out.0.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.add_q_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.add_q_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.add_k_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.add_k_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.add_v_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.add_v_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.2.attn.to_add_out.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.2.attn.to_add_out.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_q.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_q.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_k.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_k.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_v.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_v.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_out.0.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_out.0.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.add_q_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.add_q_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.add_k_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.add_k_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.add_v_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.add_v_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.3.attn.to_add_out.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.3.attn.to_add_out.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_q.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_q.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_k.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_k.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_v.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_v.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_out.0.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_out.0.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.add_q_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.add_q_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.add_k_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.add_k_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.add_v_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.add_v_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.4.attn.to_add_out.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.4.attn.to_add_out.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_q.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_q.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_k.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_k.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_v.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_v.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_out.0.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_out.0.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.add_q_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.add_q_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.add_k_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.add_k_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.add_v_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.add_v_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.5.attn.to_add_out.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.5.attn.to_add_out.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_q.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_q.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_k.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_k.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_v.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_v.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_out.0.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_out.0.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.add_q_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.add_q_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.add_k_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.add_k_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.add_v_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.add_v_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.6.attn.to_add_out.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.6.attn.to_add_out.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_q.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_q.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_k.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_k.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_v.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_v.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_out.0.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_out.0.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.add_q_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.add_q_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.add_k_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.add_k_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.add_v_proj.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.add_v_proj.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+	size mismatch for transformer_blocks.7.attn.to_add_out.lora_A.r4.weight: copying a param with shape torch.Size([16, 3072]) from checkpoint, the shape in current model is torch.Size([16, 4096]).
+	size mismatch for transformer_blocks.7.attn.to_add_out.lora_B.r4.weight: copying a param with shape torch.Size([3072, 16]) from checkpoint, the shape in current model is torch.Size([4096, 16]).
+Jul 08  00:04:58.397
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BWPVX6BA5TY6YCRASX85	100%|██████████| 4/4 [00:00<00:00,  8.70it/s]
+Jul 08  00:04:58.617
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6BWPVX6BA5TY6YCRASX85	   POST / -> 200 OK  (duration: 2.09 s, execution: 2.03 s)
+Jul 08  00:05:46.036
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6DCZW6Z18X3HED8XSND1M	    GET / -> 200 OK  (duration: 72.1 ms, execution: 19.1 ms)
+Jul 08  00:05:46.104
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6DD1XP6SDGTBMQ407R6Y6	    GET / -> 200 OK  (duration: 67.4 ms, execution: 19.0 ms)
+Jul 08  00:05:46.139
+ta-01KWZ60DPNDQGE4A92CJK6PK8R	in-01KWZ6DD2SAAEWG3ZS7EB61P0X	    GET / -> 200 OK  (duration: 73.1 ms, execution: 19.0 ms)
+Jul 08  10:24:56.091
+—	—	Function 'NexusFlux2Generator.*' (fu-XfsAR9dXgGJi9fDP2cgpux) is waiting to be scheduled on a GPU_L40S worker. We are actively working on acquiring more capacity for your workload.
+Jul 08  10:25:29.454
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 08  10:25:30.267
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]
+Jul 08  10:25:31.321
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Jul 08  10:25:32.613
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.05s/it]
+Jul 08  10:25:33.849
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.19s/it]
+Jul 08  10:25:33.948
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.09it/s]
+Jul 08  10:25:34.052
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading pipeline components...:  40%|████      | 2/5 [00:04<00:06,  2.04s/it]
+Jul 08  10:25:35.952
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Jul 08  10:25:36.653
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.90s/it]
+Jul 08  10:25:36.654
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.30s/it]
+Jul 08  10:25:37.144
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	Loading pipeline components...: 100%|██████████| 5/5 [00:07<00:00,  1.45s/it]
+Jul 08  10:25:51.105
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	—	black-forest-labs/FLUX.2-klein-9B loaded in 21.7s
+Jul 08  10:31:11.871
+ta-01KX09VMZ669QZ1BZXRPQ46EGR	in-01KX0A6K8DCMHM0B25CDATM6WK	    GET / -> 200 OK  (duration: 174.4 ms, execution: 70.6 ms)
+Jul 08  10:35:24.383
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 08  10:35:25.107
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading pipeline components...:  20%|██        | 1/5 [00:00<00:00,  6.96it/s]
+Jul 08  10:35:26.153
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Jul 08  10:35:27.428
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.05s/it]
+Jul 08  10:35:28.658
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.18s/it]
+Jul 08  10:35:28.755
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.10it/s]
+Jul 08  10:35:29.183
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading pipeline components...:  60%|██████    | 3/5 [00:04<00:02,  1.44s/it]
+Jul 08  10:35:32.433
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Loading checkpoint shards:  50%|█████     | 1/2 [00:02<00:02,  2.27s/it]
+Jul 08  10:35:32.434
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:03<00:00,  1.63s/it]
+Jul 08  10:35:32.444
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	Loading pipeline components...: 100%|██████████| 5/5 [00:07<00:00,  1.55s/it]
+Jul 08  10:36:02.976
+ta-01KX0AE14MZVYBSHMGEW5671GR	—	black-forest-labs/FLUX.2-klein-9B loaded in 38.6s
+Jul 08  10:36:07.077
+ta-01KX0AE14MZVYBSHMGEW5671GR	in-01KX0AFKK6R819GS06RN36SM0A	    GET / -> 200 OK  (duration: 77.9 ms, execution: 21.7 ms)
+Jul 08  10:37:11.548
+ta-01KX0AE14MZVYBSHMGEW5671GR	in-01KX0AHGAPFBEPTJCQK68JXDT2	/usr/local/lib/python3.12/site-packages/peft/tuners/tuners_utils.py:302: UserWarning: Already found a `peft_config` attribute in the model. This will lead to having multiple adapters in the model. Make sure to know what you are doing!
+  warnings.warn(
+Jul 08  10:37:25.258
+ta-01KX0AE14MZVYBSHMGEW5671GR	in-01KX0AHGAPFBEPTJCQK68JXDT2	 62%|██████▎   | 5/8 [00:04<00:03,  1.01s/it]
+Jul 08  10:37:28.340
+ta-01KX0AE14MZVYBSHMGEW5671GR	in-01KX0AHGAPFBEPTJCQK68JXDT2	100%|██████████| 8/8 [00:08<00:00,  1.01s/it]
+Jul 08  10:37:31.257
+ta-01KX0AE14MZVYBSHMGEW5671GR	in-01KX0AHGAPFBEPTJCQK68JXDT2	   POST / -> 200 OK  (duration: 22.1 s, execution: 22.0 s)
+Jul 08  10:42:03.726
+ta-01KX0AE14MZVYBSHMGEW5671GR	in-01KX0AT8JECWCTTND2DNW6F4TP	100%|██████████| 8/8 [00:06<00:00,  1.32it/s]
+Jul 08  10:42:04.812
+ta-01KX0AE14MZVYBSHMGEW5671GR	in-01KX0AT8JECWCTTND2DNW6F4TP	   POST / -> 200 OK  (duration: 8.64 s, execution: 8.59 s)
+Jul 08  10:57:17.200
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 08  10:57:17.901
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading pipeline components...:  20%|██        | 1/5 [00:00<00:01,  3.67it/s]
+Jul 08  10:57:19.392
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Jul 08  10:57:19.908
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.49s/it]
+Jul 08  10:57:19.908
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.00s/it]
+Jul 08  10:57:20.346
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading pipeline components...:  80%|████████  | 4/5 [00:02<00:00,  1.66it/s]
+Jul 08  10:57:21.126
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Jul 08  10:57:22.156
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.28it/s]
+Jul 08  10:57:23.214
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.08it/s]
+Jul 08  10:57:23.308
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:02<00:00,  1.35it/s]
+Jul 08  10:57:23.313
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	Loading pipeline components...: 100%|██████████| 5/5 [00:05<00:00,  1.15s/it]
+Jul 08  10:57:37.051
+ta-01KX0BP37P18MC2PM8PWNY22FR	—	black-forest-labs/FLUX.2-klein-9B loaded in 19.9s
+Jul 08  10:57:37.672
+ta-01KX0BP37P18MC2PM8PWNY22FR	in-01KX0BNJ1DF5JFE9EQGPPMBQVQ	    GET / -> 200 OK  (duration: 47.0 s, execution: 28.2 ms)
+Jul 08  10:57:37.678
+ta-01KX0BP37P18MC2PM8PWNY22FR	in-01KX0BNJ5TSJRCQCD11NK1SG86	    GET / -> 200 OK  (duration: 46.9 s, execution: 22.0 ms)
+Jul 08  10:57:37.737
+ta-01KX0BP37P18MC2PM8PWNY22FR	in-01KX0BNJA7YXJ39N70KVHPKVQP	    GET / -> 200 OK  (duration: 46.8 s, execution: 21.3 ms)
+Jul 08  11:09:07.943
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 08  11:09:09.113
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading pipeline components...:  40%|████      | 2/5 [00:00<00:00,  3.41it/s]
+Jul 08  11:09:09.868
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Jul 08  11:09:10.851
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.33it/s]
+Jul 08  11:09:11.822
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.13it/s]
+Jul 08  11:09:11.895
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:02<00:00,  1.44it/s]
+Jul 08  11:09:12.069
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading pipeline components...:  80%|████████  | 4/5 [00:03<00:00,  1.07it/s]
+Jul 08  11:09:13.511
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Jul 08  11:09:14.019
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.44s/it]
+Jul 08  11:09:14.019
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.03it/s]
+Jul 08  11:09:14.021
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	Loading pipeline components...: 100%|██████████| 5/5 [00:05<00:00,  1.15s/it]
+Jul 08  11:09:26.518
+ta-01KX0CBGRHPFAY2747Q4C6MEQR	—	black-forest-labs/FLUX.2-klein-9B loaded in 18.6s
+Jul 08  11:27:28.129
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 08  11:27:28.888
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]
+Jul 08  11:27:31.541
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.19s/it]
+Jul 08  11:27:32.766
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.35s/it]
+Jul 08  11:27:32.850
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.01it/s]
+Jul 08  11:27:33.497
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading pipeline components...:  60%|██████    | 3/5 [00:04<00:02,  1.49s/it]
+Jul 08  11:27:35.139
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Jul 08  11:27:35.716
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.64s/it]
+Jul 08  11:27:35.716
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.11s/it]
+Jul 08  11:27:35.830
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	Loading pipeline components...: 100%|██████████| 5/5 [00:07<00:00,  1.46s/it]
+Jul 08  11:27:49.368
+ta-01KX0DD3NK3W9D6099P0ENSXPR	—	black-forest-labs/FLUX.2-klein-9B loaded in 21.2s
+Jul 08  11:30:14.808
+ta-01KX0DD3NK3W9D6099P0ENSXPR	in-01KX0DJQ5YXTX9Z8RAE20CFMJT	    GET / -> 200 OK  (duration: 98.5 ms, execution: 51.1 ms)
+Jul 08  11:30:14.882
+ta-01KX0DD3NK3W9D6099P0ENSXPR	in-01KX0DJQ97FPR1W07CF2B4E1F7	    GET / -> 200 OK  (duration: 71.0 ms, execution: 19.8 ms)
+Jul 08  11:32:11.521
+ta-01KX0DD3NK3W9D6099P0ENSXPR	in-01KX0DP7EQFHJVPEMPS0A09HSB	/usr/local/lib/python3.12/site-packages/peft/tuners/tuners_utils.py:302: UserWarning: Already found a `peft_config` attribute in the model. This will lead to having multiple adapters in the model. Make sure to know what you are doing!
+  warnings.warn(
+Jul 08  11:32:33.416
+ta-01KX0DD3NK3W9D6099P0ENSXPR	in-01KX0DP7EQFHJVPEMPS0A09HSB	100%|██████████| 8/8 [00:11<00:00,  1.43s/it]
+Jul 08  11:32:37.028
+ta-01KX0DD3NK3W9D6099P0ENSXPR	in-01KX0DP7EQFHJVPEMPS0A09HSB	   POST / -> 200 OK  (duration: 27.3 s, execution: 26.4 s)
+Jul 08  11:56:13.552
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 08  11:56:14.251
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading pipeline components...:  20%|██        | 1/5 [00:00<00:00,  9.09it/s]
+Jul 08  11:56:15.009
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Jul 08  11:56:16.007
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.32it/s]
+Jul 08  11:56:16.986
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:01<00:01,  1.11it/s]
+Jul 08  11:56:17.060
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:02<00:00,  1.42it/s]
+Jul 08  11:56:17.710
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading pipeline components...:  60%|██████    | 3/5 [00:03<00:02,  1.27s/it]
+Jul 08  11:56:19.223
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Jul 08  11:56:19.728
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.51s/it]
+Jul 08  11:56:19.729
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.01s/it]
+Jul 08  11:56:19.730
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	Loading pipeline components...: 100%|██████████| 5/5 [00:05<00:00,  1.17s/it]
+Jul 08  11:56:19.730
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	
+Jul 08  11:56:33.334
+ta-01KX0F1X9N8QP40VV4QWMN314R	—	black-forest-labs/FLUX.2-klein-9B loaded in 19.8s
+Jul 08  11:56:33.996
+ta-01KX0F1X9N8QP40VV4QWMN314R	in-01KX0F1C21SCND2ZH040PKZPDT	    GET / -> 200 OK  (duration: 50.6 s, execution: 25.7 ms)
+Jul 08  11:56:34.072
+ta-01KX0F1X9N8QP40VV4QWMN314R	in-01KX0F1CFJDCCG1TQ9G752X8SD	    GET / -> 200 OK  (duration: 50.2 s, execution: 18.0 ms)
+Jul 08  11:56:34.077
+ta-01KX0F1X9N8QP40VV4QWMN314R	in-01KX0F1C7XCM2NZT2FV5VKXWPA	    GET / -> 200 OK  (duration: 50.4 s, execution: 19.9 ms)
+Jul 08  11:59:29.030
+ta-01KX0F1X9N8QP40VV4QWMN314R	in-01KX0F889CZ5B9HXCVMB6ZZFWG	    GET / -> 200 OK  (duration: 104.9 ms, execution: 55.1 ms)
+Jul 08  11:59:29.253
+ta-01KX0F1X9N8QP40VV4QWMN314R	in-01KX0F88HDCQP13R5G8PM697CY	    GET / -> 200 OK  (duration: 68.7 ms, execution: 23.1 ms)
+Jul 08  11:59:29.401
+ta-01KX0F1X9N8QP40VV4QWMN314R	in-01KX0F88N5BT3GP48HNV6KC0Z9	    GET / -> 200 OK  (duration: 108.4 ms, execution: 23.1 ms)
+Jul 08  12:04:37.262
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 08  12:04:38.113
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading pipeline components...:   0%|          | 0/5 [00:00<?, ?it/s]
+Jul 08  12:04:39.112
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Jul 08  12:04:40.189
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.00it/s]
+Jul 08  12:04:41.295
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.04s/it]
+Jul 08  12:04:41.381
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.22it/s]
+Jul 08  12:04:41.911
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading pipeline components...:  80%|████████  | 4/5 [00:04<00:00,  1.31it/s]
+Jul 08  12:04:43.411
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Jul 08  12:04:43.966
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.50s/it]
+Jul 08  12:04:43.966
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.03s/it]
+Jul 08  12:04:43.968
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	Loading pipeline components...: 100%|██████████| 5/5 [00:06<00:00,  1.25s/it]
+Jul 08  12:04:57.242
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	—	black-forest-labs/FLUX.2-klein-9B loaded in 20.0s
+Jul 08  12:04:57.943
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	in-01KX0FGHNXH2B1CCW6NHP4SD4N	    GET / -> 200 OK  (duration: 57.3 s, execution: 19.5 ms)
+Jul 08  12:04:57.958
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	in-01KX0FGHKWGQ6QK3STZWY5PCCH	    GET / -> 200 OK  (duration: 57.3 s, execution: 26.3 ms)
+Jul 08  12:04:58.000
+ta-01KX0FH2WSVDRPFZH0DQYV8P7R	in-01KX0FGHPCJ6WP6YG27P0BBBEE	    GET / -> 200 OK  (duration: 57.3 s, execution: 19.4 ms)
+Jul 08  16:15:00.802
+—	—	Function 'NexusFlux2Generator.*' (fu-XfsAR9dXgGJi9fDP2cgpux) is waiting to be scheduled on a GPU_L40S worker. We are actively working on acquiring more capacity for your workload.
+Jul 08  16:15:47.181
+—	—	Function 'NexusFlux2Generator.*' (fu-XfsAR9dXgGJi9fDP2cgpux) is waiting to be scheduled on a GPU_L40S worker. We are actively working on acquiring more capacity for your workload.
+Jul 08  16:19:38.212
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading black-forest-labs/FLUX.2-klein-9B from cache...
+Jul 08  16:19:39.392
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading pipeline components...:  20%|██        | 1/5 [00:00<00:01,  2.39it/s]
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]
+Jul 08  16:19:44.501
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading checkpoint shards:  50%|█████     | 1/2 [00:05<00:05,  5.11s/it]
+Jul 08  16:19:48.916
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading checkpoint shards: 100%|██████████| 2/2 [00:09<00:00,  4.76s/it]
+Jul 08  16:19:49.066
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading pipeline components...:  40%|████      | 2/5 [00:10<00:17,  5.99s/it]
+Jul 08  16:19:49.066
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Jul 08  16:19:50.005
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.06it/s]
+Jul 08  16:19:51.392
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.20s/it]
+Jul 08  16:19:52.708
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.10it/s]
+Jul 08  16:19:53.305
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	Loading pipeline components...: 100%|██████████| 5/5 [00:14<00:00,  2.94s/it]
+Jul 08  16:20:07.107
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	—	black-forest-labs/FLUX.2-klein-9B loaded in 28.9s
+Jul 08  16:20:08.086
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	in-01KX0Y4RQVK8VEFBMPY0ZA8WNQ	    GET / -> 200 OK  (duration: 24.7 s, execution: 18.3 ms)
+Jul 08  16:21:42.648
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	in-01KX0Y8BMQR7YTR9YMG5M4Y05P	/usr/local/lib/python3.12/site-packages/peft/tuners/tuners_utils.py:302: UserWarning: Already found a `peft_config` attribute in the model. This will lead to having multiple adapters in the model. Make sure to know what you are doing!
+  warnings.warn(
+Jul 08  16:21:50.103
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	in-01KX0Y8BMQR7YTR9YMG5M4Y05P	  0%|          | 0/4 [00:00<?, ?it/s]
+Jul 08  16:21:59.790
+ta-01KX0Y45JKQ1XVXMKVPQ76TZ8R	in-01KX0Y8BMQR7YTR9YMG5M4Y05P	   POST / -> 200 OK  (duration: 18.8 s, execution: 17.5 s)
+Streaming
+Modal logo
+© Modal 2026
+About
+Status
+Changelog
+Documentation
+Slack Community
+Pricing
+Examples
