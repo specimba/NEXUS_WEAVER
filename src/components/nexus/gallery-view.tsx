@@ -563,16 +563,16 @@ function DetailDrawer({
 
                 {data.safety ? (
                   <DetailBlock title="ST3GG Safety" icon={<ShieldCheck className="h-3.5 w-3.5" />}>
-                    <Row k="Risk level" v={data.safety.riskLevel} />
-                    <Row k="Score" v={String(data.safety.score)} />
-                    <Row k="Passed" v={data.safety.passed ? "yes" : "no"} />
-                    <Row k="Stage" v={`${data.safety.stageMs}ms`} />
+                    <Row k="Risk level" v={data.safety?.riskLevel ?? "unknown"} />
+                    <Row k="Score" v={String(data.safety?.score ?? "—")} />
+                    <Row k="Passed" v={data.safety?.passed ? "yes" : "no"} />
+                    <Row k="Stage" v={`${data.safety?.stageMs ?? 0}ms`} />
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      {data.safety.rationale}
+                      {data.safety?.rationale ?? "No rationale provided."}
                     </p>
-                    {data.safety.flags.length > 0 ? (
+                    {(data.safety?.flags?.length ?? 0) > 0 ? (
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {data.safety.flags.map((f) => (
+                        {data.safety!.flags!.map((f) => (
                           <span
                             key={f}
                             className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] text-amber-300"
@@ -587,11 +587,11 @@ function DetailDrawer({
 
                 {data.judge ? (
                   <DetailBlock title="Gemma 4 Judge" icon={<ScanEye className="h-3.5 w-3.5" />}>
-                    <Row k="Verdict" v={data.judge.verdict} />
-                    <Row k="Stage" v={`${data.judge.stageMs}ms`} />
-                    {data.judge.observations.length > 0 ? (
+                    <Row k="Verdict" v={data.judge?.verdict ?? "unknown"} />
+                    <Row k="Stage" v={`${data.judge?.stageMs ?? 0}ms`} />
+                    {(data.judge?.observations?.length ?? 0) > 0 ? (
                       <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
-                        {data.judge.observations.map((o, i) => (
+                        {data.judge!.observations!.map((o, i) => (
                           <li key={i}>• {o}</li>
                         ))}
                       </ul>

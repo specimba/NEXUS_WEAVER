@@ -37,12 +37,33 @@ export interface BrainModel {
 
 export const BRAIN_MODELS: BrainModel[] = [
   {
+    id: "qwen3-aeon-27b",
+    name: "Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16",
+    shortName: "AEON 27B",
+    hfUrl: "https://huggingface.co/AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16",
+    description:
+      "AEON-7's ultimate uncensored BF16 build of Qwen3.6-27B. Served on Modal B200 GPU " +
+      "(EU West). Vision-capable + broad uncensored reasoning — the recommended brain for " +
+      "ST3GG safety scan, visual judge, and evidence parsing. Benchmark: 1.9 req/s, 1.8s TTFT.",
+    specialty: "Vision + uncensored reasoning + 27B scale — handles all brain roles.",
+    quantization: "BF16",
+    roles: ["safety", "judge", "evidence"],
+    uncensored: true,
+    reasoning: "fable5",
+    params: "~27B",
+    contextWindow: "128k",
+    estMsPerCall: 3000,
+    trend: "rising",
+    recommended: true,
+  },
+  {
     id: "gemma4-12b-fable5-abliterated",
     name: "Gemma 4 12B — Agentic Fable5 Abliterated",
     shortName: "Gemma4 Fable5",
     hfUrl: "https://huggingface.co/huihui-ai/Huihui-gemma-4-12B-agentic-fable5-ablenerated-GGUF",
     description:
-      "Huihui-ai's agentic fable5 abliterated GGUF. The recommended uncensored brain — fable5 reasoning + abliteration means it will analyze mature visual content instead of refusing. Use as the default judge + evidence parser.",
+      "Huihui-ai's agentic fable5 abliterated GGUF. Fable5 reasoning + abliteration means it " +
+      "will analyze mature visual content instead of refusing. Self-deployed via Modal vLLM.",
     specialty: "Uncensored fable5 reasoning — analyzes mature content without refusal.",
     quantization: "GGUF (Q4–Q8)",
     roles: ["safety", "judge", "evidence"],
@@ -52,7 +73,6 @@ export const BRAIN_MODELS: BrainModel[] = [
     contextWindow: "128k",
     estMsPerCall: 4000,
     trend: "rising",
-    recommended: true,
   },
   {
     id: "gemma4-12b-heretic-composer",
@@ -60,7 +80,7 @@ export const BRAIN_MODELS: BrainModel[] = [
     shortName: "Gemma4 Heretic",
     hfUrl: "https://huggingface.co/llmfan46/gemma-4-12B-coder-fable5-composer2.5-v1-uncensored-heretic",
     description:
-      "llmfan46's heretic composer2.5 build. Best for fable-style reasoning + uncensored analysis. Slightly stronger code/JSON output than the agentic variant — preferred for the Nemotron evidence-parse stage.",
+      "llmfan46's heretic composer2.5 build. Best for fable-style reasoning + uncensored analysis.",
     specialty: "Fable reasoning + uncensored + strong JSON/evidence output.",
     quantization: "Heretic",
     roles: ["judge", "evidence"],
@@ -76,8 +96,7 @@ export const BRAIN_MODELS: BrainModel[] = [
     name: "jarod2212 Model Collection",
     shortName: "jarod2212",
     hfUrl: "https://huggingface.co/jarod2212/models",
-    description:
-      "Curated collection of additional uncensored reasoning models. Swap in when a specialized task (e.g. agentic tool-use judge) needs a different profile.",
+    description: "Curated collection of additional uncensored reasoning models.",
     specialty: "Specialized uncensored variants — pick per task.",
     quantization: "varies",
     roles: ["judge", "evidence"],
@@ -93,8 +112,7 @@ export const BRAIN_MODELS: BrainModel[] = [
     name: "Qwen3 VL Uncensored (nDimensional block)",
     shortName: "Qwen3 VL",
     hfUrl: "https://huggingface.co/nDimensional/Qwen3.5-35B-A3B-Uncensored-FP8_BLOCK",
-    description:
-      "Vision-capable uncensored alternative for the visual-judge role when a Gemma variant isn't available. Larger footprint.",
+    description: "Vision-capable uncensored alternative. Larger footprint.",
     specialty: "Vision + uncensored — visual judge fallback.",
     quantization: "FP8",
     roles: ["judge"],
@@ -107,7 +125,7 @@ export const BRAIN_MODELS: BrainModel[] = [
   },
 ];
 
-export const DEFAULT_BRAIN_ID = "gemma4-12b-fable5-abliterated";
+export const DEFAULT_BRAIN_ID = "qwen3-aeon-27b";
 
 export function getBrain(id: string | null | undefined): BrainModel {
   if (!id) return BRAIN_MODELS[0];

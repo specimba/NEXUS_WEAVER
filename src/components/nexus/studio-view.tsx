@@ -1489,15 +1489,15 @@ function ResultPanel({
                       ST3GG safety scan
                     </span>
                     <span className="font-mono text-[10px] text-rose-300">
-                      risk: {result.safety.riskLevel} · score {result.safety.score}
+                      risk: {result.safety?.riskLevel ?? "unknown"} · score {result.safety?.score ?? "—"}
                     </span>
                   </div>
                   <p className="text-[11px] leading-snug text-muted-foreground">
-                    {result.safety.rationale}
+                    {result.safety?.rationale ?? "No rationale provided."}
                   </p>
-                  {result.safety.flags.length > 0 ? (
+                  {(result.safety?.flags?.length ?? 0) > 0 ? (
                     <div className="mt-1.5 flex flex-wrap gap-1">
-                      {result.safety.flags.map((f) => (
+                      {result.safety!.flags!.map((f) => (
                         <span
                           key={f}
                           className="rounded border border-rose-500/30 bg-rose-500/10 px-1.5 py-0.5 font-mono text-[9px] text-rose-300"
@@ -1641,15 +1641,15 @@ function ResultPanel({
       {/* Safety + Judge detail */}
       <div className="grid gap-4 md:grid-cols-2">
         {result.safety ? (
-          <DetailCard title="ST3GG Safety Scan" icon={<ShieldMark />} tone={result.safety.passed ? "ok" : "warn"}>
+          <DetailCard title="ST3GG Safety Scan" icon={<ShieldMark />} tone={result.safety?.passed ? "ok" : "warn"}>
             <div className="mb-3 flex items-center justify-between">
-              <span className="font-mono text-xs text-muted-foreground">Risk: {result.safety.riskLevel}</span>
-              <ScoreRing value={result.safety.score} size={48} />
+              <span className="font-mono text-xs text-muted-foreground">Risk: {result.safety?.riskLevel ?? "unknown"}</span>
+              <ScoreRing value={result.safety?.score ?? 0} size={48} />
             </div>
-            <p className="text-xs text-muted-foreground">{result.safety.rationale}</p>
-            {result.safety.flags.length > 0 ? (
+            <p className="text-xs text-muted-foreground">{result.safety?.rationale ?? "No rationale provided."}</p>
+            {(result.safety?.flags?.length ?? 0) > 0 ? (
               <div className="mt-2 flex flex-wrap gap-1">
-                {result.safety.flags.map((f) => (
+                {result.safety!.flags!.map((f) => (
                   <span key={f} className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] text-amber-300">
                     {f}
                   </span>

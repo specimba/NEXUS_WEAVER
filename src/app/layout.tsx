@@ -17,16 +17,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NEXUS Visual Weaver — Governed Visual Creation Pipeline",
   description:
-    "FLUX.1 image generation studio with calibrated quality presets, curated HF/Civitai LoRA library, NSFW 18+ safety gating, and EU-compliant legal policy. Multi-agent pipeline: FLUX → ST3GG → MiniCPM-V → Nemotron.",
+    "FLUX.2 Klein 9B image generation studio on Modal L40S GPU, with Qwen3.6-27B-AEON uncensored brain, calibrated quality presets, curated HF/Civitai LoRA library, NSFW 18+ safety gating, and EU-compliant legal policy. Async pipeline: FLUX.2 → ST3GG → Judge → Nemotron.",
   keywords: [
     "NEXUS",
-    "FLUX.1",
+    "FLUX.2",
     "image generation",
     "LoRA",
     "HuggingFace",
     "Civitai",
     "AI safety",
     "EU AI Act",
+    "Modal",
+    "Qwen3.6",
   ],
   authors: [{ name: "NEXUS Visual Weaver" }],
   icons: {
