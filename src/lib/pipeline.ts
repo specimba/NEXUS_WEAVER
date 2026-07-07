@@ -327,7 +327,7 @@ Respond as JSON exactly in this shape:
 }
 
 // ----------------------------------------------------------------------------
-// Stage 3 — MiniCPM-V visual judge (z-ai vision completions on generated image)
+// Stage 3 — Visual judge (z-ai vision completions on generated image)
 // ----------------------------------------------------------------------------
 export async function stageJudge(
   imagePath: string,
@@ -464,13 +464,14 @@ ${JSON.stringify(judge, null, 2)}
 Produce evidence JSON exactly:
 {
   "summary": string,                  // one sentence executive summary
-  "modelChain": ["FLUX.2","ST3GG","MiniCPM-V","Nemotron"],
+  "modelChain": ["FLUX.2","ST3GG","Visual Judge","Nemotron"],
   "provenance": {
-    "generator": "FLUX.2 Klein (via z-ai images.generations)",
-    "safetyModel": "ST3GG (via z-ai chat completions)",
-    "judgeModel": "MiniCPM-V 2.6 (via z-ai vision)",
-    "aggregator": "Nemotron-Nano (via z-ai chat completions)"
+    "generator": "FLUX.2 Klein 9B (via Modal L40S GPU)",
+    "safetyModel": "ST3GG (via ${brain.shortName})",
+    "judgeModel": "Visual Judge (via z-ai vision)",
+    "aggregator": "Nemotron (via ${brain.shortName})"
   },
+  // NOTE: Use the actual brain name "${brain.shortName}" in the provenance above.
   "finalVerdict": "approved"|"rejected"|"needs_review",
   "confidence": number,               // 0-100
   "keyFindings": string[],            // 3-5 bullets
@@ -723,7 +724,7 @@ export async function runPipeline(
       gen.id
     );
 
-    // Stage: MiniCPM-V visual judge
+    // Stage: Visual judge (z-ai vision on generated image)
     progress("judge", { status: "running", message: "Visual judge analyzing generated image…" });
     const judge = await stageJudge(flux.imagePath, input.prompt, input.style, input.wardrobe, input.brainId);
     progress("judge", { status: "done", ms: judge.stageMs, message: `${judge.verdict} · ${judge.overallScore}` });
@@ -746,7 +747,7 @@ export async function runPipeline(
     });
     await logEvent(
       "stage_complete",
-      `MiniCPM-V judged: ${judge.verdict} (overall ${judge.overallScore})`,
+      `Visual judge: ${judge.verdict} (overall ${judge.overallScore})`,
       judge.verdict === "approved" ? "success" : judge.verdict === "rejected" ? "warn" : "info",
       gen.id
     );

@@ -23,7 +23,7 @@ image = (
         "Pillow~=11.2.1", "accelerate~=1.8.1",
         "git+https://github.com/huggingface/diffusers.git",  # LATEST — no commit pin (Flux2KleinPipeline is recent)
         "huggingface-hub==0.36.0", "optimum-quanto==0.2.7", "peft>=0.15.0",
-        "safetensors==0.5.3", "sentencepiece==0.2.0", "torch==2.7.1",
+        "safetensors>=0.8.0", "sentencepiece==0.2.0", "torch==2.7.1",
         "transformers~=4.53.0", "fastapi[standard]",
         extra_options="--index-strategy unsafe-best-match",
         extra_index_url="https://download.pytorch.org/whl/cu128",

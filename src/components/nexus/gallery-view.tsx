@@ -471,7 +471,7 @@ function DetailDrawer({
               <button
                 onClick={exportEvidence}
                 className="nexus-press inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card/50 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-primary"
-                title="Export Gemma 4 evidence JSON only"
+                title="Export evidence JSON"
               >
                 <Download className="h-3 w-3" /> Evidence
               </button>
@@ -586,7 +586,7 @@ function DetailDrawer({
                 ) : null}
 
                 {data.judge ? (
-                  <DetailBlock title="Gemma 4 Judge" icon={<ScanEye className="h-3.5 w-3.5" />}>
+                  <DetailBlock title="Visual Judge" icon={<ScanEye className="h-3.5 w-3.5" />}>
                     <Row k="Verdict" v={data.judge?.verdict ?? "unknown"} />
                     <Row k="Stage" v={`${data.judge?.stageMs ?? 0}ms`} />
                     {(data.judge?.observations?.length ?? 0) > 0 ? (
@@ -600,7 +600,7 @@ function DetailDrawer({
                 ) : null}
 
                 {data.evidence ? (
-                  <DetailBlock title="Gemma 4 Evidence" icon={<FileJson className="h-3.5 w-3.5" />}>
+                  <DetailBlock title="Structured Evidence" icon={<FileJson className="h-3.5 w-3.5" />}>
                     <pre className="nexus-scroll max-h-48 overflow-auto rounded bg-background/60 p-2 text-[9px] leading-relaxed">
 {JSON.stringify(data.evidence, null, 2)}
                     </pre>

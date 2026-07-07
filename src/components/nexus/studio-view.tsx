@@ -1665,7 +1665,7 @@ function ResultPanel({
 
         {result.judge ? (
           <DetailCard
-            title="Gemma 4 Judge Report"
+            title="Visual Judge Report"
             icon={<ScanEye className="h-4 w-4" />}
             tone={result.judge.verdict === "approved" ? "ok" : result.judge.verdict === "rejected" ? "bad" : "warn"}
           >
@@ -1703,10 +1703,10 @@ function ResultPanel({
         ) : null}
       </div>
 
-      {/* Gemma 4 evidence */}
+      {/* Structured evidence */}
       {result.evidence ? (
         <DetailCard
-          title="Gemma 4 Structured Evidence"
+          title="Structured Evidence"
           icon={<FileJson className="h-4 w-4" />}
           action={
             <button
