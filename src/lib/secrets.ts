@@ -34,6 +34,12 @@ export const MODAL_PROXY_SECRET = process.env.MODAL_PROXY_SECRET || "ws_REDACTED
 // (FLUX.2-klein-9B is gated, requires HF auth)
 export const HF_TOKEN = process.env.HF_TOKEN || process.env.HUGGING_FACE_HUB_TOKEN || "***REMOVED***_SEE_GITHUB_SECRETS";
 
+// Browserless token — for headless browser scraping (Civitai, Civitai.red NSFW pages)
+// Used by the LoRA metadata scraper to fetch model info from civitai.red (NSFW section)
+// and JS-rendered pages that can't be scraped with plain HTTP.
+// Get from: https://browserless.io/account/
+export const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN || "BROWSERLESS_REDACTED";
+
 // ── Modal Endpoint URLs ──────────────────────────────────────────────────────
 
 // FLUX.2 Klein 9B — image generation endpoint (L40S GPU, public, no auth needed)
