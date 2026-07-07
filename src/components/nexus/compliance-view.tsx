@@ -904,7 +904,18 @@ export function ComplianceView() {
                 </thead>
                 <tbody>
                   {rows.map((r) => {
-                    const s = r.safety!;
+                    const s = r.safety;
+                    if (!s) {
+                      return (
+                        <tr key={r.id} className="border-t border-border/30">
+                          <td className="max-w-[220px] truncate px-2 py-2 text-muted-foreground">{r.prompt}</td>
+                          <td className="px-2 py-2 text-muted-foreground">—</td>
+                          <td className="px-2 py-2 text-right font-mono text-muted-foreground">—</td>
+                          <td className="px-2 py-2 text-muted-foreground">no scan</td>
+                          <td className="px-2 py-2 text-muted-foreground">—</td>
+                        </tr>
+                      );
+                    }
                     return (
                       <tr key={r.id} className="border-t border-border/30 hover:bg-foreground/5">
                         <td className="max-w-[220px] truncate px-2 py-2 text-foreground">

@@ -384,12 +384,12 @@ export function StudioView() {
           setStage("st3gg", {
             status: "done",
             ms: t.st3gg,
-            message: data.safety ? `${data.safety.riskLevel} risk · score ${data.safety.score}` : "Scanned",
+            message: data.safety ? `${data.safety?.riskLevel ?? "unknown"} risk · score ${data.safety?.score ?? "—"}` : "Scanned",
           });
           setStage("judge", {
             status: "done",
             ms: t.judge,
-            message: data.judge ? `${data.judge.verdict} · ${data.judge.overallScore}` : "Judged",
+            message: data.judge ? `${data.judge?.verdict ?? "unknown"} · ${data.judge?.overallScore ?? "—"}` : "Judged",
           });
           setStage("nemotron", { status: "done", ms: t.nemotron, message: "Evidence aggregated" });
           setStage("output", { status: "done", ms: 1, message: "Persisted to gallery" });
@@ -428,7 +428,7 @@ export function StudioView() {
           setStage("flux", { status: "error", message: "Blocked by policy" });
           setStage("st3gg", {
             status: "done",
-            message: data.safety ? `${data.safety.riskLevel} risk · score ${data.safety.score}` : "Blocked",
+            message: data.safety ? `${data.safety?.riskLevel ?? "unknown"} risk · score ${data.safety?.score ?? "—"}` : "Blocked",
           });
           setStage("judge", { status: "skipped", message: "Skipped — blocked" });
           setStage("nemotron", { status: "skipped", message: "Skipped — blocked" });
@@ -1530,7 +1530,7 @@ function ResultPanel({
                 >
                   <RotateCcw className="h-3 w-3" /> Adjust &amp; retry
                 </button>
-                {result.safety && result.safety.score >= 40 ? (
+                {result.safety && (result.safety?.score ?? 0) >= 40 ? (
                   <button
                     type="button"
                     onClick={() => {
@@ -1729,17 +1729,17 @@ function ResultPanel({
           }
         >
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <VerdictBadge verdict={(result.evidence.finalVerdict as string) ?? result.verdict} size="sm" />
-            {typeof result.evidence.confidence === "number" ? (
+            <VerdictBadge verdict={(result.evidence?.finalVerdict as string) ?? result.verdict ?? "unknown"} size="sm" />
+            {typeof result.evidence?.confidence === "number" ? (
               <span className="font-mono text-[10px] text-muted-foreground">
                 confidence {String(result.evidence.confidence)}
               </span>
             ) : null}
           </div>
-          {typeof result.evidence.summary === "string" ? (
+          {typeof result.evidence?.summary === "string" ? (
             <p className="mb-3 text-sm text-foreground">{result.evidence.summary}</p>
           ) : null}
-          {Array.isArray(result.evidence.keyFindings) ? (
+          {Array.isArray(result.evidence?.keyFindings) ? (
             <div className="mb-3">
               <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Key Findings</div>
               <ul className="space-y-0.5 text-xs text-muted-foreground">

@@ -551,11 +551,11 @@ function DetailDrawer({
                   <div className="flex-1 space-y-1.5">
                     {data.judge ? (
                       <>
-                        <Bar label="Prompt adherence" v={data.judge.promptAdherence} />
-                        <Bar label="Visual quality" v={data.judge.visualQuality} />
-                        <Bar label="Aesthetic" v={data.judge.aestheticScore} />
-                        <Bar label="Safety" v={data.judge.safetyScore} />
-                        <Bar label="Wardrobe match" v={data.judge.wardrobeMatch} />
+                        <Bar label="Prompt adherence" v={data.judge?.promptAdherence ?? 0} />
+                        <Bar label="Visual quality" v={data.judge?.visualQuality ?? 0} />
+                        <Bar label="Aesthetic" v={data.judge?.aestheticScore ?? 0} />
+                        <Bar label="Safety" v={data.judge?.safetyScore ?? 0} />
+                        <Bar label="Wardrobe match" v={data.judge?.wardrobeMatch ?? 0} />
                       </>
                     ) : null}
                   </div>
@@ -738,7 +738,7 @@ function CompareDrawer({
                   {data?.judge ? (
                     <div className="space-y-2">
                       <ScoreRing
-                        value={data.judge.overallScore}
+                        value={data.judge?.overallScore ?? 0}
                         size={60}
                         label={idx === 0 ? "A" : "B"}
                       />
