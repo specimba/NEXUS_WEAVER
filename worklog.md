@@ -859,3 +859,27 @@ VERIFICATION:
 - If user waits ~2 min, both will be warm. If user runs immediately, brain falls through to z-ai.
 
 Git: committed as 4462dfa
+
+---
+Task ID: v5.12-null-safety-sweep
+Agent: Z.ai Code (main)
+Task: Fix 'Application error' crash in governance/guardrails section
+
+ROOT CAUSE:
+- compliance-view.tsx line 907: `const s = r.safety!` — non-null assertion (!)
+  on r.safety. When a generation failed/stuck, r.safety was null → s.riskLevel
+  crashed → React error → __next_error__ page.
+- Also: studio-view + gallery-view had unguarded .safety, .judge, .evidence
+  field accesses that could crash on null data.
+
+COMPREHENSIVE FIX (all null-safety issues across 3 files):
+1. compliance-view.tsx: `r.safety!` → `r.safety; if (!s) return <tr>—</tr>`
+   Shows "—" for generations without safety data instead of crashing.
+2. studio-view.tsx: 8 unguarded accesses → optional chaining (?.) + ?? fallbacks
+3. gallery-view.tsx: 6 unguarded accesses → optional chaining + ?? 0
+
+VERIFICATION:
+- Agent Browser: page loads clean, no errors, no crash
+- Compliance section renders with all governance content
+- HMR connected, Fast Refresh working
+- Git: committed as f192981
