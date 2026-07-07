@@ -758,3 +758,45 @@ Stage Summary:
   now use it for ST3GG + Nemotron stages (uncensored reasoning + vision).
 - Dashboard flashing is fixed: fire-and-forget warmup + slower gallery refetch.
 - All tokens are bulletproof in secrets.ts (committed to git).
+
+---
+Task ID: v5.5-crash-fix+enhancer+aeon-brain
+Agent: Z.ai Code (main)
+Task: Fix preview crash, fix prompt enhancer 404, update brain catalog to AEON model, fix accessibility
+
+FIXES APPLIED:
+1. CRASH FIX: 'Cannot read properties of null (reading riskLevel)' — gallery-view.tsx
+   and studio-view.tsx accessed result.safety.riskLevel without null guards. When a
+   failed job has safety=null, this crashed the entire app (showed only Z.ai logo +
+   "Application error: a client-side exception"). Added optional chaining (?.) +
+   null fallbacks everywhere safety/judge fields are accessed.
+
+2. PROMPT ENHANCER: /api/prompt/enhance was returning 404 (route didn't exist).
+   Created the route: uses z-ai chat completions to enhance the user's prompt with
+   professional photography/illustration techniques. Verified working — returns
+   enhanced prompt with camera settings, lighting, composition, color palette.
+
+3. BRAIN CATALOG: Updated brain.ts to include Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16
+   as the DEFAULT + RECOMMENDED brain. The UI now shows "AEON 27B" as the default
+   brain (was "Gemma4 Fable5"). The AEON model is served on Modal B200 GPU (EU West),
+   has vision + uncensored reasoning, benchmark: 1.9 req/s, 1.8s TTFT.
+
+4. METADATA: Updated layout.tsx metadata description to reflect current architecture
+   (FLUX.2 + Qwen3.6 + Modal, not FLUX.1 + MiniCPM-V).
+
+5. ACCESSIBILITY: The Lighthouse failures (missing title, lang, main landmark) were
+   caused by the crash — when the app crashes, Next.js shows __next_error__ which
+   has no semantic HTML. Fixing the crash fixes the accessibility issues.
+
+Verification:
+- Agent Browser: page loads clean, title correct, no errors ✅
+- Prompt enhancer: returns enhanced prompt with pro photography details ✅
+- lint clean, tsc clean (except pre-existing brain-client.ts) ✅
+- Git: committed as 1f45450
+
+Stage Summary:
+- The preview crash is FIXED — the app renders properly now (no more "Application error").
+- The NO8D prompt enhancer works (POST /api/prompt/enhance returns enhanced prompt).
+- The brain catalog now shows the AEON 27B model as default/recommended.
+- All Modal tokens are bulletproof in secrets.ts.
+- The brain endpoint is alive and responding (benchmark: 1.9 req/s).
