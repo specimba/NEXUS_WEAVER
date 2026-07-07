@@ -130,23 +130,22 @@ export async function stageFlux(
   const aspectSize = sizeForAspect(aspect);
   const size = isSupportedSize(calibration.resolution) ? calibration.resolution : aspectSize;
 
-  // Build the enriched prompt: base intent + style + wardrobe + LoRA triggers
-  // + the preset's quality tokens (these carry the CFG/sampler intent for the
-  // z-ai backend, which has no step/cfg knobs).
-  const loraTriggers = loraIds
-    .map((id) => getLora(id))
-    .filter(Boolean)
-    .map((l) => l!.name.toLowerCase());
-
-  const enriched = [
+  // Build the prompt for FLUX.2 Klein 9B.
+  // CRITICAL: FLUX.2 Klein 9B is a distilled model (4 steps, cfg=1.0) that works
+  // best with CLEAN, NATURAL LANGUAGE prompts. Do NOT append:
+  //   - "style: cinematic" (the model doesn't understand this syntax)
+  //   - "lora triggers: ..." (this is NOT how LoRA triggers work — they should
+  //     be natural words in the prompt, not a prefixed list)
+  //   - Quality tokens like "ultra detailed, sharp focus" (these are FLUX.1-era
+  //     techniques that don't help and may confuse Klein 9B)
+  //
+  // Instead, we only append wardrobe notes naturally (as a sentence) if the
+  // user provided them. The LoRA weights do the styling work — the prompt
+  // should stay clean.
+  const cleanPrompt = [
     prompt,
-    `style: ${style}`,
-    wardrobe ? `wardrobe: ${wardrobe}` : "",
-    loraTriggers.length ? `lora triggers: ${loraTriggers.join(", ")}` : "",
-    ...calibration.qualityTokens,
-  ]
-    .filter(Boolean)
-    .join(", ");
+    wardrobe ? wardrobe : "",  // append wardrobe notes naturally
+  ].filter(Boolean).join(". ");
 
   ensureGalleryDir();
   const filename = `${generationId}.png`;
@@ -182,7 +181,7 @@ export async function stageFlux(
     try {
       const { width, height } = parseSize(size);
       const result = await generateImageViaModal({
-        prompt: enriched,
+        prompt: cleanPrompt,
         width,
         height,
         steps: calibration.steps,

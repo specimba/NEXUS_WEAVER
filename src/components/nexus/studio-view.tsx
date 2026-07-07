@@ -204,7 +204,7 @@ export function StudioView() {
   // Modal is the PRIMARY generation path (always on). No boost toggle needed.
 
   // v4: engine-aware pipeline stages — reflect the selected engine + brain,
-  // not a hardcoded "FLUX.1-schnell" label.
+  // not a hardcoded "FLUX.2-klein-9B" label.
   const pipelineStages = getPipelineStages(engineId, brainId);
   const [elapsed, setElapsed] = useState(0);
   const [warming, setWarming] = useState(false);
@@ -1798,7 +1798,7 @@ function ResultPanel({
  * Rendered inside ResultPanel after the still image is generated + approved.
  * Lets the user pick a video engine, edit the motion prompt, choose a duration,
  * and POST to /api/video/run. The backend is intentionally a stub in this
- * sandbox (the Modal endpoint serves FLUX.1-schnell image only — no video GPU),
+ * sandbox (the Modal endpoint serves FLUX.2-klein-9B image only — no video GPU),
  * so the card gracefully surfaces the structured errorMessage in a rose callout
  * with a one-click link to Cost Lab.
  */
@@ -2175,7 +2175,7 @@ function ProvenanceCard({ result }: { result: RunResult }) {
       </div>
 
       {/* v4: Backend mismatch warning — the user selected an engine (e.g. Krea 2)
-          but the Modal endpoint serves FLUX.1-schnell. Surface this clearly so
+          but the Modal endpoint serves FLUX.2-klein-9B. Surface this clearly so
           they know the actual model used ≠ the selected one. */}
       {result.backendMismatch ? (
         <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/8 p-2.5">
@@ -2183,7 +2183,7 @@ function ProvenanceCard({ result }: { result: RunResult }) {
           <div className="text-[10px] leading-relaxed text-amber-200/90">
             <span className="font-semibold text-amber-300">Backend mismatch:</span>{" "}
             You selected <span className="font-mono">{engine.name}</span> but the Modal
-            endpoint currently serves FLUX.1-schnell. The generated image uses FLUX.1-schnell
+            endpoint currently serves FLUX.2-klein-9B. The generated image uses FLUX.2-klein-9B
             weights. Deploy the optimized app from{" "}
             <button
               onClick={() => useNexus.getState().setView("costlab")}
@@ -2335,7 +2335,7 @@ function DetailCard({
 }
 
 /**
- * CalibrationPanel — FLUX.1 calibration preset picker + advanced overrides.
+ * CalibrationPanel — FLUX.2 calibration preset picker + advanced overrides.
  * Renders the 6 presets as a horizontal chip row, shows a compact key/value
  * grid for the active preset, and exposes steps/cfg/denoise/loraWeight
  * sliders in a collapsible "Advanced overrides" section.
