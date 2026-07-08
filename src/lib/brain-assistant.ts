@@ -45,28 +45,46 @@ export function localCompatibilityChecks(params: {
   const engine = getEngine(engineId);
   const suggestions: BrainSuggestion[] = [];
 
-  // 1. LoRA engine-family compatibility
+  // 1. LoRA engine-family compatibility + incompatible format checks
   const loras = loraIds.map((id) => getLora(id)).filter(Boolean) as LoraEntry[];
   for (const lora of loras) {
+    // Check for incompatible-diffusers tag (LoRAs that fail to load on FLUX.2)
+    if (lora.tags?.includes("incompatible-diffusers") || lora.tags?.includes("incompatible-flux2")) {
+      suggestions.push({
+        kind: "compat",
+        title: `LoRA "${lora.name}" is INCOMPATIBLE with FLUX.2`,
+        detail: lora.notes ?? `"${lora.name}" will FAIL to load on the Modal GPU. It silently does nothing — the image is generated without it. Remove it from the stack.`,
+        action: { label: `Remove ${lora.name}`, type: "remove-lora", value: lora.id },
+      });
+      continue; // Skip the engine-family check — already flagged as incompatible
+    }
     // `engine.family` is typed as `string` (engines.ts) while `engineFamilies`
     // is `EngineFamily[]` (lora-library.ts). Use .some() to avoid the type
     // mismatch that Array.includes() would require.
     if (lora.engineFamilies.length > 0 && !lora.engineFamilies.some((f) => f === engine.family)) {
       suggestions.push({
         kind: "compat",
-        title: `LoRA "${lora.name}" may not match engine`,
-        detail: `"${lora.name}" targets ${lora.engineFamilies.join(", ")} but you selected ${engine.name} (${engine.family}). The LoRA may have no effect or produce artifacts. Consider removing it or switching to a compatible engine.`,
+        title: `LoRA "${lora.name}" is for a different engine`,
+        detail: `"${lora.name}" targets ${lora.engineFamilies.join(", ")} but you selected ${engine.name} (${engine.family}). This LoRA will FAIL to load on the GPU — it silently does nothing. Remove it from the stack.`,
         action: { label: `Remove ${lora.name}`, type: "remove-lora", value: lora.id },
       });
     }
   }
 
-  // 2. Too many LoRAs stacked (collapse risk)
-  if (loras.length > 5) {
+  // 2. LoRA stack analysis — check total weight + role diversity
+  const totalWeight = loras.reduce((sum, l) => sum + (loraWeights[l.id] ?? l.recommendedWeight), 0);
+  if (loras.length > 8) {
     suggestions.push({
       kind: "warning",
-      title: "LoRA stack overload",
-      detail: `${loras.length} LoRAs stacked. Beyond 5, adapters often "collapse" — they compete for the same attention layers and produce degraded output (blurred features, artifacts, inconsistent style). Consider reducing to 3-4 max for clean results.`,
+      title: "Large LoRA stack",
+      detail: `${loras.length} LoRAs stacked. Professional workflows use 5-10 LoRAs with LOW individual weights (0.15-0.30 each) and diverse roles (style + control + detailer). Keep total combined weight under ~2.0 to avoid collapse.`,
+    });
+  }
+  if (totalWeight > 2.5) {
+    suggestions.push({
+      kind: "warning",
+      title: "Total LoRA weight too high",
+      detail: `Combined weight is ${totalWeight.toFixed(2)}. Professional ComfyUI workflows keep total combined weight under ~2.0. Reduce individual weights to 0.15-0.30 each when stacking many LoRAs.`,
     });
   }
 
@@ -90,13 +108,14 @@ export function localCompatibilityChecks(params: {
     });
   }
 
-  // 5. Steps too low for the engine
-  if (calibration && calibration.steps < engine.params.stepsMin + 2) {
+  // 5. Steps check — for FLUX.2 Klein 9B, 4 is OPTIMAL (research-confirmed)
+  // Going higher DEGRADES quality (unnatural skin, plastic look, blurry eyes)
+  if (calibration && engine.family === "FLUX.2" && calibration.steps > 4) {
     suggestions.push({
       kind: "optimization",
-      title: "Steps may be too low",
-      detail: `${calibration.steps} steps for ${engine.name} (min recommended: ${engine.params.stepsMin}). The output may look undercooked. Try ${engine.params.stepsMin + 4} steps for cleaner detail.`,
-      action: { label: `Set ${engine.params.stepsMin + 4} steps`, type: "adjust-steps", value: String(engine.params.stepsMin + 4) },
+      title: "Steps too high for FLUX.2 Klein 9B",
+      detail: `${calibration.steps} steps is too many for FLUX.2 Klein 9B (distilled model). 4 steps is OPTIMAL — higher steps DEGRADE quality (unnatural skin, plastic look, blurry eyes). The backend caps at 4 anyway, but the UI shows the wrong value.`,
+      action: { label: "Set 4 steps", type: "adjust-steps", value: "4" },
     });
   }
 

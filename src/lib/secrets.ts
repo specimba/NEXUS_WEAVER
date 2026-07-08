@@ -68,3 +68,17 @@ export const MODAL_BRAIN_MODEL =
 // ── Timeouts ─────────────────────────────────────────────────────────────────
 export const MODAL_COLD_START_TIMEOUT = Number(process.env.MODAL_COLD_START_TIMEOUT || 300);
 export const MODAL_WARM_TIMEOUT = Number(process.env.MODAL_WARM_TIMEOUT || 120);
+
+// ── Video I2V backends ───────────────────────────────────────────────────────
+// Wan 2.2 I2V — image-to-video on H100 GPU
+// v3: refactored to @app.cls + @modal.enter() + @modal.asgi_app() — the URL
+// now includes the class name (nexuswan22generator). The old function-based
+// URL (without the class name) returned 404 "invalid function call" during
+// cold start because model loading blocked the asgi_app from becoming ready.
+export const MODAL_WAN22_URL =
+  process.env.MODAL_WAN22_URL ||
+  "https://specimba--nexus-wan22-i2v-nexuswan22generator-web-app.modal.run";
+// LTX 2.3 I2V — image-to-video on H100 GPU
+export const MODAL_LTX23_URL =
+  process.env.MODAL_LTX23_URL ||
+  "https://specimba--nexus-ltx23-i2v-nexusltx23generator-web-app.modal.run";

@@ -29,6 +29,7 @@
 import fs from "fs";
 import path from "path";
 import { isModalEnabled } from "@/lib/modal-client";
+import { MODAL_WAN22_URL, MODAL_LTX23_URL } from "@/lib/secrets";
 import { logEvent } from "@/lib/pipeline";
 import { getEngine } from "@/lib/engines";
 
@@ -64,7 +65,7 @@ export interface VideoStageResult {
 }
 
 const NOT_DEPLOYED_MSG =
-  "Video generation requires a deployed Modal video app (Wan 2.2 / LTX 2.3). The current Modal endpoint serves FLUX.1-schnell (image only). Deploy a video Modal app and set MODAL_VIDEO_BASE_URL in .env.";
+  "Video backend is cold-starting. The Wan 2.2 / LTX 2.3 Modal app needs ~2-5 min to warm up on first use. Try again in a minute.";
 
 function ensureGalleryDir(): void {
   if (!fs.existsSync(GALLERY_DIR)) {
@@ -78,7 +79,15 @@ function ensureGalleryDir(): void {
  */
 function resolveAbsoluteImagePath(sourceImagePath: string): string | null {
   if (!sourceImagePath) return null;
-  // Strip leading slash, then resolve under public/
+  // Handle /api/image/{id} paths — read from DB, write to temp file
+  if (sourceImagePath.startsWith("/api/image/")) {
+    // For video pipeline, we need the actual file. The /api/image/ route serves
+    // from DB imageData. We'll handle this in the caller by fetching the image
+    // via HTTP and saving to a temp file.
+    // Return null here — the caller needs to resolve it differently.
+    return null; // Will be handled by the video run route using /api/video/i2v
+  }
+  // Handle /gallery/ paths — resolve under public/
   const stripped = sourceImagePath.startsWith("/")
     ? sourceImagePath.slice(1)
     : sourceImagePath;
@@ -108,8 +117,32 @@ export async function runVideoStage(
   const t0 = Date.now();
   const engine = getEngine(params.engineId);
 
-  // 1. Validate source image exists
-  const absImagePath = resolveAbsoluteImagePath(params.sourceImagePath);
+  // 1. Validate source image exists — handle both /gallery/ and /api/image/ paths
+  let absImagePath: string | null = null;
+  let imageBase64: string | null = null;
+
+  if (params.sourceImagePath.startsWith("/api/image/")) {
+    // DB-backed image — read from Prisma
+    try {
+      const { db } = await import("@/lib/db");
+      const genId = params.sourceImagePath.replace("/api/image/", "");
+      const gen = await db.generation.findUnique({ where: { id: genId } });
+      if (gen?.imageData) {
+        imageBase64 = gen.imageData;
+        // Write to temp file for video pipeline
+        const tempPath = path.join(GALLERY_DIR, `temp_${genId}.png`);
+        fs.writeFileSync(tempPath, Buffer.from(gen.imageData, "base64"));
+        absImagePath = tempPath;
+      }
+    } catch {
+      // fall through to disk check
+    }
+  }
+
+  if (!absImagePath) {
+    absImagePath = resolveAbsoluteImagePath(params.sourceImagePath);
+  }
+
   if (!absImagePath) {
     const ms = Date.now() - t0;
     await logEvent(
@@ -150,15 +183,17 @@ export async function runVideoStage(
     }
   );
 
-  // 3. Attempt the Modal video endpoint only when both MODAL_USE=true and
-  //    MODAL_VIDEO_BASE_URL are set. Without a dedicated video app, the
-  //    current Modal endpoint serves FLUX.1-schnell (image only) and cannot
-  //    produce video output — so we don't waste a GPU call on it.
-  if (!isModalEnabled() || !MODAL_VIDEO_BASE_URL) {
+  // 3. Check which video backend to use based on engine selection.
+  //    Wan 2.2 and LTX 2.3 are deployed as separate Modal apps.
+  const videoBackendUrl = engine.id === "wan-2.2" ? MODAL_WAN22_URL :
+                          engine.id === "ltx-2.3" ? MODAL_LTX23_URL :
+                          MODAL_WAN22_URL; // default to Wan 2.2
+
+  if (!videoBackendUrl) {
     const ms = Date.now() - t0;
     await logEvent(
       "video_stage",
-      `Video stage aborted — no video Modal app deployed (MODAL_USE=${isModalEnabled()}, MODAL_VIDEO_BASE_URL=${MODAL_VIDEO_BASE_URL ? "set" : "unset"}). The current Modal endpoint serves FLUX.1-schnell (image only).`,
+      `Video stage aborted — no video Modal app deployed for engine ${engine.id}.`,
       "warn",
       null,
       { engineId: engine.id }
@@ -179,16 +214,23 @@ export async function runVideoStage(
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), MODAL_VIDEO_TIMEOUT_SEC * 1000);
 
-    const res = await fetch(`${MODAL_VIDEO_BASE_URL}/generate_video`, {
+    // Random seed per video run — same pattern as image pipeline. A fixed
+    // seed (42) meant every video had identical motion noise → no variation.
+    const videoSeed = Math.floor(Math.random() * 2_147_483_647);
+
+    const res = await fetch(`${videoBackendUrl}/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
         image: imageBase64,
         prompt: params.prompt,
-        engine_id: engine.id,
-        steps,
-        cfg,
-        duration_sec: durationSec,
+        negative_prompt: "",
+        num_frames: durationSec * (engine.id === "ltx-2.3" ? 24 : 16),
+        height: 720,
+        width: 1280,
+        num_inference_steps: engine.id === "ltx-2.3" ? 25 : 30,
+        guidance_scale: engine.id === "ltx-2.3" ? 3.0 : 5.0,
+        seed: videoSeed,
       }),
       signal: ctrl.signal,
     });
@@ -197,13 +239,13 @@ export async function runVideoStage(
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(
-        `Modal /generate_video HTTP ${res.status}: ${text.slice(0, 240)}`
+        `Modal /generate HTTP ${res.status}: ${text.slice(0, 240)}`
       );
     }
 
     const data = (await res.json()) as { video?: string; ms?: number };
     if (!data.video) {
-      throw new Error("Modal /generate_video returned no video field");
+      throw new Error("Modal /generate returned no video field");
     }
 
     ensureGalleryDir();

@@ -58,6 +58,8 @@ class NexusFlux2Generator:
     @modal.fastapi_endpoint(method="POST")
     def generate(self, prompt: str, negative_prompt: str = "", steps: int = 10, cfg: float = 3.5, seed: int = 42, height: int = 1024, width: int = 1024, loras: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         t0 = time.time()
+        # Log the actual parameters received — critical for debugging quality issues
+        print(f"[generate] prompt={prompt[:100]}... steps={steps} cfg={cfg} seed={seed} size={width}x{height} loras={len(loras) if loras else 0}")
         lora_status: list[dict[str, Any]] = []
         active_adapters: list[str] = []
         active_weights: list[float] = []
@@ -86,7 +88,27 @@ class NexusFlux2Generator:
                 except Exception as exc:
                     lora_status.append({"repo": repo, "adapter": adapter, "weight_name": weight_name, "status": "failed", "error": str(exc)[:300]})
             if active_adapters:
-                self.pipe.set_adapters(active_adapters, adapter_weights=active_weights)
+                try:
+                    self.pipe.set_adapters(active_adapters, adapter_weights=active_weights)
+                except ValueError as set_err:
+                    # set_adapters can fail if a LoRA loaded weights but the adapter
+                    # wasn't properly registered in peft_config. Try loading adapters
+                    # one by one as a fallback.
+                    print(f"set_adapters failed: {set_err}. Trying individual adapter setup...")
+                    for i, (adapter_name, w) in enumerate(zip(active_adapters, active_weights)):
+                        try:
+                            self.pipe.set_adapters([adapter_name], adapter_weights=[w])
+                        except Exception:
+                            # Remove this adapter from active list — it's broken
+                            active_adapters[i] = None
+                            active_weights[i] = None
+                    # Filter out None entries
+                    active_adapters = [a for a in active_adapters if a is not None]
+                    active_weights = [w for w in active_weights if w is not None]
+                    if active_adapters:
+                        self.pipe.set_adapters(active_adapters, adapter_weights=active_weights)
+                    else:
+                        print("All adapters failed to set — generating without LoRAs")
 
         generator = torch.Generator(device="cuda").manual_seed(seed)
         # NOTE: Flux2KleinPipeline does NOT accept negative_prompt (unlike FluxPipeline).

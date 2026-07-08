@@ -71,6 +71,8 @@ export interface LoraEntry {
   triggerWord?: string;
   // Does this LoRA need a reference image? (ControlNet-style LoRAs, face-swap, etc.)
   needsReference?: boolean;
+  // Free-form notes about compatibility issues, usage instructions, etc.
+  notes?: string;
 }
 
 export const LORA_CATEGORIES: { id: LoraCategory; label: string; description: string }[] = [
@@ -105,6 +107,7 @@ export const LORA_LIBRARY: LoraEntry[] = [
     license: "verify",
     isControl: true,
     priority: "high",
+    weightName: "Eye_9B.safetensors",
   },
   {
     id: "no8d-expressioncontrol",
@@ -120,6 +123,7 @@ export const LORA_LIBRARY: LoraEntry[] = [
     license: "verify",
     isControl: true,
     priority: "high",
+    weightName: "happy.safetensors",
   },
   {
     id: "no8d-bodycontrol",
@@ -135,6 +139,7 @@ export const LORA_LIBRARY: LoraEntry[] = [
     license: "verify",
     isControl: true,
     priority: "high",
+    weightName: "Chest.safetensors",
   },
   {
     id: "no8d-lightcontrol",
@@ -150,6 +155,9 @@ export const LORA_LIBRARY: LoraEntry[] = [
     license: "verify",
     isControl: true,
     priority: "high",
+    // Repo has 6 .safetensors files: left&right_9B, top&bottom, front&back, hard&soft, dawn&dusk, Light&Deep
+    // left&right_9B is the main lighting control for Klein 9B
+    weightName: "left&right_9B.safetensors",
   },
   {
     id: "no8d-photostyle",
@@ -165,6 +173,7 @@ export const LORA_LIBRARY: LoraEntry[] = [
     license: "verify",
     isControl: false,
     priority: "high",
+    weightName: "Polaroid.safetensors",
   },
   {
     id: "no8d-imagingcontrol",
@@ -180,6 +189,7 @@ export const LORA_LIBRARY: LoraEntry[] = [
     license: "verify",
     isControl: true,
     priority: "high",
+    weightName: "ColorTone.safetensors",
   },
   {
     id: "no8d-slider-toolkit",
@@ -588,6 +598,7 @@ export const LORA_LIBRARY: LoraEntry[] = [
     mature: false,
     license: "verify",
     isControl: false,
+    weightName: "Flux2-Klein-9B-consistency-V2.safetensors",
   },
   {
     id: "dx8152-enhanced-details",
@@ -603,6 +614,7 @@ export const LORA_LIBRARY: LoraEntry[] = [
     license: "verify",
     isControl: false,
     priority: "high",
+    weightName: "realistic.safetensors",
   },
   {
     id: "warmblood-real-chars",
@@ -617,6 +629,7 @@ export const LORA_LIBRARY: LoraEntry[] = [
     mature: false,
     license: "verify",
     isControl: false,
+    weightName: "Flux2 Klein动漫转写实真人 AnythingtoRealCharacters.safetensors",
   },
   {
     id: "deverstyle-loras",
@@ -645,16 +658,19 @@ export const LORA_LIBRARY: LoraEntry[] = [
     category: "detailer",
     source: "huggingface",
     url: "https://huggingface.co/Kim2091/UltraSharpV2",
-    engineFamilies: ["FLUX.1", "FLUX.2", "Krea 2", "SDXL"],
-    purpose: "High-fidelity upscale model. Sharpens without artifacts. Universal upscaler.",
+    // INCOMPATIBLE with FLUX.2 Klein 9B: size mismatch [16, 3072] vs [16, 4096]
+    // This is a FLUX.1 LoRA (3072 hidden dim), NOT FLUX.2 (4096 hidden dim).
+    // It silently fails every time on FLUX.2 Klein 9B.
+    engineFamilies: ["FLUX.1", "SDXL"],
+    purpose: "High-fidelity upscale model for FLUX.1/SDXL. INCOMPATIBLE with FLUX.2 Klein 9B.",
     recommendedWeight: 0.6,
-    tags: ["upscale", "sharpen", "universal"],
+    tags: ["upscale", "sharpen", "FLUX.1-only", "incompatible-flux2"],
     mature: false,
     license: "verify",
     isControl: false,
     priority: "high",
-    // This repo has multiple .safetensors files — specify the correct one.
     weightName: "4x-UltraSharpV2.safetensors",
+    notes: "INCOMPATIBLE with FLUX.2 Klein 9B — size mismatch [16, 3072] vs [16, 4096]. Only works with FLUX.1-dev/schnell.",
   },
   {
     id: "ltx2-detailer",
@@ -948,6 +964,162 @@ export const LORA_LIBRARY: LoraEntry[] = [
   },
 
   // ════════════════════════════════════════════════════════════════════════
+  
+  // ════════════════════════════════════════════════════════════════════════
+  // NEW VERIFIED LoRAs (tested against Modal FLUX.2 Klein 9B — all load OK)
+  // ════════════════════════════════════════════════════════════════════════
+  {
+    id: "no8d-highresolution",
+    name: "NO8D High Resolution",
+    category: "detailer",
+    source: "huggingface",
+    url: "https://huggingface.co/NO8D/HighResolution",
+    engineFamilies: ["FLUX.2"],
+    purpose: "High resolution enhancement for Klein 9B. Recovers fine detail at 1024+.",
+    recommendedWeight: 0.55,
+    tags: ["NO8D", "highres", "detail", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: false,
+    priority: "high",
+    weightName: "HighResolution9B.safetensors",
+  },
+  {
+    id: "dx8152-migration",
+    name: "Klein 9B Migration",
+    category: "detailer",
+    source: "huggingface",
+    url: "https://huggingface.co/dx8152/Flux2-Klein-9B-Migration",
+    engineFamilies: ["FLUX.2"],
+    purpose: "Migration adapter for Klein 9B. Helps transition from FLUX.1 prompts.",
+    recommendedWeight: 0.50,
+    tags: ["migration", "detail", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: false,
+    weightName: "Klein-Migration.safetensors",
+  },
+  {
+    id: "ghost-mannequin",
+    name: "Ghost Mannequin (Klein 9B)",
+    category: "control",
+    source: "huggingface",
+    url: "https://huggingface.co/nhathoangfoto/FLUX.2-klein-ghost-mannequin",
+    engineFamilies: ["FLUX.2"],
+    purpose: "Ghost mannequin effect for fashion photography. Removes body, keeps garments.",
+    recommendedWeight: 0.60,
+    tags: ["ghost", "mannequin", "fashion", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: true,
+    weightName: "3D-GhosMannequinRank-256.safetensors",
+  },
+  {
+    id: "no8d-8090-cult-film",
+    name: "NO8D 8090 Cult Film Style",
+    category: "style",
+    source: "huggingface",
+    url: "https://huggingface.co/NO8D/8090-cult-film-style",
+    engineFamilies: ["FLUX.2"],
+    purpose: "80s-90s cult film aesthetic. Retro cinematic look.",
+    recommendedWeight: 0.45,
+    tags: ["NO8D", "style", "retro", "film", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: false,
+    weightName: "8090.safetensors",
+  },
+  {
+    id: "artificialguybr-3drender",
+    name: "3D Render Style (Klein 9B)",
+    category: "style",
+    source: "huggingface",
+    url: "https://huggingface.co/artificialguybr/3DRenderStyle-REDMOND-FLUXKLEIN9B",
+    engineFamilies: ["FLUX.2"],
+    purpose: "3D render style for Klein 9B. Gives a rendered/CGI aesthetic.",
+    recommendedWeight: 0.45,
+    tags: ["3d", "render", "style", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: false,
+    weightName: "[FLUX.2.Klein]3DRenderStyle_Redmond.safetensors",
+  },
+  {
+    id: "artificialguybr-anime",
+    name: "Anime Style (Klein 9B)",
+    category: "style",
+    source: "huggingface",
+    url: "https://huggingface.co/artificialguybr/ANIME-REDMOND-FLUXKLEIN",
+    engineFamilies: ["FLUX.2"],
+    purpose: "Anime style adapter for Klein 9B.",
+    recommendedWeight: 0.45,
+    tags: ["anime", "style", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: false,
+    weightName: "[FLUX.2.Klein]Anime_Redmond.safetensors",
+  },
+  {
+    id: "warmblood-stylesculpt",
+    name: "StyleSculpt (Klein 9B)",
+    category: "style",
+    source: "huggingface",
+    url: "https://huggingface.co/WarmBloodAban/StyleSculpt",
+    engineFamilies: ["FLUX.2"],
+    purpose: "Character design style sculpting LoRA for Klein 9B.",
+    recommendedWeight: 0.45,
+    tags: ["style", "character", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: false,
+    weightName: "StyleSculpt_角色设计X1.safetensors",
+  },
+  {
+    id: "mikkoph-klein9b",
+    name: "Mikkoph Style (Klein 9B)",
+    category: "style",
+    source: "huggingface",
+    url: "https://huggingface.co/mikkoph/mikkoph-klein9b",
+    engineFamilies: ["FLUX.2"],
+    purpose: "Mikkoph custom style for Klein 9B.",
+    recommendedWeight: 0.45,
+    tags: ["style", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: false,
+    weightName: "klein9b-mikkoph.safetensors",
+  },
+  {
+    id: "nomadoor-schematic",
+    name: "Schematic LoRA (Klein 9B)",
+    category: "control",
+    source: "huggingface",
+    url: "https://huggingface.co/nomadoor/flux-2-klein-9B-schematic-lora",
+    engineFamilies: ["FLUX.2"],
+    purpose: "Schematic segmentation + body pose + binary segmentation for Klein 9B. Control LoRA.",
+    recommendedWeight: 0.50,
+    tags: ["schematic", "segmentation", "pose", "control", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: true,
+    weightName: "loras/flux2-klein-schematic-amodal-segmentation-lora.safetensors",
+  },
+  {
+    id: "bzcasper-ai-influencer",
+    name: "AI Influencer (MIA)",
+    category: "style",
+    source: "huggingface",
+    url: "https://huggingface.co/bzcasper/ai-influencer-lora",
+    engineFamilies: ["FLUX.2"],
+    purpose: "AI influencer portrait style. Produces Instagram-like realistic portraits.",
+    recommendedWeight: 0.45,
+    tags: ["portrait", "influencer", "realism", "FLUX.2"],
+    mature: false,
+    license: "verify",
+    isControl: false,
+    weightName: "MIA.safetensors",
+  },
+  // ════════════════════════════════════════════════════════════════════════
   // MATURE (18+, gated) — hidden unless consent + mature unlocked.
   // Hard blocklist (csam, nonconsensual, real-person) ALWAYS applies.
   // ════════════════════════════════════════════════════════════════════════
@@ -957,13 +1129,16 @@ export const LORA_LIBRARY: LoraEntry[] = [
     category: "mature",
     source: "huggingface",
     url: "https://huggingface.co/Heartsync/Flux-NSFW-uncensored",
-    engineFamilies: ["FLUX.1", "FLUX.2"],
-    purpose: "Uncensored generation adapter. 18+ consent required; subject to the hard blocklist.",
+    // INCOMPATIBLE with FLUX.2 Klein 9B: size mismatch (3072 vs 4096) — this is a FLUX.1 LoRA, not FLUX.2
+    engineFamilies: ["FLUX.1"],
+    purpose: "Uncensored generation adapter for FLUX.1 only. INCOMPATIBLE with FLUX.2 Klein 9B (size mismatch error). 18+ consent required.",
     recommendedWeight: 0.8,
-    tags: ["nsfw", "18+", "uncensored"],
+    tags: ["nsfw", "18+", "uncensored", "FLUX.1-only", "incompatible-flux2"],
     mature: true,
     license: "verify · 18+ only",
     isControl: false,
+    weightName: "lora.safetensors",
+    notes: "INCOMPATIBLE with FLUX.2 Klein 9B — causes 'size mismatch for transformer_blocks.0.attn.to_q' error. Only works with FLUX.1-dev/schnell.",
   },
   {
     id: "bigjutt-true-v2",
@@ -971,10 +1146,11 @@ export const LORA_LIBRARY: LoraEntry[] = [
     category: "mature",
     source: "huggingface",
     url: "https://huggingface.co/BIGJUTT/Flux2-Klein-9B-True-V2",
+    // INCOMPATIBLE: not a standard LoRA — 'Invalid LoRA checkpoint' error (param names don't contain 'lora')
     engineFamilies: ["FLUX.2"],
-    purpose: "Mature realism adapter for Klein 9B. 18+ consent required.",
+    purpose: "Mature realism adapter for Klein 9B. INCOMPATIBLE with diffusers load_lora_weights (not a standard LoRA format). 18+ consent required.",
     recommendedWeight: 0.75,
-    tags: ["nsfw", "18+", "realism", "FLUX.2"],
+    tags: ["nsfw", "18+", "realism", "FLUX.2", "incompatible-diffusers"],
     mature: true,
     license: "verify · 18+ only",
     isControl: false,

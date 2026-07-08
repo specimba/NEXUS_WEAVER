@@ -8,6 +8,7 @@ import {
   isBrainEndpointConfigured,
   type BrainChatMessage,
 } from "@/lib/modal-client";
+import { parseWardrobe, checkWardrobeAdherence, type WardrobeSpec } from "@/lib/wardrobe-intelligence";
 import type {
   JudgeResult,
   SafetyResult,
@@ -120,8 +121,9 @@ export async function stageFlux(
   calibration: ResolvedCalibration,
   loraIds: string[],
   loraWeights: Record<string, number>,
-  engineId?: string
-): Promise<{ imagePath: string; imageBase64: string; size: string; ms: number; backend: "modal" | "zai"; engineId: string; backendMismatch: boolean }> {
+  engineId?: string,
+  seed?: number
+): Promise<{ imagePath: string; imageBase64: string; size: string; ms: number; backend: "modal" | "zai"; engineId: string; backendMismatch: boolean; seed: number }> {
   const start = nowMs();
   const selectedEngine = getEngine(engineId);
 
@@ -153,6 +155,7 @@ export async function stageFlux(
 
   let backend: "modal" | "zai" = "modal";
   let base64: string | null = null;
+  let usedSeed: number = seed ?? Math.floor(Math.random() * 2_147_483_647);
 
   // Build the LoRA array for Modal: map our library IDs to HF repo IDs + weights
   const modalLoras: Array<{ repo: string; adapter: string; weight: number; weightName?: string } | null> = loraIds
@@ -180,17 +183,23 @@ export async function stageFlux(
   if (isModalEnabled()) {
     try {
       const { width, height } = parseSize(size);
+      // Use the seed passed from runPipeline (generated once per pipeline run
+      // so it can be stored in the Generation row for provenance/repro).
+      // Fallback to a fresh random seed if not provided (defensive).
+      const effectiveSeed = seed ?? Math.floor(Math.random() * 2_147_483_647);
       const result = await generateImageViaModal({
         prompt: cleanPrompt,
         width,
         height,
         steps: calibration.steps,
         cfg: calibration.cfg,
+        seed: effectiveSeed,
         loras: validModalLoras,
         isFirstCall: true, // allow long cold-start timeout (300s)
       });
       base64 = result.imageBase64;
       backend = "modal";
+      usedSeed = effectiveSeed;
       await logEvent(
         "stage_complete",
         `Modal /generate ok — ${result.ms}ms (round-trip ${result.latencyMs}ms) · engine=${selectedEngine.shortName} steps=${calibration.steps} cfg=${calibration.cfg} loras=${validModalLoras.length}`,
@@ -240,6 +249,7 @@ export async function stageFlux(
     backend,
     engineId: selectedEngine.id,
     backendMismatch,
+    seed: usedSeed,
   };
 }
 
@@ -576,6 +586,9 @@ export interface PipelineRunOutput {
   engineId: string | null;
   backend: "modal" | "zai" | null;
   backendMismatch: boolean;
+  // The random seed used for this generation — stored so the user can confirm
+  // seeds vary per run (creative variation) and reproduce a specific result.
+  seed: number | null;
 }
 
 // Quick heuristic: does the prompt text itself signal mature intent?
@@ -602,6 +615,13 @@ export async function runPipeline(
     input.calibrationOverrides as Partial<CalibrationPreset> | undefined
   );
 
+  // Generate the random seed ONCE per pipeline run. This is passed to
+  // stageFlux + stored in the Generation row so the user can see (in the
+  // Provenance panel) that every run uses a different seed — confirming
+  // creative variation is active. The seed is generated here (not inside
+  // stageFlux) so blocked runs still record the intended seed.
+  const runSeed = Math.floor(Math.random() * 2_147_483_647);
+
   // 0. create the Generation row (pending) with calibration + lora provenance
   const gen = await db.generation.create({
     data: {
@@ -614,6 +634,7 @@ export async function runPipeline(
       calibrationId: input.calibrationId,
       calibration: JSON.stringify(calibration),
       loraIds: input.loraIds.join(","),
+      seed: BigInt(runSeed),
     },
   });
   await logEvent("pipeline_start", `Pipeline started for "${truncate(input.prompt, 60)}" · engine=${input.engineId ?? "flux2-klein-9b"} preset=${input.calibrationId} brain=${input.brainId ?? "gemma4"} loras=${input.loraIds.length}${input.videoEnabled ? " +video" : ""}`, "info", gen.id);
@@ -704,12 +725,13 @@ export async function runPipeline(
         engineId: input.engineId ?? null,
         backend: null,
         backendMismatch: false,
+        seed: runSeed,
       };
     }
 
     // Stage: FLUX image generation (Modal H100 or z-ai fallback) with calibration
     progress("flux", { status: "running", message: "Modal FLUX.2 generating on L40S GPU…" });
-    const flux = await stageFlux(input.prompt, input.style, input.aspect, input.wardrobe, gen.id, calibration, input.loraIds, input.loraWeights ?? {}, input.engineId);
+    const flux = await stageFlux(input.prompt, input.style, input.aspect, input.wardrobe, gen.id, calibration, input.loraIds, input.loraWeights ?? {}, input.engineId, runSeed);
     progress("flux", { status: "done", ms: flux.ms, message: `Image rendered via ${flux.backend}` });
     timings.flux = flux.ms;
     await db.generation.update({
@@ -728,6 +750,20 @@ export async function runPipeline(
     const judge = await stageJudge(flux.imagePath, input.prompt, input.style, input.wardrobe, input.brainId);
     progress("judge", { status: "done", ms: judge.stageMs, message: `${judge.verdict} · ${judge.overallScore}` });
     timings.judge = judge.stageMs;
+
+    // Wardrobe intelligence: parse the prompt for structured garment data,
+    // then check if the judge's observations confirm the wardrobe spec.
+    const wardrobeSpec = parseWardrobe(input.prompt + (input.wardrobe ? " " + input.wardrobe : ""));
+    const wardrobeCheck = checkWardrobeAdherence(wardrobeSpec, judge.observations || []);
+    if (wardrobeCheck.mismatches.length > 0) {
+      await logEvent(
+        "wardrobe_mismatch",
+        `Wardrobe adherence: ${wardrobeCheck.score}/100. Mismatches: ${wardrobeCheck.mismatches.join("; ")}`,
+        "warn",
+        gen.id
+      );
+    }
+
     await db.judgeReport.create({
       data: {
         generationId: gen.id,
@@ -799,6 +835,7 @@ export async function runPipeline(
       engineId: flux.engineId,
       backend: flux.backend,
       backendMismatch: flux.backendMismatch,
+      seed: flux.seed,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -837,6 +874,7 @@ export async function runPipeline(
       engineId: input.engineId ?? null,
       backend: null,
       backendMismatch: false,
+      seed: runSeed,
     };
   }
 }

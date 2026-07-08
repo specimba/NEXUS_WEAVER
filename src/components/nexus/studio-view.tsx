@@ -59,6 +59,7 @@ import {
   ArrowLeftRight,
   // Task 15 — Brain Assistant + GPU Boost icons
   Lightbulb,
+  Shuffle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -416,6 +417,7 @@ export function StudioView() {
             engineId: data.engineId ?? engineId,
             backend: data.backend ?? null,
             backendMismatch: data.backendMismatch ?? false,
+            seed: data.seed ?? null,
           });
           toast.success(`Pipeline complete — ${data.verdict}`);
           activeJobIdRef.current = null;
@@ -455,6 +457,7 @@ export function StudioView() {
             engineId: data.engineId ?? engineId,
             backend: data.backend ?? null,
             backendMismatch: data.backendMismatch ?? false,
+            seed: data.seed ?? null,
           });
           toast.warning("Run blocked by safety policy", {
             description: data.blockReason ?? undefined,
@@ -1871,6 +1874,15 @@ function VideoStepCard({
         signal: ctrl.signal,
       });
 
+      // CRITICAL: check content-type before parsing JSON — dev server crash returns HTML
+      const videoContentType = res.headers.get("content-type") || "";
+      if (!videoContentType.includes("application/json")) {
+        const msg = res.status === 504
+          ? "Gateway timed out. The video backend may be cold-starting (2-5 min). Try again in a minute."
+          : `Unexpected response (HTTP ${res.status}). The video backend may be cold-starting or the dev server crashed.`;
+        throw new Error(msg);
+      }
+
       const data = (await res.json()) as {
         videoPath?: string | null;
         errorMessage?: string | null;
@@ -2244,6 +2256,22 @@ function ProvenanceCard({ result }: { result: RunResult }) {
               <span className="text-foreground">{result.calibration.resolution}</span>
             </span>
           </div>
+          {/* Seed provenance — shows the random seed used for THIS run. Because
+              a new seed is generated per run, this number changes every time,
+              confirming creative variation is active (different initial noise →
+              different composition/pose/lighting). If two runs show the same
+              seed, that would indicate a seed bug. */}
+          {result.seed != null ? (
+            <div className="mt-1.5 flex items-center gap-1.5 font-mono text-[10px]">
+              <span className="text-muted-foreground/60">seed:</span>
+              <span className="text-emerald-300" title="Randomized per run — different every time">
+                {result.seed.toLocaleString()}
+              </span>
+              <span className="inline-flex items-center gap-0.5 rounded bg-emerald-500/10 px-1 py-0.5 text-[8px] uppercase tracking-wider text-emerald-400">
+                <Shuffle className="h-2.5 w-2.5" /> randomized
+              </span>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -4512,6 +4540,7 @@ function BrainAssistantCard() {
     trigger: 0,
   });
   const [lastMode, setLastMode] = useState<"local" | "deep" | null>(null);
+  const [aeonAnalysis, setAeonAnalysis] = useState<BrainAnalysis | null>(null);
   const [open, setOpen] = useState(true);
 
   // Resolve the calibration to send to the brain (preset + overrides merged).
@@ -4586,9 +4615,80 @@ function BrainAssistantCard() {
     dispatch("analyze-local");
   }, []);
 
-  const onDeepAnalyze = useCallback(() => {
+  const onDeepAnalyze = useCallback(async () => {
+    // Try AEON first (via /api/aeon/advice), fall back to old /api/brain/analyze
+    try {
+      const aeonRes = await fetch("/api/aeon/advice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          engine: engineId,
+          params: {
+            steps: calibration.steps,
+            cfgScale: calibration.cfg,
+            resolution: { width: parseInt(calibration.resolution.split("x")[0] || "1024"), height: parseInt(calibration.resolution.split("x")[1] || "1024") },
+          },
+          loraStack: loraIds.map((id) => {
+            const lora = getLora(id);
+            return {
+              id,
+              name: lora?.name ?? id,
+              role: lora?.isControl ? "control" : lora?.category === "detailer" ? "detailer" : "style",
+              weight: loraWeights[id] ?? lora?.recommendedWeight ?? 0.5,
+              recommendedWeightRange: lora ? { min: 0.3, max: 0.6 } : undefined,
+            };
+          }),
+          mode: "advice_only",
+        }),
+      });
+
+      if (aeonRes.ok) {
+        const aeonData = await aeonRes.json() as { advice?: { summary?: string; issues?: Array<{ severity: string; message: string }>; loraWeightSuggestions?: Array<{ loraId: string; toWeight: number; reason?: string }>; promptRewrite?: { rewritten: string; rationale?: string } }; meta?: { backend: string } };
+        if (aeonData.advice) {
+          const adv = aeonData.advice;
+          const backendLabel = aeonData.meta?.backend === "aeon_modal" ? "AEON 27B" : "z-ai";
+          // Convert AEON advice to BrainSuggestion format
+          const suggestions: BrainSuggestion[] = [];
+          for (const issue of adv.issues || []) {
+            suggestions.push({
+              kind: issue.severity === "error" ? "compat" : issue.severity === "warning" ? "warning" : "tip",
+              title: issue.message.slice(0, 80),
+              detail: issue.message,
+            });
+          }
+          for (const ws of adv.loraWeightSuggestions || []) {
+            suggestions.push({
+              kind: "optimization",
+              title: `Adjust ${ws.loraId} weight → ${ws.toWeight}`,
+              detail: ws.reason || `AEON suggests weight ${ws.toWeight}`,
+              action: { label: `Set ${ws.toWeight}`, type: "adjust-cfg", value: String(ws.toWeight) },
+            });
+          }
+          if (adv.promptRewrite) {
+            suggestions.push({
+              kind: "tip",
+              title: "Prompt rewrite suggested",
+              detail: adv.promptRewrite.rationale || adv.promptRewrite.rewritten.slice(0, 200),
+            });
+          }
+          // Replace the analysis with AEON results
+          setAeonAnalysis({
+            suggestions,
+            summary: `${adv.summary || "AEON analysis complete"} (via ${backendLabel})`,
+            confidence: 85,
+            ms: 0,
+          });
+          toast.success(`AEON analysis complete (via ${backendLabel})`);
+          return;
+        }
+      }
+    } catch {
+      // Fall through to old brain analyze
+    }
+    // Fallback: old brain analyze
     dispatch("analyze-deep");
-  }, []);
+  }, [prompt, engineId, calibration, loraIds, loraWeights]);
 
   const applyAction = useCallback(
     (action: NonNullable<BrainSuggestion["action"]>) => {
@@ -4629,8 +4729,8 @@ function BrainAssistantCard() {
     [setEngine, syncCalibrationToEngine, toggleLora, setCalibrationOverride]
   );
 
-  const suggestions = data?.suggestions ?? [];
-  const summary = data?.summary ?? null;
+  const suggestions = aeonAnalysis?.suggestions ?? data?.suggestions ?? [];
+  const summary = aeonAnalysis?.summary ?? data?.summary ?? null;
   const confidence = data?.confidence ?? null;
   const isDeepFetching = isFetching && mode === "deep";
 

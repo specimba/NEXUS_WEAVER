@@ -38,7 +38,7 @@ const MODAL_BASE_URL = MODAL_FLUX2_URL;
 // Passing higher values (e.g. steps=24, cfg=10.0 from the Photoreal Portrait
 // preset) wastes 15-25s and produces WORSE output. Cap them here so the
 // calibration presets don't fight the model.
-const FLUX2_MAX_STEPS = 8;   // 4 is ideal, 8 is acceptable, 24 is broken
+const FLUX2_MAX_STEPS = 4;   // 4 is optimal for Klein 9B distilled (research-confirmed). Higher steps DEGRADE quality.
 const FLUX2_DEFAULT_CFG = 1.0; // klein-9B uses near-zero CFG
 
 // Modal is the PRIMARY generation path. Default TRUE even if .env gets reset.

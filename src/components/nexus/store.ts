@@ -54,6 +54,9 @@ export interface RunResult {
   engineId?: string | null;
   backend?: "modal" | "zai" | null;
   backendMismatch?: boolean;
+  // The random seed used for this generation — shown in Provenance so the user
+  // can confirm seeds vary per run (creative variation is active).
+  seed?: number | null;
 }
 
 // Anonymous device fingerprint (no PII). Generated once, stored in localStorage.

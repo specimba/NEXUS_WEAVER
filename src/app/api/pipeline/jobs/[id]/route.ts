@@ -107,6 +107,7 @@ export async function GET(
         engineId: null,
         backend: state.status === "completed" ? "modal" : null,
         backendMismatch: false,
+        seed: gen.seed !== null ? Number(gen.seed) : null,
         createdAt: gen.createdAt.toISOString(),
       };
     }

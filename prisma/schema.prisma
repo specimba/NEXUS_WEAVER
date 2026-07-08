@@ -36,6 +36,9 @@ model Generation {
   calibration   String? // JSON: {presetId, model, steps, cfg, sampler, denoise, resolution, loras:[]}
   // LoRA ids (comma-separated) applied to this run
   loraIds     String?
+  // The random seed used for this generation (stored so the user can see
+  // seeds vary per run + reproduce a specific result). null for non-Modal runs.
+  seed        BigInt?
   // NSFW maturity tier this run was executed under: safe | mature | blocked
   maturityTier String?
   errorMessage String?

@@ -312,6 +312,8 @@ export interface PipelineResponse {
   engineId: string | null;
   backend: "modal" | "zai" | null;
   backendMismatch: boolean;
+  // The random seed used for this generation (randomized per run)
+  seed: number | null;
   createdAt: string;
 }
 

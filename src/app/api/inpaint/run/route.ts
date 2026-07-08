@@ -49,14 +49,14 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-  // Path-traversal guard — only allow /gallery/ paths.
+  // Path-traversal guard — allow /gallery/ and /api/image/ paths.
   if (
     sourceImagePath.includes("..") ||
-    !sourceImagePath.startsWith("/gallery/")
+    (!sourceImagePath.startsWith("/gallery/") && !sourceImagePath.startsWith("/api/image/"))
   ) {
     return NextResponse.json(
       {
-        error: "sourceImagePath must start with /gallery/ and contain no '..'",
+        error: "sourceImagePath must start with /gallery/ or /api/image/",
       },
       { status: 400 }
     );
