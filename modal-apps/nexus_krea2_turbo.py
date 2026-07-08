@@ -62,12 +62,27 @@ class NexusKrea2Generator:
     @modal.enter()
     def enter(self) -> None:
         import torch
+        from transformers import AutoConfig
         from diffusers import Krea2Pipeline
 
         print(f"Loading {MODEL_ID}...")
         t0 = time.time()
+
+        # FIX: Qwen3VLModel crashes if config.rope_scaling is None
+        # (transformers bug: modeling_qwen3_vl.py line 297 calls
+        # config.rope_scaling.get("mrope_section", [...]) but rope_scaling
+        # can be None for some model configs). Pre-load the text encoder
+        # config, set a default rope_scaling if missing, then pass it
+        # explicitly to the pipeline.
+        text_encoder_config = AutoConfig.from_pretrained(MODEL_ID, subfolder="text_encoder")
+        if not hasattr(text_encoder_config, "rope_scaling") or text_encoder_config.rope_scaling is None:
+            text_encoder_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+
         self.pipe = Krea2Pipeline.from_pretrained(
-            MODEL_ID, torch_dtype=torch.bfloat16, cache_dir=HF_CACHE_DIR
+            MODEL_ID,
+            text_encoder=text_encoder_config,  # pass fixed config
+            torch_dtype=torch.bfloat16,
+            cache_dir=HF_CACHE_DIR,
         )
         self.pipe.to("cuda")
         self.load_time = time.time() - t0
