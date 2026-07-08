@@ -31,7 +31,8 @@ image = (
         "git+https://github.com/huggingface/diffusers.git",  # Krea2Pipeline is recent
         "huggingface-hub==0.36.0", "optimum-quanto==0.2.7", "peft>=0.15.0",
         "safetensors>=0.8.0", "sentencepiece==0.2.0", "torch==2.7.1",
-        "transformers~=4.53.0", "fastapi[standard]",
+        "transformers>=4.57.0",  # Qwen3VLModel requires >=4.55 (4.57 is latest 4.x)
+        "fastapi[standard]",
         extra_options="--index-strategy unsafe-best-match",
         extra_index_url="https://download.pytorch.org/whl/cu128",
     )
