@@ -1124,3 +1124,73 @@ Stage Summary:
 - Video seed was hardcoded 42 — now randomized per run.
 - The user's perception of "similar images" is due to LoRA stacking + long
   prompt, NOT a seed bug. The seed display proves seeds vary per run.
+
+---
+Task ID: v5.26-professional-github-workflow
+Agent: Z.ai Code (main)
+Task: Set up professional Git workflow with GitHub for version control, rollbacks, and sandbox-wipe recovery
+
+WHAT WAS BUILT:
+A complete professional version control system using GitHub (specimba/NEXUS_WEAVER)
+with encrypted token storage, GPG-signed commits, version tags for rollback, and
+automated recovery scripts.
+
+COMPONENTS:
+1. GitHub repo: https://github.com/specimba/NEXUS_WEAVER
+   - 163 tracked files (lean source-only — no db, uploads, gallery, logs)
+   - All 56 commits GPG-signed (key 21897A2CC2FA8793)
+   - Tag v5.25 created as the first rollback point
+
+2. Token security (PROFESSIONAL pattern):
+   - secrets.ts: NO hardcoded token values — reads exclusively from process.env
+   - All 6 tokens stored as encrypted GitHub Actions Secrets:
+     MODAL_TOKEN_ID, MODAL_TOKEN_SECRET, MODAL_PROXY_KEY, MODAL_PROXY_SECRET,
+     HF_TOKEN, BROWSERLESS_TOKEN
+   - NEXUS_ENV_BLOB: full .env base64-encoded as a single secret
+   - GitHub secret scanning: PASSES (all tokens scrubbed from history)
+
+3. History scrubbing (git filter-branch):
+   - Redacted all tokens from file contents (--tree-filter) across 56 commits
+   - Redacted all tokens from commit messages (--msg-filter)
+   - Cleaned up backup refs + expired reflogs + aggressive GC
+   - Final verification: 0 token matches in all git objects
+
+4. Recovery scripts:
+   - scripts/restore-env.sh: recreates .env after sandbox wipe
+   - scripts/push-env-to-github.sh: pushes current .env to GitHub Secrets
+   - .github/workflows/restore-env.yml: GitHub Actions workflow that decodes
+     NEXUS_ENV_BLOB and uploads it as a downloadable artifact
+
+5. Documentation:
+   - VERSION_CONTROL.md: full guide (recovery, rollback, tag creation, security)
+   - .env.example: template with all required env vars (no real values)
+
+6. .gitignore (professional):
+   - Excludes: db/*.db, upload/, public/gallery/*, tool-results/, *.log,
+     .env, .next/, node_modules/, preview-*.png, agent-ctx/
+
+RECOVERY PROCEDURE (after sandbox wipe):
+  git clone https://github.com/specimba/NEXUS_WEAVER.git
+  cd NEXUS_WEAVER && bun install
+  export GH_PAT=<your-pat>
+  gh workflow run restore-env.yml
+  gh run download <run-id> -n env-file && mv env-file/restored.env .env
+  bun run db:push && bun run dev
+
+ROLLBACK PROCEDURE:
+  git tag -l                          # view available versions
+  git checkout v5.25                  # roll back (read-only)
+  # OR: git reset --hard v5.25 && git push --force origin main  (destructive)
+
+CREDENTIALS:
+- GitHub PAT: GLMfalltoken1 (expires 2026-10-05, 36 repo + 19 account permissions)
+- GPG key: 21897A2CC2FA8793 (RSA 4096, expires 2028, added to GitHub account)
+- Git credential helper: store (PAT in ~/.git-credentials, chmod 600)
+
+Stage Summary:
+- The project now has a PROFESSIONAL version control system on GitHub.
+- Sandbox wipes are no longer catastrophic — clone + restore-env.sh = full recovery.
+- Version tags (v5.25, v5.26, ...) provide clean rollback points.
+- Token values never appear in git history — GitHub secret scanning passes.
+- GPG-signed commits provide commit authenticity verification.
+- The .git size dropped from 192M to ~20M (removed db, uploads, gallery blobs).
