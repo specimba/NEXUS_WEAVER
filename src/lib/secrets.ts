@@ -70,6 +70,18 @@ export const MODAL_LTX23_URL =
   process.env.MODAL_LTX23_URL ||
   "https://specimba--nexus-ltx23-i2v-nexusltx23generator-web-app.modal.run";
 
+// ── Additional image generation backends ─────────────────────────────────────
+// Krea 2 Turbo (H100) — Krea2Pipeline, Qwen3VL text encoder
+// Fast high-quality generation, LoRA-compatible
+export const MODAL_KREA2_URL =
+  process.env.MODAL_KREA2_URL ||
+  "https://specimba--nexus-krea2-turbo-nexuskrea2generator-web-app.modal.run";
+// Z-Image Turbo (H100) — ZImagePipeline, Qwen3 text encoder
+// Alibaba's fast model (933K downloads), LoRA-compatible
+export const MODAL_ZIMAGE_URL =
+  process.env.MODAL_ZIMAGE_URL ||
+  "https://specimba--nexus-zimage-turbo-nexuszimagegenerator-web-app.modal.run";
+
 // ── Validation helper ────────────────────────────────────────────────────────
 /** Returns true if all required tokens are present (for health checks). */
 export function areTokensConfigured(): boolean {

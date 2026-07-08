@@ -21,6 +21,8 @@ import {
   MODAL_PROXY_SECRET,
   MODAL_FLUX2_GENERATE_URL,
   MODAL_FLUX2_HEALTH_URL,
+  MODAL_KREA2_URL,
+  MODAL_ZIMAGE_URL,
   MODAL_BRAIN_URL,
   MODAL_BRAIN_MODEL,
   MODAL_COLD_START_TIMEOUT as _COLD,
@@ -180,6 +182,55 @@ export async function getCachedModalHealth(forceRefresh = false): Promise<ModalH
  * - NO FLUX.1 fallback. FLUX.2 is the only path. The async job pattern
  *   surfaces any errors to the UI.
  */
+// ── Multi-backend routing ────────────────────────────────────────────────────
+// Each image engine has its own Modal app with a different API format:
+//   • FLUX.2 Klein 9B: @modal.fastapi_endpoint → params as QUERY string
+//   • Krea 2 Turbo:    @modal.asgi_app → params as JSON BODY
+//   • Z-Image Turbo:   @modal.asgi_app → params as JSON BODY
+// This resolver maps engineId → { url, format, maxSteps, defaultCfg }.
+
+type BackendFormat = "fastapi_query" | "asgi_json";
+
+interface BackendConfig {
+  url: string;
+  format: BackendFormat;
+  maxSteps: number;
+  defaultCfg: number;
+  gpu: string;
+}
+
+function resolveBackend(engineId?: string): BackendConfig {
+  switch (engineId) {
+    case "krea-2-turbo":
+    case "krea-2-raw":
+      return {
+        url: MODAL_KREA2_URL,
+        format: "asgi_json",
+        maxSteps: 8,   // Krea 2 Turbo: 4-8 steps optimal
+        defaultCfg: 3.5, // Krea 2 uses moderate CFG
+        gpu: "H100",
+      };
+    case "z-image-turbo":
+      return {
+        url: MODAL_ZIMAGE_URL,
+        format: "asgi_json",
+        maxSteps: 8,   // Z-Image Turbo: 4-8 steps
+        defaultCfg: 3.0, // Z-Image uses moderate CFG
+        gpu: "H100",
+      };
+    case "flux2-klein-9b":
+    case "flux2-dev":
+    default:
+      return {
+        url: MODAL_FLUX2_URL,
+        format: "fastapi_query",
+        maxSteps: FLUX2_MAX_STEPS,
+        defaultCfg: FLUX2_DEFAULT_CFG,
+        gpu: "L40S",
+      };
+  }
+}
+
 export async function generateImageViaModal(params: {
   prompt: string;
   width: number;
@@ -189,24 +240,27 @@ export async function generateImageViaModal(params: {
   seed?: number;
   loras?: Array<{ repo: string; adapter?: string; weight: number; weightName?: string }>;
   isFirstCall?: boolean;
+  engineId?: string;
 }): Promise<ModalGenerateResult> {
-  const { prompt, width, height, steps, cfg, seed, loras, isFirstCall } = params;
+  const { prompt, width, height, steps, cfg, seed, loras, isFirstCall, engineId } = params;
   const timeoutMs = (isFirstCall ? COLD_START_TIMEOUT : WARM_TIMEOUT) * 1000;
 
-  if (!MODAL_FLUX2_URL) {
+  const backend = resolveBackend(engineId);
+
+  if (!backend.url) {
     throw new Error(
-      "MODAL_FLUX2_URL is not set. The FLUX.2 Klein 9B Modal app must be deployed " +
-      "and its generate-webhook URL set in .env."
+      `Modal backend for engine "${engineId ?? "flux2-klein-9b"}" is not configured. ` +
+      `Check that the Modal app is deployed and the URL is set in secrets.ts/.env.`
     );
   }
 
-  // Cap steps/cfg to FLUX.2-klein-9B's tuned values.
-  const effectiveSteps = Math.min(steps ?? 4, FLUX2_MAX_STEPS);
-  const effectiveCfg = FLUX2_DEFAULT_CFG;
-  if (steps && steps > FLUX2_MAX_STEPS) {
+  // Cap steps/cfg to the engine's tuned values.
+  const effectiveSteps = Math.min(steps ?? backend.maxSteps, backend.maxSteps);
+  const effectiveCfg = backend.defaultCfg;
+  if (steps && steps > backend.maxSteps) {
     console.log(
       `[modal-client] Capping steps ${steps}→${effectiveSteps} and forcing cfg ${cfg}→${effectiveCfg} ` +
-      `(FLUX.2-klein-9B is tuned for 4 steps / cfg 1.0; higher values waste time + degrade quality)`
+      `(engine=${engineId ?? "flux2-klein-9b"} is tuned for ${backend.maxSteps} steps / cfg ${backend.defaultCfg})`
     );
   }
 
@@ -214,23 +268,8 @@ export async function generateImageViaModal(params: {
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   const t0 = Date.now();
 
-  // Build the request for @modal.fastapi_endpoint(method="POST"):
-  // FastAPI treats simple types (str, int, float) as QUERY parameters and the
-  // single complex type (loras: list[dict]) as the JSON BODY.
-  const queryParams = new URLSearchParams({
-    prompt,
-    negative_prompt: "",
-    steps: String(effectiveSteps),
-    cfg: String(effectiveCfg),
-    seed: String(seed ?? 42),
-    height: String(height),
-    width: String(width),
-  });
-  const generateUrl = `${MODAL_FLUX2_URL}?${queryParams.toString()}`;
-  // Body = the loras list (JSON array). Convert weightName → weight_name for the
-  // Python Modal app (which reads lora.get("weight_name", "")). When no loras,
-  // send an empty array.
-  const lorasBody = JSON.stringify(
+  // Convert weightName → weight_name for the Python Modal apps
+  const lorasPayload =
     loras && loras.length > 0
       ? loras.map((l) => ({
           repo: l.repo,
@@ -238,16 +277,51 @@ export async function generateImageViaModal(params: {
           weight: l.weight,
           ...(l.weightName ? { weight_name: l.weightName } : {}),
         }))
-      : []
-  );
+      : [];
 
-  try {
-    const res = await fetch(generateUrl, {
+  let generateUrl: string;
+  let fetchOptions: RequestInit;
+
+  if (backend.format === "fastapi_query") {
+    // FLUX.2: @modal.fastapi_endpoint — simple types as query params, loras as body
+    const queryParams = new URLSearchParams({
+      prompt,
+      negative_prompt: "",
+      steps: String(effectiveSteps),
+      cfg: String(effectiveCfg),
+      seed: String(seed ?? 42),
+      height: String(height),
+      width: String(width),
+    });
+    generateUrl = `${backend.url}?${queryParams.toString()}`;
+    fetchOptions = {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: lorasBody,
+      body: JSON.stringify(lorasPayload),
       signal: ctrl.signal,
-    });
+    };
+  } else {
+    // Krea 2 / Z-Image: @modal.asgi_app — everything as JSON body
+    generateUrl = `${backend.url}/generate`;
+    fetchOptions = {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        prompt,
+        negative_prompt: "",
+        steps: effectiveSteps,
+        cfg: effectiveCfg,
+        seed: seed ?? 42,
+        height,
+        width,
+        loras: lorasPayload,
+      }),
+      signal: ctrl.signal,
+    };
+  }
+
+  try {
+    const res = await fetch(generateUrl, fetchOptions);
     const latencyMs = Date.now() - t0;
 
     if (!res.ok) {

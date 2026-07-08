@@ -196,6 +196,7 @@ export async function stageFlux(
         seed: effectiveSeed,
         loras: validModalLoras,
         isFirstCall: true, // allow long cold-start timeout (300s)
+        engineId: selectedEngine.id, // route to the correct Modal backend
       });
       base64 = result.imageBase64;
       backend = "modal";
