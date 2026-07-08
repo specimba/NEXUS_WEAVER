@@ -9,7 +9,7 @@
 # Also stores each token as an individual secret for granular access.
 #
 # Usage:
-#   export GH_PAT="github_pat_..."
+#   export GH_PAT="<YOUR_GITHUB_PAT>"
 #   ./scripts/push-env-to-github.sh
 # =============================================================================
 set -euo pipefail
@@ -105,7 +105,7 @@ echo -e "${GREEN}  ✅ .env pushed to GitHub Secrets successfully!${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "  After a sandbox wipe, restore with:"
-echo -e "    ${YELLOW}export GH_PAT=\"github_pat_...\"${NC}"
+echo -e "    ${YELLOW}export GH_PAT=\"<YOUR_GITHUB_PAT>\"${NC}"
 echo -e "    ${YELLOW}git clone https://github.com/$REPO.git${NC}"
 echo -e "    ${YELLOW}cd NEXUS_WEAVER && bun install${NC}"
 echo -e "    ${YELLOW}./scripts/restore-env.sh${NC}"

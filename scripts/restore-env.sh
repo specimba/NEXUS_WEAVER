@@ -10,7 +10,7 @@
 # Prerequisites:
 #   - GitHub PAT with repo + actions:secrets read access
 #   - Set GH_PAT env var before running, or it will prompt:
-#       export GH_PAT="github_pat_..."
+#       export GH_PAT="<YOUR_GITHUB_PAT>"
 #       ./scripts/restore-env.sh
 #
 # This script reads GitHub Actions Secrets (encrypted at rest) and writes them
