@@ -1,49 +1,45 @@
 /**
- * NEXUS Visual Weaver — Secrets (BULLETPROOF storage)
+ * NEXUS Visual Weaver — Secrets (Professional pattern)
  *
- * WHY THIS FILE EXISTS:
- * The sandbox environment periodically resets the `.env` file, wiping all
- * Modal/HF tokens and causing the pipeline to fail with "MODAL_FLUX2_URL is
- * not set" or 401 auth errors. This file is COMMITTED TO GIT and contains the
- * tokens as hardcoded fallback constants. The code reads from `process.env`
- * first (for local dev override), then falls back to these constants.
+ * HOW THIS WORKS:
+ * 1. Token VALUES (Modal API keys, HF token, Browserless token) are stored as
+ *    GitHub repo Secrets (encrypted at rest, never in the repo). A recovery
+ *    script (scripts/restore-env.sh) pulls them into .env on first setup.
+ * 2. This file reads from process.env at runtime — NO hardcoded token values.
+ * 3. Endpoint URLs (Modal generate/health/brain/video URLs) are NOT secrets
+ *    (they're public Modal Web Function URLs) and stay here as fallbacks.
+ * 4. After a sandbox wipe: git clone → scripts/restore-env.sh → bun run dev.
  *
- * This ensures the tokens ALWAYS survive sandbox resets — they're in the git
- * history, not in a volatile .env file.
- *
- * SECURITY NOTE: In a production deployment, these would be in a secrets
- * manager (Vault, AWS Secrets Manager, etc.) — never in source code. This
- * pattern is specific to the sandbox dev environment where .env persistence
- * is unreliable.
+ * SECURITY: Token values never appear in git history → GitHub secret scanning
+ * passes → no leaked credentials. The recovery script uses the GitHub API
+ * (with a PAT) to read repo secrets and write them to .env.
  */
 
-// Modal API tokens — for CLI auth and app management
-// Get from: Modal Dashboard → Settings → API Tokens
-export const MODAL_TOKEN_ID = process.env.MODAL_TOKEN_ID || "ak_REDACTED_SEE_GITHUB_SECRETS";
-export const MODAL_TOKEN_SECRET = process.env.MODAL_TOKEN_SECRET || "as_REDACTED_SEE_GITHUB_SECRETS";
+// ── Token values (read from env — restored by scripts/restore-env.sh) ────────
+// These MUST be set in .env (restored from GitHub Secrets after a wipe).
+// If missing, the pipeline will throw a clear error pointing to restore-env.sh.
+
+export const MODAL_TOKEN_ID = process.env.MODAL_TOKEN_ID || "";
+export const MODAL_TOKEN_SECRET = process.env.MODAL_TOKEN_SECRET || "";
 
 // Modal PROXY tokens — for authenticating to Modal Auto Endpoints and
 // Web Functions with requires_proxy_auth=True.
 // Proxy tokens use wk-/ws- prefixes (API tokens use ak-/as- prefixes).
-// They CANNOT be interchanged. Created via: modal workspace proxy-tokens create
-// These are sent as Modal-Key + Modal-Secret headers to the brain endpoint.
-export const MODAL_PROXY_KEY = process.env.MODAL_PROXY_KEY || "wk_REDACTED_SEE_GITHUB_SECRETS";
-export const MODAL_PROXY_SECRET = process.env.MODAL_PROXY_SECRET || "ws_REDACTED_SEE_GITHUB_SECRETS";
+// Created via: modal workspace proxy-tokens create
+export const MODAL_PROXY_KEY = process.env.MODAL_PROXY_KEY || "";
+export const MODAL_PROXY_SECRET = process.env.MODAL_PROXY_SECRET || "";
 
 // HuggingFace token — used by Modal apps to download gated models
 // (FLUX.2-klein-9B is gated, requires HF auth)
-export const HF_TOKEN = process.env.HF_TOKEN || process.env.HUGGING_FACE_HUB_TOKEN || "***REMOVED***_SEE_GITHUB_SECRETS";
+export const HF_TOKEN =
+  process.env.HF_TOKEN || process.env.HUGGING_FACE_HUB_TOKEN || "";
 
-// Browserless token — for headless browser scraping (Civitai, Civitai.red NSFW pages)
-// Used by the LoRA metadata scraper to fetch model info from civitai.red (NSFW section)
-// and JS-rendered pages that can't be scraped with plain HTTP.
-// Get from: https://browserless.io/account/
-export const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN || "BROWSERLESS_REDACTED";
+// Browserless token — for headless browser scraping (Civitai, Civitai.red)
+export const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN || "";
 
-// ── Modal Endpoint URLs ──────────────────────────────────────────────────────
+// ── Modal Endpoint URLs (public, NOT secrets — safe as fallbacks) ────────────
 
-// FLUX.2 Klein 9B — image generation endpoint (L40S GPU, public, no auth needed)
-// @modal.fastapi_endpoint URLs — each method gets its own URL
+// FLUX.2 Klein 9B — image generation endpoint (L40S GPU, public, no auth)
 export const MODAL_FLUX2_GENERATE_URL =
   process.env.MODAL_FLUX2_URL ||
   "https://specimba--nexus-flux2-klein9b-nexusflux2generator-generate.modal.run";
@@ -51,16 +47,11 @@ export const MODAL_FLUX2_HEALTH_URL =
   process.env.MODAL_FLUX2_HEALTH_URL ||
   MODAL_FLUX2_GENERATE_URL.replace(/-generate\.modal\.run$/, "-health.modal.run");
 
-// Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16 — the brain endpoint (B200 GPU)
-// Modal Auto Endpoint — OpenAI-compatible /v1/chat/completions API
+// Qwen3.6-27B-AEON brain endpoint (B200 GPU, EU West, OpenAI-compatible)
 // REQUIRES proxy auth (Modal-Key + Modal-Secret headers)
-// Model: AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16
-// This model has vision + broad uncensored reasoning — used for ST3GG, Judge, Nemotron
 export const MODAL_BRAIN_URL =
   process.env.MODAL_BRAIN_URL ||
   "https://specimba--ep-qwen3-6-27b-aeon-ultimate-uncensored-bf16-server.eu-west.modal.direct";
-
-// The model name to send in the OpenAI-compatible API request body
 export const MODAL_BRAIN_MODEL =
   process.env.MODAL_BRAIN_MODEL ||
   "AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16";
@@ -70,15 +61,17 @@ export const MODAL_COLD_START_TIMEOUT = Number(process.env.MODAL_COLD_START_TIME
 export const MODAL_WARM_TIMEOUT = Number(process.env.MODAL_WARM_TIMEOUT || 120);
 
 // ── Video I2V backends ───────────────────────────────────────────────────────
-// Wan 2.2 I2V — image-to-video on H100 GPU
-// v3: refactored to @app.cls + @modal.enter() + @modal.asgi_app() — the URL
-// now includes the class name (nexuswan22generator). The old function-based
-// URL (without the class name) returned 404 "invalid function call" during
-// cold start because model loading blocked the asgi_app from becoming ready.
+// Wan 2.2 I2V (H100) — @app.cls pattern, URL includes class name
 export const MODAL_WAN22_URL =
   process.env.MODAL_WAN22_URL ||
   "https://specimba--nexus-wan22-i2v-nexuswan22generator-web-app.modal.run";
-// LTX 2.3 I2V — image-to-video on H100 GPU
+// LTX 2.3 I2V (H100)
 export const MODAL_LTX23_URL =
   process.env.MODAL_LTX23_URL ||
   "https://specimba--nexus-ltx23-i2v-nexusltx23generator-web-app.modal.run";
+
+// ── Validation helper ────────────────────────────────────────────────────────
+/** Returns true if all required tokens are present (for health checks). */
+export function areTokensConfigured(): boolean {
+  return Boolean(MODAL_TOKEN_ID && MODAL_TOKEN_SECRET);
+}

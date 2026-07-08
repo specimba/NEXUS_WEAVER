@@ -5,7 +5,7 @@
 // Can be called from the Next.js server or from Novita sandboxes.
 // ---------------------------------------------------------------------------
 
-const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN || "BROWSERLESS_REDACTED";
+const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN || "";
 const BROWSERLESS_BASE = "https://production-sfo.browserless.io";
 
 export function isBrowserlessConfigured(): boolean {

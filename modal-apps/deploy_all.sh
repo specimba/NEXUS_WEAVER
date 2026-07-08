@@ -42,7 +42,7 @@ echo ""
 
 # Create the HuggingFace secret (idempotent — overwrites if exists)
 echo "=== Setting HuggingFace secret ==="
-export HF_TOKEN="${HF_TOKEN:-***REMOVED***_SEE_GITHUB_SECRETS}"
+export HF_TOKEN="${HF_TOKEN:-hf_YOUR_HF_TOKEN_HERE}"
 modal secret create huggingface-secret HF_TOKEN="$HF_TOKEN" 2>&1 || true
 echo ""
 

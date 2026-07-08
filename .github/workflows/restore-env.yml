@@ -1,0 +1,28 @@
+name: Restore Env
+# =============================================================================
+# This workflow reads the NEXUS_ENV_BLOB secret (base64-encoded .env) and
+# uploads it as a downloadable artifact. After a sandbox wipe, run this
+# workflow, download the artifact, and decode it to .env.
+#
+# Usage:
+#   gh workflow run restore-env.yml
+#   gh run download <run-id> -n env-file
+#   mv env-file/restored.env .env
+# =============================================================================
+on:
+  workflow_dispatch:
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decode + upload .env
+        run: |
+          echo "${{ secrets.NEXUS_ENV_BLOB }}" | base64 -d > restored.env
+          echo "✅ .env restored ($(wc -l < restored.env) lines)"
+      - name: Upload .env artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: env-file
+          path: restored.env
+          retention-days: 1
