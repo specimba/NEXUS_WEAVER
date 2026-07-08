@@ -178,10 +178,37 @@ export async function stageFlux(
   const validModalLoras = modalLoras.filter((l): l is { repo: string; adapter: string; weight: number; weightName?: string } => l !== null);
 
   // Modal is the PRIMARY and ONLY image generation path.
-  // The H100 serves FLUX.1-schnell with LoRA support.
-  // Cold starts take 10-60s; warm calls return in 2-5s.
+  // Each engine has its own Modal app. FLUX.2 (L40S) is always-on.
+  // H100 engines (Z-Image, Krea 2) are auto-deployed on-demand by the
+  // engine manager, and auto-stop after 5 min idle (scaledown_window).
   if (isModalEnabled()) {
     try {
+      // Auto-deploy the selected engine if it's stopped (H100 engines only).
+      // This is the "smart rotator" — the user selects an engine and the
+      // system ensures its Modal app is deployed before generating.
+      const { ensureEngineDeployed } = await import("@/lib/engine-manager");
+      const deployCheck = await ensureEngineDeployed(selectedEngine.id);
+      if (!deployCheck.ready) {
+        await logEvent(
+          "error",
+          `Engine deploy failed: ${deployCheck.message}`,
+          "error",
+          generationId
+        );
+        throw new Error(
+          `Engine "${selectedEngine.name}" could not be deployed: ${deployCheck.message}. ` +
+          `Try FLUX.2 (always-on) or deploy the engine manually.`
+        );
+      }
+      if (deployCheck.message.includes("Auto-deploying")) {
+        await logEvent(
+          "stage_complete",
+          `Engine auto-deployed: ${deployCheck.message}`,
+          "info",
+          generationId
+        );
+      }
+
       const { width, height } = parseSize(size);
       // Use the seed passed from runPipeline (generated once per pipeline run
       // so it can be stored in the Generation row for provenance/repro).

@@ -4146,6 +4146,65 @@ function EnginePicker() {
   const presetCount = presetsForEngine(activeEngine.id).length;
   const isDefaultEngine = activeEngine.id === DEFAULT_IMAGE_ENGINE_ID;
 
+  // ── Engine deploy status (smart rotator) ─────────────────────────────────
+  // Fetches which Modal apps are deployed vs stopped. H100 engines show a
+  // deploy/stop toggle. FLUX.2 is always-on (no toggle).
+  const [engineStatuses, setEngineStatuses] = useState<Record<string, { status: string; gpu: string; alwaysOn: boolean }>>({});
+  const [deploying, setDeploying] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchStatuses = async () => {
+      try {
+        const res = await fetch("/api/modal/engine-manager", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data.engines) {
+          setEngineStatuses(data.engines);
+        }
+      } catch {
+        // Non-fatal — status display is advisory
+      }
+    };
+    fetchStatuses();
+    // Poll every 20s — slow, just for status display (backend caches 5s)
+    const interval = setInterval(fetchStatuses, 20000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  const handleDeployToggle = async (eid: string) => {
+    const current = engineStatuses[eid];
+    if (!current) return;
+    setDeploying(eid);
+    try {
+      const action = current.status === "deployed" ? "stop" : "deploy";
+      const res = await fetch("/api/modal/engine-manager", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, engineId: eid }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        // Refresh statuses
+        const statusRes = await fetch("/api/modal/engine-manager", { cache: "no-store" });
+        const statusData = await statusRes.json();
+        if (statusData.engines) setEngineStatuses(statusData.engines);
+      } else {
+        toast.error(data.message || "Engine operation failed");
+      }
+    } catch (err) {
+      toast.error("Engine operation failed");
+    } finally {
+      setDeploying(null);
+    }
+  };
+
+  const activeStatus = engineStatuses[activeEngine.id];
+  const isH100 = activeStatus?.gpu === "H100";
+  const isDeployed = activeStatus?.status === "deployed";
+  const isAlwaysOn = activeStatus?.alwaysOn === true;
+
   return (
     <div className="nexus-card rounded-2xl p-4">
       <div className="mb-2 flex items-center justify-between">
@@ -4177,12 +4236,17 @@ function EnginePicker() {
         {engines.map((e) => {
           const active = e.id === engineId;
           const badgeCls = engineBadgeClass(e.badge);
+          const eStatus = engineStatuses[e.id];
+          const eAlwaysOn = eStatus?.alwaysOn === true;
+          const eDeployed = eStatus?.status === "deployed";
+          // Status dot: green=deployed/always-on, gray=stopped, blue=unknown
+          const dotColor = eAlwaysOn || eDeployed ? "bg-emerald-400" : eStatus?.status === "stopped" ? "bg-zinc-500" : "bg-sky-400";
           return (
             <button
               key={e.id}
               type="button"
               onClick={() => handlePick(e)}
-              title={e.name}
+              title={`${e.name} — ${eAlwaysOn ? "always on" : eStatus?.status ?? "unknown"}`}
               className={cn(
                 "nexus-chip nexus-card-hover relative shrink-0 rounded-md border px-2.5 py-1.5 text-left transition",
                 active
@@ -4190,6 +4254,11 @@ function EnginePicker() {
                   : "border-border/50 bg-background/40 hover:border-primary/30"
               )}
             >
+              {/* Status dot — top-right corner */}
+              <span
+                className={cn("absolute right-1 top-1 h-1.5 w-1.5 rounded-full", dotColor)}
+                title={eAlwaysOn ? "Always on (L40S)" : eDeployed ? "Deployed" : eStatus?.status === "stopped" ? "Stopped — will auto-deploy on run" : "Unknown"}
+              />
               <div className="flex items-center gap-1">
                 <span className="text-[11px] font-medium leading-tight">
                   {e.shortName}
@@ -4230,6 +4299,33 @@ function EnginePicker() {
                 <span className="inline-flex items-center gap-0.5 rounded border border-amber-500/30 bg-amber-500/10 px-1 py-0.5 font-mono text-[8px] uppercase tracking-wider text-amber-300">
                   <Sparkle className="h-2 w-2" /> rising
                 </span>
+              ) : null}
+              {/* Engine deploy status badge + toggle (H100 engines only) */}
+              {isAlwaysOn ? (
+                <span className="inline-flex items-center gap-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 px-1 py-0.5 font-mono text-[8px] uppercase tracking-wider text-emerald-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> always on
+                </span>
+              ) : isH100 ? (
+                <button
+                  type="button"
+                  onClick={(ev) => { ev.stopPropagation(); handleDeployToggle(activeEngine.id); }}
+                  disabled={deploying === activeEngine.id}
+                  className={cn(
+                    "inline-flex items-center gap-0.5 rounded border px-1 py-0.5 font-mono text-[8px] uppercase tracking-wider transition",
+                    isDeployed
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                      : "border-zinc-500/30 bg-zinc-500/10 text-zinc-400 hover:bg-zinc-500/20",
+                    deploying === activeEngine.id && "opacity-50"
+                  )}
+                  title={isDeployed ? "Click to stop (saves H100 idle cost)" : "Click to deploy (H100 cold start ~2-5 min)"}
+                >
+                  {deploying === activeEngine.id ? (
+                    <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                  ) : (
+                    <span className={cn("h-1.5 w-1.5 rounded-full", isDeployed ? "bg-emerald-400" : "bg-zinc-500")} />
+                  )}
+                  {isDeployed ? "deployed" : "stopped"}
+                </button>
               ) : null}
             </div>
             <div className="mt-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70">
