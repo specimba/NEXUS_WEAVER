@@ -730,8 +730,9 @@ export async function runPipeline(
       };
     }
 
-    // Stage: FLUX image generation (Modal H100 or z-ai fallback) with calibration
-    progress("flux", { status: "running", message: "Modal FLUX.2 generating on L40S GPU…" });
+    // Stage: Image generation via the selected engine's Modal backend
+    const stageEngine = getEngine(input.engineId);
+    progress("flux", { status: "running", message: `${stageEngine.shortName} generating on ${stageEngine.family}…` });
     const flux = await stageFlux(input.prompt, input.style, input.aspect, input.wardrobe, gen.id, calibration, input.loraIds, input.loraWeights ?? {}, input.engineId, runSeed);
     progress("flux", { status: "done", ms: flux.ms, message: `Image rendered via ${flux.backend}` });
     timings.flux = flux.ms;

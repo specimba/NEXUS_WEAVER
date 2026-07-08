@@ -326,18 +326,18 @@ export async function generateImageViaModal(params: {
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      throw new Error(`Modal FLUX.2 /generate HTTP ${res.status}: ${text.slice(0, 300)}`);
+      throw new Error(`Modal ${engineId ?? "flux2-klein-9b"} /generate HTTP ${res.status}: ${text.slice(0, 300)}`);
     }
 
     const responseText = await res.text();
     if (responseText.length < 100) {
-      throw new Error(`Modal FLUX.2 returned empty response (${responseText.length} chars)`);
+      throw new Error(`Modal ${engineId ?? "flux2-klein-9b"} returned empty response (${responseText.length} chars)`);
     }
 
     const data = JSON.parse(responseText) as { image?: string; ms?: number; size?: string; error?: string };
-    if (data.error) throw new Error(`Modal FLUX.2 app error: ${data.error}`);
-    if (!data.image) throw new Error(`Modal FLUX.2 returned no image. Keys: ${Object.keys(data).join(",")}`);
-    if (data.image.length < 1000) throw new Error(`Modal FLUX.2 returned truncated image (${data.image.length} chars)`);
+    if (data.error) throw new Error(`Modal ${engineId ?? "flux2-klein-9b"} app error: ${data.error}`);
+    if (!data.image) throw new Error(`Modal ${engineId ?? "flux2-klein-9b"} returned no image. Keys: ${Object.keys(data).join(",")}`);
+    if (data.image.length < 1000) throw new Error(`Modal ${engineId ?? "flux2-klein-9b"} returned truncated image (${data.image.length} chars)`);
 
     recordSpend({
       gpu: "L40S",
@@ -355,12 +355,12 @@ export async function generateImageViaModal(params: {
     const msg = err instanceof Error ? err.message : String(err);
     if (msg.includes("aborted") || msg.includes("AbortError")) {
       throw new Error(
-        `Modal FLUX.2 timed out after ${timeoutMs / 1000}s. The container may still be ` +
+        `Modal ${engineId ?? "flux2-klein-9b"} timed out after ${timeoutMs / 1000}s. The container may still be ` +
         `cold-starting (downloading 29GB weights). Wait 60s and retry — the second call ` +
         `will be warm. Original: ${msg}`
       );
     }
-    throw new Error(`Modal FLUX.2 generation failed: ${msg}`);
+    throw new Error(`Modal ${engineId ?? "flux2-klein-9b"} generation failed: ${msg}`);
   } finally {
     clearTimeout(timer);
   }

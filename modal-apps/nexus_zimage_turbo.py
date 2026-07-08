@@ -10,7 +10,6 @@ Pipeline: diffusers.ZImagePipeline (requires latest diffusers from git)
 Deploy:
   modal deploy modal-apps/nexus_zimage_turbo.py
 """
-from __future__ import annotations
 import time
 from typing import Any
 import modal
@@ -49,7 +48,7 @@ secrets = [modal.Secret.from_name("huggingface-secret")]
     volumes=volumes,
     secrets=secrets,
     timeout=20 * MINUTES,
-    scaledown_window=15 * MINUTES,
+    scaledown_window=5 * MINUTES,
     min_containers=0,
     max_containers=1,
     cpu=8,

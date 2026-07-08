@@ -9,13 +9,12 @@ start; routes are live as soon as enter() completes.
 Deploy:
   modal deploy modal-apps/nexus_ltx23_i2v.py
 """
-from __future__ import annotations
 import time
 from typing import Any
 import modal
 
 APP_NAME = "nexus-ltx23-i2v"
-MODEL_ID = "Lightricks/LTX-2.3"
+MODEL_ID = "Lightricks/LTX-Video"
 HF_CACHE_DIR = "/root/.cache/huggingface"
 MINUTES = 60
 
@@ -49,7 +48,7 @@ secrets = [modal.Secret.from_name("huggingface-secret")]
     volumes=volumes,
     secrets=secrets,
     timeout=15 * MINUTES,
-    scaledown_window=15 * MINUTES,
+    scaledown_window=5 * MINUTES,
     min_containers=0,
     max_containers=1,
     cpu=8,
