@@ -257,14 +257,12 @@ export async function stopEngine(engineId: string): Promise<{ success: boolean; 
 export async function ensureEngineDeployed(engineId: string): Promise<{ ready: boolean; message: string }> {
   const app = getEngineApp(engineId);
   if (!app) {
-    // Unknown engine — fall through to FLUX.2 (the pipeline's default)
     return { ready: true, message: "Unknown engine — using FLUX.2 default" };
   }
-  if (app.alwaysOn) {
-    return { ready: true, message: `${app.appName} is always-on` };
-  }
 
-  // Check current status
+  // Check current status for ALL engines (including always-on).
+  // An always-on app can still be STOPPED if someone manually stopped it
+  // (or if it crashed). If it's stopped, redeploy it.
   const statuses = await getEngineStatuses();
   const current = statuses[engineId];
 
@@ -272,8 +270,14 @@ export async function ensureEngineDeployed(engineId: string): Promise<{ ready: b
     return { ready: true, message: `${app.appName} already deployed` };
   }
 
-  // Deploy it
-  console.log(`[engine-manager] Auto-deploying ${app.appName} for engine ${engineId}...`);
+  // If the app is stopped (or unknown), deploy it.
+  // This covers both H100 engines AND the always-on FLUX.2 engine.
+  if (app.alwaysOn && current?.status === "stopped") {
+    console.log(`[engine-manager] Always-on app ${app.appName} is STOPPED — auto-redeploying...`);
+  } else if (!app.alwaysOn) {
+    console.log(`[engine-manager] Auto-deploying ${app.appName} for engine ${engineId}...`);
+  }
+
   const result = await deployEngine(engineId);
   if (result.success) {
     return {
