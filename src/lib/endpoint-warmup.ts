@@ -22,9 +22,9 @@
  *    real-time status so the user knows what to expect.
  */
 
-import { MODAL_BRAIN_URL, MODAL_JUDGE_URL, MODAL_CREATIVE_URL, MODAL_PROXY_KEY, MODAL_PROXY_SECRET } from "@/lib/secrets";
+import { MODAL_BRAIN_URL, MODAL_JUDGE_URL, MODAL_CREATIVE_URL, MODAL_PROXY_KEY, MODAL_PROXY_SECRET, MODAL_FLUX2_HEALTH_URL } from "@/lib/secrets";
 
-export type EndpointName = "st3gg" | "judge" | "creative";
+export type EndpointName = "st3gg" | "judge" | "creative" | "flux2";
 export type EndpointStatus = "warm" | "cold" | "warming" | "error";
 
 interface EndpointState {
@@ -38,6 +38,7 @@ const endpointStates: Record<EndpointName, EndpointState> = {
   st3gg: { status: "cold", lastChecked: 0, lastError: null },
   judge: { status: "cold", lastChecked: 0, lastError: null },
   creative: { status: "cold", lastChecked: 0, lastError: null },
+  flux2: { status: "cold", lastChecked: 0, lastError: null },
 };
 
 const STATUS_TTL_MS = 30_000; // 30s — status is valid for 30s before re-checking
@@ -47,6 +48,7 @@ function getEndpointUrl(name: EndpointName): string | null {
     case "st3gg": return MODAL_BRAIN_URL || null;
     case "judge": return MODAL_JUDGE_URL || null;
     case "creative": return MODAL_CREATIVE_URL || null;
+    case "flux2": return MODAL_FLUX2_HEALTH_URL || null;
   }
 }
 
@@ -56,17 +58,22 @@ function getEndpointUrl(name: EndpointName): string | null {
  */
 export async function pingEndpoint(name: EndpointName, timeoutMs = 5000): Promise<boolean> {
   const url = getEndpointUrl(name);
-  if (!url || !MODAL_PROXY_KEY || !MODAL_PROXY_SECRET) {
+  if (!url) {
     endpointStates[name] = { status: "error", lastChecked: Date.now(), lastError: "endpoint not configured" };
     return false;
   }
 
+  // FLUX.2 doesn't need proxy auth — it's a public Web Function
+  const needsAuth = name !== "flux2";
+  const headers: Record<string, string> = {};
+  if (needsAuth && MODAL_PROXY_KEY && MODAL_PROXY_SECRET) {
+    headers["Modal-Key"] = MODAL_PROXY_KEY;
+    headers["Modal-Secret"] = MODAL_PROXY_SECRET;
+  }
+
   try {
-    const res = await fetch(`${url}/v1/models`, {
-      headers: {
-        "Modal-Key": MODAL_PROXY_KEY,
-        "Modal-Secret": MODAL_PROXY_SECRET,
-      },
+    const res = await fetch(url, {
+      headers,
       signal: AbortSignal.timeout(timeoutMs),
     });
 
@@ -81,13 +88,21 @@ export async function pingEndpoint(name: EndpointName, timeoutMs = 5000): Promis
       return false;
     }
 
+    // 404 = app is stopped (not just cold) — different from 503
+    if (res.status === 404) {
+      endpointStates[name] = { status: "error", lastChecked: Date.now(), lastError: "app stopped (404)" };
+      return false;
+    }
+
     endpointStates[name] = { status: "error", lastChecked: Date.now(), lastError: `HTTP ${res.status}` };
     return false;
   } catch (err) {
+    // Timeout = container is cold-starting (loading weights)
+    // This is expected for FLUX.2 (~20-30s) and brain endpoints (~60-120s)
     endpointStates[name] = {
-      status: "error",
+      status: "warming",
       lastChecked: Date.now(),
-      lastError: err instanceof Error ? err.message.slice(0, 100) : String(err),
+      lastError: null,
     };
     return false;
   }
@@ -99,8 +114,9 @@ export async function pingEndpoint(name: EndpointName, timeoutMs = 5000): Promis
  * startup. Subsequent calls within 5 min will find the container warm.
  */
 export async function preWarmAllEndpoints(): Promise<void> {
-  console.log("[warmup] Pre-warming all Modal endpoints...");
+  console.log("[warmup] Pre-warming all endpoints (FLUX.2 + 3 brain endpoints)...");
   await Promise.allSettled([
+    pingEndpoint("flux2", 10000),  // FLUX.2 takes longer to respond (10s timeout)
     pingEndpoint("st3gg"),
     pingEndpoint("judge"),
     pingEndpoint("creative"),

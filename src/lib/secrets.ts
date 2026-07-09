@@ -118,6 +118,12 @@ export const MODAL_ZIMAGE_URL =
   process.env.MODAL_ZIMAGE_URL ||
   "https://specimba--nexus-zimage-turbo-nexuszimagegenerator-web-app.modal.run";
 
+// ── Inpainting backend ───────────────────────────────────────────────────────
+// FLUX.1 Kontext-dev (L40S) — mask-and-redraw inpainting
+export const MODAL_INPAINT_URL =
+  process.env.MODAL_INPAINT_URL ||
+  "https://specimba--nexus-kontext-inpaint-nexuskontextinpaint-web-app.modal.run";
+
 // ── Validation helper ────────────────────────────────────────────────────────
 /** Returns true if all required tokens are present (for health checks). */
 export function areTokensConfigured(): boolean {
