@@ -47,35 +47,50 @@ export const MODAL_FLUX2_HEALTH_URL =
   process.env.MODAL_FLUX2_HEALTH_URL ||
   MODAL_FLUX2_GENERATE_URL.replace(/-generate\.modal\.run$/, "-health.modal.run");
 
-// ── Brain endpoints ──────────────────────────────────────────────────────────
-// v5.33: Two separate brain endpoints for different roles:
+// ── Brain endpoints (Modal Managed Inference Endpoints) ─────────────────────
+// v5.34: User deployed 3 managed endpoints via `modal endpoint create`.
+// These are proper Modal Managed Inference Endpoints with benchmarks:
 //
 // ST3GG Brain (text safety):
-//   Model: prithivMLmods/Qwen3.5-9B-Unredacted-MAX (9B, ~$0.50/hr)
+//   Model: qwen3-5-9b-unredacted-max (9B, 0.84 req/s, TTFT 2.2s)
 //   Role: Prompt safety scanning (text-only, fast)
-//   App: nexus-brain-vllm
+//   Benchmark: 0.84 req/s, E2E 3.1s
 //
-// Creative Brain (visual judge + enhancer):
-//   Model: google/gemma-4-31B-it + DFlash speculative decoding
-//   Role: Visual quality scoring + prompt enhancement (5.8x faster with DFlash)
-//   App: nexus-creative-brain
+// Visual Judge (vision quality scoring):
+//   Model: gemma-4-31b-it-uncensored-heretic (31B, 0.77 req/s, TTFT 1.9s)
+//   Role: Image quality scoring + visual analysis
+//   Benchmark: 0.77 req/s, E2E 4.1s
 //
-// Both run on L40S (same GPU as FLUX.2) for cost efficiency.
+// Creative Enhancer (lore + story + prompt expansion):
+//   Model: brisk-evolution-4b-v0-1 (4B, 0.90 req/s, TTFT 2.0s)
+//   Role: Lore-aware prompt enhancement, story generation, aesthetic quirks
+//   Benchmark: 0.90 req/s, E2E 2.3s (fastest)
+//
+// All 3 require proxy auth (Modal-Key + Modal-Secret headers).
 
+// ST3GG Brain — Qwen3.5-9B-Unredacted-MAX
 export const MODAL_BRAIN_URL =
   process.env.MODAL_BRAIN_URL ||
-  "https://specimba--nexus-brain-vllm-web-app.modal.run";
+  "https://specimba--ep-qwen3-5-9b-unredacted-max-server.us-west.modal.direct";
 export const MODAL_BRAIN_MODEL =
   process.env.MODAL_BRAIN_MODEL ||
-  "prithivMLmods/Qwen3.5-9B-Unredacted-MAX";
+  "qwen3-5-9b-unredacted-max";
 
-// Creative Brain (Visual Judge + Prompt Enhancer) — Gemma 31B + DFlash
-export const MODAL_CREATIVE_BRAIN_URL =
-  process.env.MODAL_CREATIVE_BRAIN_URL ||
-  "https://specimba--nexus-creative-brain-web-app.modal.run";
-export const MODAL_CREATIVE_BRAIN_MODEL =
-  process.env.MODAL_CREATIVE_BRAIN_MODEL ||
-  "google/gemma-4-31B-it";
+// Visual Judge — Gemma 4 31B Heretic
+export const MODAL_JUDGE_URL =
+  process.env.MODAL_JUDGE_URL ||
+  "https://specimba--ep-gemma-4-31b-it-uncensored-heretic-server.us-west.modal.direct";
+export const MODAL_JUDGE_MODEL =
+  process.env.MODAL_JUDGE_MODEL ||
+  "gemma-4-31b-it-uncensored-heretic";
+
+// Creative Enhancer — Brisk Evolution 4B (lore + story + prompt expansion)
+export const MODAL_CREATIVE_URL =
+  process.env.MODAL_CREATIVE_URL ||
+  "https://specimba--ep-brisk-evolution-4b-v0-1-server.us-west.modal.direct";
+export const MODAL_CREATIVE_MODEL =
+  process.env.MODAL_CREATIVE_MODEL ||
+  "brisk-evolution-4b-v0-1";
 
 // ── Timeouts ─────────────────────────────────────────────────────────────────
 export const MODAL_COLD_START_TIMEOUT = Number(process.env.MODAL_COLD_START_TIMEOUT || 300);

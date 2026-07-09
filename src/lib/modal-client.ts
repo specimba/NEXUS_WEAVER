@@ -25,6 +25,10 @@ import {
   MODAL_ZIMAGE_URL,
   MODAL_BRAIN_URL,
   MODAL_BRAIN_MODEL,
+  MODAL_JUDGE_URL,
+  MODAL_JUDGE_MODEL,
+  MODAL_CREATIVE_URL,
+  MODAL_CREATIVE_MODEL,
   MODAL_COLD_START_TIMEOUT as _COLD,
   MODAL_WARM_TIMEOUT as _WARM,
 } from "@/lib/secrets";
@@ -470,24 +474,42 @@ export interface BrainChatResult {
  */
 export async function callModalBrain(
   messages: BrainChatMessage[],
-  options?: { temperature?: number; maxTokens?: number }
+  options?: { temperature?: number; maxTokens?: number; role?: "st3gg" | "judge" | "nemotron" | "creative" }
 ): Promise<BrainChatResult | null> {
   if (!isBrainEndpointConfigured()) return null;
   const temperature = options?.temperature ?? 0.3;
   const maxTokens = options?.maxTokens ?? 2000;
+  const role = options?.role ?? "st3gg";
   const t0 = Date.now();
+
+  // Select the correct endpoint based on role:
+  // - st3gg/nemotron → Qwen 9B (fast text reasoning)
+  // - judge → Gemma 31B heretic (vision-capable)
+  // - creative → Brisk 4B (lore/story/prompt expansion)
+  let endpointUrl = MODAL_BRAIN_URL;
+  let endpointModel = MODAL_BRAIN_MODEL;
+  let modelName = "Qwen3.5-9B-Unredacted-MAX (Modal L40S)";
+
+  if (role === "judge" && MODAL_JUDGE_URL) {
+    endpointUrl = MODAL_JUDGE_URL;
+    endpointModel = MODAL_JUDGE_MODEL;
+    modelName = "Gemma-4-31B-it-Uncensored-Heretic (Modal L40S)";
+  } else if (role === "creative" && MODAL_CREATIVE_URL) {
+    endpointUrl = MODAL_CREATIVE_URL;
+    endpointModel = MODAL_CREATIVE_MODEL;
+    modelName = "Brisk-Evolution-4B (Modal L40S)";
+  }
+
   try {
-    const res = await fetch(`${MODAL_BRAIN_URL}/v1/chat/completions`, {
+    const res = await fetch(`${endpointUrl}/v1/chat/completions`, {
       method: "POST",
-      // Modal Auto Endpoints require proxy auth: Modal-Key + Modal-Secret headers.
-      // These must be PROXY tokens (wk-/ws-), NOT API tokens (ak-/as-).
       headers: {
         "Content-Type": "application/json",
         "Modal-Key": MODAL_PROXY_KEY,
         "Modal-Secret": MODAL_PROXY_SECRET,
       },
       body: JSON.stringify({
-        model: MODAL_BRAIN_MODEL,
+        model: endpointModel,
         messages,
         temperature,
         max_tokens: maxTokens,
@@ -496,23 +518,23 @@ export async function callModalBrain(
     });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      console.log(`[modal-brain] HTTP ${res.status}: ${text.slice(0, 200)}`);
+      console.log(`[modal-brain:${role}] HTTP ${res.status}: ${text.slice(0, 200)}`);
       return null;
     }
     const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
     const content = data.choices?.[0]?.message?.content ?? "";
     if (!content) {
-      console.log("[modal-brain] empty response content");
+      console.log(`[modal-brain:${role}] empty response content`);
       return null;
     }
     return {
       content,
       ms: Date.now() - t0,
-      model: "Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16 (Modal B200)",
+      model: modelName,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.log(`[modal-brain] failed (endpoint may still be provisioning): ${msg}`);
+    console.log(`[modal-brain:${role}] failed: ${msg}`);
     return null;
   }
 }

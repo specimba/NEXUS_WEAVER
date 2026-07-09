@@ -338,7 +338,7 @@ Respond as JSON exactly in this shape:
   ];
   let raw = "";
   if (isBrainEndpointConfigured()) {
-    const brainResult = await callModalBrain(brainMessages, { temperature: 0.3 });
+    const brainResult = await callModalBrain(brainMessages, { temperature: 0.3, role: "st3gg" });
     if (brainResult) {
       raw = brainResult.content;
     }
@@ -548,7 +548,7 @@ Produce evidence JSON exactly:
   ];
   let raw = "";
   if (isBrainEndpointConfigured()) {
-    const brainResult = await callModalBrain(brainMessagesNem, { temperature: 0.3 });
+    const brainResult = await callModalBrain(brainMessagesNem, { temperature: 0.3, role: "nemotron" });
     if (brainResult) {
       raw = brainResult.content;
     }
