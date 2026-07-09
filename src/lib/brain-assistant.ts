@@ -72,19 +72,37 @@ export function localCompatibilityChecks(params: {
   }
 
   // 2. LoRA stack analysis — check total weight + role diversity
+  // Research (July 2026 ComfyUI community consensus): max 3 LoRAs recommended.
+  // 6+ is explicitly "not recommended" — quality degrades and interference
+  // becomes unpredictable. Individual weights 0.3-0.5 when stacked.
+  // Total combined weight should stay near ~1.0.
   const totalWeight = loras.reduce((sum, l) => sum + (loraWeights[l.id] ?? l.recommendedWeight), 0);
-  if (loras.length > 8) {
+  const styleLoras = loras.filter((l) => l.category === "style");
+  if (loras.length > 5) {
     suggestions.push({
       kind: "warning",
-      title: "Large LoRA stack",
-      detail: `${loras.length} LoRAs stacked. Professional workflows use 5-10 LoRAs with LOW individual weights (0.15-0.30 each) and diverse roles (style + control + detailer). Keep total combined weight under ~2.0 to avoid collapse.`,
+      title: "Too many LoRAs — images will look generic",
+      detail: `${loras.length} LoRAs stacked. ComfyUI community consensus (July 2026): max 3 LoRAs recommended. 6+ causes quality degradation and unpredictable interference. Style LoRAs fight each other and mathematically average to a generic look. CUT to 2-3 LoRAs max.`,
+    });
+  } else if (loras.length > 3) {
+    suggestions.push({
+      kind: "warning",
+      title: "LoRA stack above recommended maximum",
+      detail: `${loras.length} LoRAs stacked. Community recommends max 3. Consider removing ${loras.length - 3} LoRA(s), especially competing style LoRAs.`,
     });
   }
-  if (totalWeight > 2.5) {
+  if (styleLoras.length > 1) {
+    suggestions.push({
+      kind: "warning",
+      title: `${styleLoras.length} competing style LoRAs`,
+      detail: `Multiple style LoRAs (${styleLoras.map((l) => l.name).join(", ")}) fight each other — their weights add together and average to a generic look. Use at most 1 style LoRA. Pick the one that best matches your vision.`,
+    });
+  }
+  if (totalWeight > 1.5) {
     suggestions.push({
       kind: "warning",
       title: "Total LoRA weight too high",
-      detail: `Combined weight is ${totalWeight.toFixed(2)}. Professional ComfyUI workflows keep total combined weight under ~2.0. Reduce individual weights to 0.15-0.30 each when stacking many LoRAs.`,
+      detail: `Combined weight is ${totalWeight.toFixed(2)}. Community recommendation: keep total near ~1.0 when stacking. Individual weights should be 0.3-0.5 each. Higher weights cause interference and collapse to a generic aesthetic.`,
     });
   }
 
