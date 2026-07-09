@@ -482,9 +482,9 @@ Respond as JSON exactly:
 }
 
 // ----------------------------------------------------------------------------
-// Stage 4 — Nemotron evidence parse (aggregate into structured evidence)
+// Stage 4 — Evidence aggregation (aggregate into structured evidence)
 // ----------------------------------------------------------------------------
-export async function stageNemotron(
+export async function stageEvidence(
   prompt: string,
   style: string,
   aspect: string,
@@ -516,12 +516,12 @@ ${JSON.stringify(judge, null, 2)}
 Produce evidence JSON exactly:
 {
   "summary": string,                  // one sentence executive summary
-  "modelChain": ["FLUX.2","ST3GG","Visual Judge","Nemotron"],
+  "modelChain": ["FLUX.2","ST3GG","Visual Judge","Evidence"],
   "provenance": {
     "generator": "FLUX.2 Klein 9B (via Modal L40S GPU)",
     "safetyModel": "ST3GG (via ${brain.shortName})",
     "judgeModel": "Visual Judge (via z-ai vision)",
-    "aggregator": "Nemotron (via ${brain.shortName})"
+    "aggregator": "Evidence (via ${brain.shortName})"
   },
   // NOTE: Use the actual brain name "${brain.shortName}" in the provenance above.
   "finalVerdict": "approved"|"rejected"|"needs_review",
@@ -548,7 +548,7 @@ Produce evidence JSON exactly:
   ];
   let raw = "";
   if (isBrainEndpointConfigured()) {
-    const brainResult = await callModalBrain(brainMessagesNem, { temperature: 0.3, role: "nemotron" });
+    const brainResult = await callModalBrain(brainMessagesNem, { temperature: 0.3, role: "evidence" });
     if (brainResult) {
       raw = brainResult.content;
     }
@@ -600,7 +600,7 @@ export interface PipelineRunInput {
 // v5: async job progress reporting. The pipeline worker passes an onProgress
 // callback that updates the PipelineJob row after each stage boundary, so the
 // frontend's poll loop can render live stage transitions.
-export type StageName = "st3gg" | "flux" | "judge" | "nemotron" | "output";
+export type StageName = "st3gg" | "flux" | "judge" | "evidence" | "output";
 export type StageState = "running" | "done" | "error" | "skipped";
 export interface StageProgress {
   status: StageState;
@@ -748,7 +748,7 @@ export async function runPipeline(
       // Mark all downstream stages as skipped (blocked by policy)
       progress("flux", { status: "skipped", message: "Skipped — blocked by policy" });
       progress("judge", { status: "skipped", message: "Skipped — blocked by policy" });
-      progress("nemotron", { status: "skipped", message: "Skipped — blocked by policy" });
+      progress("evidence", { status: "skipped", message: "Skipped — blocked by policy" });
       progress("output", { status: "done", ms: 1, message: "Blocked — no image generated" });
       return {
         id: gen.id,
@@ -878,14 +878,14 @@ export async function runPipeline(
       gen.id
     );
 
-    // Stage: Nemotron evidence parse
-    progress("nemotron", { status: "running", message: "Nemotron structuring evidence…" });
-    const nem = await stageNemotron(input.prompt, input.style, input.aspect, input.wardrobe, safety, judge, input.brainId);
-    progress("nemotron", { status: "done", ms: nem.ms, message: "Evidence structured" });
-    timings.nemotron = nem.ms;
-    await logEvent("stage_complete", `Nemotron structured evidence parsed (${nem.ms}ms)`, "success", gen.id);
+    // Stage: Evidence aggregation
+    progress("evidence", { status: "running", message: "Evidence structuring evidence…" });
+    const nem = await stageEvidence(input.prompt, input.style, input.aspect, input.wardrobe, safety, judge, input.brainId);
+    progress("evidence", { status: "done", ms: nem.ms, message: "Evidence structured" });
+    timings.evidence = nem.ms;
+    await logEvent("stage_complete", `Evidence structured evidence parsed (${nem.ms}ms)`, "success", gen.id);
 
-    timings.prompt = elapsed(promptStart) - (timings.flux + timings.st3gg + timings.judge + timings.nemotron);
+    timings.prompt = elapsed(promptStart) - (timings.flux + timings.st3gg + timings.judge + timings.evidence);
     if (timings.prompt < 0) timings.prompt = 0;
     timings.output = 1;
 
@@ -990,7 +990,7 @@ export async function runPipeline(
     const failedStage: StageName =
       !timings.flux ? "flux" :
       !timings.judge ? "judge" :
-      !timings.nemotron ? "nemotron" :
+      !timings.evidence ? "evidence" :
       "output";
     progress(failedStage, { status: "error", message: message.slice(0, 200) });
     await db.generation.update({

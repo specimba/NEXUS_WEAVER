@@ -383,7 +383,7 @@ export function getModalBaseUrl(): string {
 // on a B200 GPU (EU West). OpenAI-compatible /v1/chat/completions API.
 //
 // Used as the pipeline "brain" for ST3GG safety scan, visual judge, and
-// Nemotron evidence parsing. This model has vision + broad uncensored reasoning
+// Evidence aggregation. This model has vision + broad uncensored reasoning
 // — it can analyze mature content without refusal AND process images.
 //
 // AUTH: Modal Auto Endpoints require proxy auth. MODAL_TOKEN_ID and
@@ -474,7 +474,7 @@ export interface BrainChatResult {
  */
 export async function callModalBrain(
   messages: BrainChatMessage[],
-  options?: { temperature?: number; maxTokens?: number; role?: "st3gg" | "judge" | "nemotron" | "creative" }
+  options?: { temperature?: number; maxTokens?: number; role?: "st3gg" | "judge" | "evidence" | "creative" }
 ): Promise<BrainChatResult | null> {
   if (!isBrainEndpointConfigured()) return null;
   const temperature = options?.temperature ?? 0.3;
@@ -483,7 +483,7 @@ export async function callModalBrain(
   const t0 = Date.now();
 
   // Select the correct endpoint based on role:
-  // - st3gg/nemotron → Qwen 9B (fast text reasoning)
+  // - st3gg/evidence → Qwen 9B (fast text reasoning)
   // - judge → Gemma 31B heretic (vision-capable)
   // - creative → Brisk 4B (lore/story/prompt expansion)
   let endpointUrl = MODAL_BRAIN_URL;

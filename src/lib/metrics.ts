@@ -6,7 +6,7 @@ export interface TimingMap {
   flux?: number;
   st3gg?: number;
   judge?: number;
-  nemotron?: number;
+  evidence?: number;
   output?: number;
 }
 
@@ -68,7 +68,7 @@ export async function computeMetrics(): Promise<MetricsResponse> {
   const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   // per-stage aggregates
-  const stageIds: StageId[] = ["prompt", "flux", "st3gg", "judge", "nemotron", "output"];
+  const stageIds: StageId[] = ["prompt", "flux", "st3gg", "judge", "evidence", "output"];
   const byStage = {} as MetricsResponse["byStage"];
   for (const sid of stageIds) {
     const ms = generations

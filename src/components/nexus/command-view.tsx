@@ -335,8 +335,8 @@ function AnalyticsRow({ metrics }: { metrics?: MetricsResponse }) {
           ? "ST3GG"
           : k === "judge"
             ? "CPM-V"
-            : k === "nemotron"
-              ? "Nemotron"
+            : k === "evidence"
+              ? "Evidence"
               : k,
     value: v.avgMs,
     color:
@@ -530,7 +530,7 @@ const ARCH_LAYERS: ArchLayer[] = [
     desc: "Visual judge scores prompt adherence, visual quality, aesthetics, safety, wardrobe match. Returns structured JSON verdict.",
   },
   {
-    name: "Evidence Aggregator (Nemotron)",
+    name: "Evidence Aggregator",
     status: "production" as const,
     stack: "z-ai chat · ~8B params",
     desc: "Aggregates scan + judge outputs into a structured evidence object with confidence, risk profile, and recommendations.",

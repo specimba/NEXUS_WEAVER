@@ -52,7 +52,7 @@ function stageIcon(id: string) {
       return ShieldCheck;
     case "judge":
       return ScanEye;
-    case "nemotron":
+    case "evidence":
       return FileJson;
     case "output":
       return CheckCircle2;

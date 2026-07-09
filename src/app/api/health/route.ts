@@ -158,7 +158,7 @@ export async function GET() {
           : "FLUX.2 Klein (z-ai images.generations)",
         safety: "ST3GG (z-ai chat completions)",
         judge: "MiniCPM-V 2.6 (z-ai vision)",
-        aggregator: "Nemotron-Nano (z-ai chat completions)",
+        aggregator: "Evidence Aggregator (z-ai chat completions)",
       },
       modal: {
         enabled: isModalEnabled(),

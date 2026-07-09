@@ -590,7 +590,7 @@ function PolicyLegalSection() {
 
 // ---------------------------------------------------------------------------
 // Pipeline Brain Configuration — selects the uncensored Gemma 4 12B variant
-// that powers ST3GG safety scan, the visual judge, and the Nemotron evidence
+// that powers ST3GG safety scan, the visual judge, and the evidence
 // parser. The brain ANALYZES content (including mature) — it does not generate
 // mature content itself.
 // ---------------------------------------------------------------------------
@@ -675,7 +675,7 @@ function BrainConfigSection() {
           </div>
           <p className="text-[10px] leading-relaxed text-muted-foreground">
             The brain powers the ST3GG safety scan, the visual judge, and the
-            Nemotron evidence parser. An uncensored Gemma 4 12B (fable5
+            Evidence aggregator. An uncensored Gemma 4 12B (fable5
             abliterated) is recommended so the brain can ANALYZE mature visual
             content for safety verdicts instead of refusing. The brain does not
             generate mature content — it evaluates it.

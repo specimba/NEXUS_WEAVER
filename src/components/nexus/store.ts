@@ -159,7 +159,7 @@ const initialStages = (): RunStageState[] => [
   { id: "flux", status: "idle" },
   { id: "st3gg", status: "idle" },
   { id: "judge", status: "idle" },
-  { id: "nemotron", status: "idle" },
+  { id: "evidence", status: "idle" },
   { id: "output", status: "idle" },
 ];
 

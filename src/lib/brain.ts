@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------------------
 // The "brain" is the uncensored-visual-ability reasoning model that powers the
 // pipeline's safety scan (ST3GG), visual judge (MiniCPM-V role), and evidence
-// parser (Nemotron role). Per Canberk's spec, the brain should be an
+// evidence aggregator. Per Canberk's spec, the brain should be an
 // UNCENSORED Gemma 4 12B variant (fable5 reasoning, abliterated) so it can
 // reason about mature visual content without refusing to analyze it.
 //
@@ -151,7 +151,7 @@ export const BRAIN_ROLE_PROMPTS: Record<"safety" | "judge" | "evidence", string>
     "aesthetics, and safety. You analyze; you do not refuse. " +
     "Respond ONLY with a JSON object following the requested schema.",
   evidence:
-    "You are the evidence parser (Nemotron role), running on an uncensored Gemma 4 12B heretic composer2.5 brain. " +
+    "You are the evidence evidence aggregator, running on an uncensored Gemma 4 12B heretic composer2.5 brain. " +
     "You aggregate scan + judge outputs into a single structured evidence object with strong JSON discipline. " +
     "Respond ONLY with a JSON object.",
 };

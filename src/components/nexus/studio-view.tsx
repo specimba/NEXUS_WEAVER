@@ -392,7 +392,7 @@ export function StudioView() {
             ms: t.judge,
             message: data.judge ? `${data.judge?.verdict ?? "unknown"} · ${data.judge?.overallScore ?? "—"}` : "Judged",
           });
-          setStage("nemotron", { status: "done", ms: t.nemotron, message: "Evidence aggregated" });
+          setStage("evidence", { status: "done", ms: t.evidence, message: "Evidence aggregated" });
           setStage("output", { status: "done", ms: 1, message: "Persisted to gallery" });
 
           finishRun({
@@ -433,7 +433,7 @@ export function StudioView() {
             message: data.safety ? `${data.safety?.riskLevel ?? "unknown"} risk · score ${data.safety?.score ?? "—"}` : "Blocked",
           });
           setStage("judge", { status: "skipped", message: "Skipped — blocked" });
-          setStage("nemotron", { status: "skipped", message: "Skipped — blocked" });
+          setStage("evidence", { status: "skipped", message: "Skipped — blocked" });
           setStage("output", { status: "skipped", message: "Skipped — blocked" });
           finishRun({
             id: data.id,
@@ -472,7 +472,7 @@ export function StudioView() {
           const rawStage = pollData.currentStage || "flux";
           const failedStage: StageId =
             rawStage === "st3gg" || rawStage === "flux" || rawStage === "judge" ||
-            rawStage === "nemotron" || rawStage === "output" || rawStage === "prompt"
+            rawStage === "evidence" || rawStage === "output" || rawStage === "prompt"
               ? (rawStage as StageId)
               : "flux";
           setStage(failedStage, { status: "error", message: msg });
@@ -628,7 +628,7 @@ export function StudioView() {
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-[15px]">
               Describe what you want. FLUX generates the image on a Modal L40S GPU,
-              then ST3GG, AEON 27B and Nemotron scan, judge and structure the result — automatically.
+              then ST3GG and Judge scan, judge and structure the result — automatically.
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-3">
@@ -989,7 +989,7 @@ export function StudioView() {
             {running ? (
               <div className="flex items-center gap-2 font-mono text-[10px] text-cyan-400/80">
                 <span className="nexus-pulse inline-block h-1.5 w-1.5 rounded-full bg-cyan-400" />
-                <span>ST3GG → FLUX.2 → Judge → Nemotron · ~30-60s · {(elapsed / 1000).toFixed(1)}s elapsed</span>
+                <span>ST3GG → FLUX.2 → Judge → Evidence · ~30-60s · {(elapsed / 1000).toFixed(1)}s elapsed</span>
               </div>
             ) : null}
             <button
@@ -1324,7 +1324,7 @@ function stageIcon(id: StageId) {
       return ShieldMark;
     case "judge":
       return ScanEye;
-    case "nemotron":
+    case "evidence":
       return FileJson;
     case "output":
       return CheckCircle2;

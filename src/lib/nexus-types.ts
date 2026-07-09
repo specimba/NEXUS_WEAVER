@@ -140,7 +140,7 @@ export type StageId =
   | "flux"
   | "st3gg"
   | "judge"
-  | "nemotron"
+  | "evidence"
   | "output";
 
 export interface StageDef {
@@ -186,7 +186,7 @@ export const PIPELINE_STAGES: StageDef[] = [
     description: "Vision judge (running on the uncensored Gemma 4 12B brain) scores prompt adherence, aesthetics and safety.",
   },
   {
-    id: "nemotron",
+    id: "evidence",
     label: "Evidence Parse",
     model: "Uncensored Brain",
     params: "~12B Gemma 4",
@@ -221,7 +221,7 @@ export function getPipelineStages(engineId?: string, brainId?: string): StageDef
         description: engine.description,
       };
     }
-    if ((stage.id === "st3gg" || stage.id === "judge" || stage.id === "nemotron") && brain) {
+    if ((stage.id === "st3gg" || stage.id === "judge" || stage.id === "evidence") && brain) {
       return {
         ...stage,
         model: brain.shortName,

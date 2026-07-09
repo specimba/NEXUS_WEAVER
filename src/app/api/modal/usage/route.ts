@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
  * Pricing model (Modal H100, as of 2026):
  *   - H100 GPU: $0.00109/sec  (~$0.065/min, ~$3.90/hr)
  *   - We only count `timings.flux` because that's the only stage that
- *     runs on Modal. ST3GG/Judge/Nemotron run on z-ai (no Modal cost).
+ *     runs on Modal. ST3GG/Judge/Evidence run on z-ai (no Modal cost).
  *
  * The endpoint also estimates the *effective* cost accounting for cold
  * starts: each cold start adds ~60–420s of GPU time (weight download).
@@ -23,7 +23,7 @@ interface TimingsMap {
   flux?: number;
   st3gg?: number;
   judge?: number;
-  nemotron?: number;
+  evidence?: number;
   prompt?: number;
   output?: number;
 }
