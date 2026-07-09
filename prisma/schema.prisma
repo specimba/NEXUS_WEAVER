@@ -195,3 +195,52 @@ model PolicyConfig {
   disclaimerOverride String?
   updatedAt       DateTime @updatedAt
 }
+
+// ── NEXUS Creative Brain System ──────────────────────────────────────────────
+
+// Taste Profile — evolves over time based on approved/rejected generations.
+// Stores structured preference weights that the prompt enhancer uses.
+model TasteProfile {
+  id                  String   @id @default("default")
+  styles              String   @default("{}") // JSON: style → weight
+  colors              String   @default("{}") // JSON: palette → weight
+  compositions        String   @default("{}") // JSON: composition → weight
+  preferredLore       String   @default("{}") // JSON: loreId → approval count
+  preferredLoraCombos String   @default("{}") // JSON: comboKey → count
+  highScoreKeywords   String   @default("{}") // JSON: keyword → count
+  lowScoreKeywords    String   @default("{}") // JSON: keyword → count
+  aspectRatioScores   String   @default("{}") // JSON: aspect → avg score
+  totalAnalyzed       Int      @default(0)
+  updatedAt           DateTime @updatedAt
+}
+
+// Experience Log — every generation becomes a structured experience record.
+// Approved (prompt, image) pairs become training data for the MeGA LoRA.
+model ExperienceLog {
+  id              String   @id @default(cuid())
+  generationId    String
+  prompt          String
+  enrichedPrompt  String
+  style           String
+  aspect          String
+  engineId        String
+  calibrationId   String
+  loraIds         String   @default("")
+  loraWeights     String   @default("{}")
+  seed            BigInt
+  loreEntriesUsed String   @default("[]")
+  overallScore    Float?
+  verdict         String?
+  approved        Boolean  @default(false)
+  safetyScore     Float?
+  promptAdherence Float?
+  visualQuality   Float?
+  aestheticScore  Float?
+  wardrobeMatch   Float?
+  imagePath       String?
+  createdAt       DateTime @default(now())
+
+  @@index([approved])
+  @@index([overallScore])
+  @@index([createdAt])
+}
