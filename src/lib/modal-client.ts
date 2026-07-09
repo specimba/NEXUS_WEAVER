@@ -469,8 +469,11 @@ export interface BrainChatResult {
  * 60-120s to load a 27B model), we abort and let the caller fall through to
  * z-ai. Without this, ST3GG hangs forever and the pipeline stalls.
  *
- * Returns null on failure (timeout, HTTP error, network error, endpoint still
- * provisioning) so the caller can gracefully fall through to z-ai. NEVER throws.
+ * v5.35: NO z-ai fallback. Uses the retry+backoff system from endpoint-warmup.ts.
+ * If the endpoint is cold, waits up to 30s for it to warm up. If still cold,
+ * returns null and the caller produces a CLEAR error message.
+ *
+ * Returns null on failure so the caller can produce a clear error. NEVER throws.
  */
 export async function callModalBrain(
   messages: BrainChatMessage[],
@@ -482,61 +485,48 @@ export async function callModalBrain(
   const role = options?.role ?? "st3gg";
   const t0 = Date.now();
 
-  // Select the correct endpoint based on role:
-  // - st3gg/evidence → Qwen 9B (fast text reasoning)
-  // - judge → Gemma 31B heretic (vision-capable)
-  // - creative → Brisk 4B (lore/story/prompt expansion)
-  let endpointUrl = MODAL_BRAIN_URL;
+  // Map role to endpoint name for the warm-up system
+  const endpointName = role === "judge" ? "judge" : role === "creative" ? "creative" : "st3gg";
+
+  // Use the retry+backoff system — NO z-ai fallback.
+  const { callEndpointWithRetry } = await import("@/lib/endpoint-warmup");
+
+  // Select the correct model based on role
   let endpointModel = MODAL_BRAIN_MODEL;
   let modelName = "Qwen3.5-9B-Unredacted-MAX (Modal L40S)";
 
   if (role === "judge" && MODAL_JUDGE_URL) {
-    endpointUrl = MODAL_JUDGE_URL;
     endpointModel = MODAL_JUDGE_MODEL;
     modelName = "Gemma-4-31B-it-Uncensored-Heretic (Modal L40S)";
   } else if (role === "creative" && MODAL_CREATIVE_URL) {
-    endpointUrl = MODAL_CREATIVE_URL;
     endpointModel = MODAL_CREATIVE_MODEL;
     modelName = "Brisk-Evolution-4B (Modal L40S)";
   }
 
-  try {
-    const res = await fetch(`${endpointUrl}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Modal-Key": MODAL_PROXY_KEY,
-        "Modal-Secret": MODAL_PROXY_SECRET,
-      },
-      body: JSON.stringify({
-        model: endpointModel,
-        messages,
-        temperature,
-        max_tokens: maxTokens,
-      }),
-      signal: AbortSignal.timeout(60_000),
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.log(`[modal-brain:${role}] HTTP ${res.status}: ${text.slice(0, 200)}`);
-      return null;
-    }
-    const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
-    const content = data.choices?.[0]?.message?.content ?? "";
-    if (!content) {
-      console.log(`[modal-brain:${role}] empty response content`);
-      return null;
-    }
-    return {
-      content,
-      ms: Date.now() - t0,
-      model: modelName,
-    };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.log(`[modal-brain:${role}] failed: ${msg}`);
+  const result = await callEndpointWithRetry(endpointName, {
+    model: endpointModel,
+    messages,
+    temperature,
+    max_tokens: maxTokens,
+  });
+
+  if (!result.ok) {
+    console.log(`[modal-brain:${role}] endpoint not available: ${result.error}`);
     return null;
   }
+
+  const data = result.data as { choices?: Array<{ message?: { content?: string } }> };
+  const content = data.choices?.[0]?.message?.content ?? "";
+  if (!content) {
+    console.log(`[modal-brain:${role}] empty response content`);
+    return null;
+  }
+
+  return {
+    content,
+    ms: Date.now() - t0,
+    model: modelName,
+  };
 }
 
 // ── In-process spend tracker (resets on server restart) ──────────────────────

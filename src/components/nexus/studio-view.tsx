@@ -510,29 +510,32 @@ export function StudioView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [run, running, prompt]);
 
-  // CREDIT OPTIMIZATION: Do NOT auto-warm Modal on mount.
-  // The previous code fired /api/modal/warmup on every page load, which
-  // pinged the FLUX.2 + brain containers, keeping them warm 24/7. This burned
-  // ~$15-30/day in idle GPU costs. Now the container only warms when the
-  // user actually clicks "Run Pipeline" — the async pipeline's cold-start
-  // timeout (300s) handles the first-request latency.
-  // The status display starts as "unknown" and updates on first generation.
+  // SMART WARM-UP: On page load, trigger pre-warm of all 3 managed endpoints.
+  // This fires a lightweight GET /v1/models to each endpoint, which triggers
+  // the container startup. By the time the user writes a prompt and clicks Run,
+  // the endpoints are warm (~2-4s response time instead of 30-120s cold start).
+  //
+  // The warm-up is fire-and-forget — it doesn't block the UI. The endpoints
+  // scale to zero after ~10 min idle, so this only warms them for the current
+  // session.
   useEffect(() => {
-    // Just check cached status (no warmup POST) — this is a lightweight
-    // read from the 60s cache, doesn't ping the container if cache is fresh.
     let cancelled = false;
     (async () => {
       try {
+        // Check FLUX.2 status (cached, fast)
         const sr = await fetch("/api/modal/status", { cache: "no-store" });
         if (cancelled) return;
         const sd = await sr.json();
-        if (sd.reachable) {
-          setModalWarm(true);
-        }
-        // Don't set modalWarm to false on cold — just leave it null.
-        // The user will see "Cold" which is fine; the pipeline handles it.
+        if (sd.reachable) setModalWarm(true);
+
+        // Pre-warm all 3 brain endpoints (fire-and-forget, ~5s per endpoint)
+        fetch("/api/modal/warm-endpoints", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "warm" }),
+        }).catch(() => {});
       } catch {
-        // silent — status is advisory
+        // silent — warm-up is best-effort
       }
     })();
     return () => { cancelled = true; };
