@@ -156,6 +156,9 @@ export async function stageFlux(
   let backend: "modal" | "zai" = "modal";
   let base64: string | null = null;
   let usedSeed: number = seed ?? Math.floor(Math.random() * 2_147_483_647);
+  // The engineId actually used for generation. May differ from selectedEngine.id
+  // if the selected H100 engine couldn't be deployed (fallback to FLUX.2).
+  let effectiveEngineId: string | undefined = engineId;
 
   // Build the LoRA array for Modal: map our library IDs to HF repo IDs + weights
   const modalLoras: Array<{ repo: string; adapter: string; weight: number; weightName?: string } | null> = loraIds
@@ -188,7 +191,20 @@ export async function stageFlux(
       // system ensures its Modal app is deployed before generating.
       const { ensureEngineDeployed } = await import("@/lib/engine-manager");
       const deployCheck = await ensureEngineDeployed(selectedEngine.id);
-      if (!deployCheck.ready) {
+
+      // If the engine fell back to FLUX.2, switch the backend to FLUX.2
+      // so we don't hit a 404 on the stopped H100 app.
+      if (deployCheck.message.startsWith("FALLBACK_TO_FLUX2")) {
+        await logEvent(
+          "stage_complete",
+          `Engine fallback: ${deployCheck.message}`,
+          "warn",
+          generationId
+        );
+        // Force the backend to FLUX.2 by overriding the engineId for this run
+        // (the user selected Z-Image/Krea, but we're using FLUX.2 instead)
+        effectiveEngineId = "flux2-klein-9b";
+      } else if (!deployCheck.ready) {
         await logEvent(
           "error",
           `Engine deploy failed: ${deployCheck.message}`,
@@ -199,8 +215,7 @@ export async function stageFlux(
           `Engine "${selectedEngine.name}" could not be deployed: ${deployCheck.message}. ` +
           `Try FLUX.2 (always-on) or deploy the engine manually.`
         );
-      }
-      if (deployCheck.message.includes("Auto-deploying")) {
+      } else if (deployCheck.message.includes("Auto-deploying") || deployCheck.message.includes("deployed successfully")) {
         await logEvent(
           "stage_complete",
           `Engine auto-deployed: ${deployCheck.message}`,
@@ -223,7 +238,7 @@ export async function stageFlux(
         seed: effectiveSeed,
         loras: validModalLoras,
         isFirstCall: true, // allow long cold-start timeout (300s)
-        engineId: selectedEngine.id, // route to the correct Modal backend
+        engineId: effectiveEngineId, // route to the correct Modal backend (may be FLUX.2 fallback)
       });
       base64 = result.imageBase64;
       backend = "modal";

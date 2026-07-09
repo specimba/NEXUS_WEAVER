@@ -510,35 +510,32 @@ export function StudioView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [run, running, prompt]);
 
-  // Auto-warm Modal on mount — warms BOTH FLUX.2 + AEON brain simultaneously.
-  // Fire-and-forget: the warmup POST pings both containers in parallel.
-  // The /api/modal/status endpoint (60s cached) is used for the initial status
-  // display. This prevents UI flashing while the warmup is in-flight.
+  // CREDIT OPTIMIZATION: Do NOT auto-warm Modal on mount.
+  // The previous code fired /api/modal/warmup on every page load, which
+  // pinged the FLUX.2 + AEON containers, keeping them warm 24/7. This burned
+  // ~$15-30/day in idle GPU costs. Now the container only warms when the
+  // user actually clicks "Run Pipeline" — the async pipeline's cold-start
+  // timeout (300s) handles the first-request latency.
+  // The status display starts as "unknown" and updates on first generation.
   useEffect(() => {
+    // Just check cached status (no warmup POST) — this is a lightweight
+    // read from the 60s cache, doesn't ping the container if cache is fresh.
     let cancelled = false;
     (async () => {
       try {
-        // Fire the warmup POST (warms both FLUX.2 + brain) but DON'T await it.
-        fetch("/api/modal/warmup", { method: "POST" }).catch(() => {});
-        // Quick status check (cached, returns in <100ms if cache is fresh)
         const sr = await fetch("/api/modal/status", { cache: "no-store" });
         if (cancelled) return;
         const sd = await sr.json();
         if (sd.reachable) {
           setModalWarm(true);
-        } else if (sd.enabled && !sd.reachable) {
-          setModalWarm(false);
-          toast.info("Modal GPU is cold-starting", {
-            description: "Warming FLUX.2 + AEON brain together (~60-120s). The async pipeline handles it — just run and wait.",
-          });
         }
+        // Don't set modalWarm to false on cold — just leave it null.
+        // The user will see "Cold" which is fine; the pipeline handles it.
       } catch {
-        // silent — auto-warm is best-effort
+        // silent — status is advisory
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   // Pre-emptively warm up the Modal container so the first generation
@@ -4167,8 +4164,8 @@ function EnginePicker() {
       }
     };
     fetchStatuses();
-    // Poll every 20s — slow, just for status display (backend caches 5s)
-    const interval = setInterval(fetchStatuses, 20000);
+    // Poll every 120s (was 20s — slower polling = less cost, status is advisory)
+    const interval = setInterval(fetchStatuses, 120000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 

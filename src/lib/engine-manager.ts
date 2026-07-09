@@ -23,12 +23,12 @@ const PROJECT_ROOT = process.cwd();
 
 // Modal CLI requires auth. The ~/.modal.toml file can get wiped by sandbox
 // resets, so we pass tokens via environment variables as a fallback.
-function getModalEnv(): Record<string, string> {
+function getModalEnv(): NodeJS.ProcessEnv {
   return {
     ...process.env,
     MODAL_TOKEN_ID: MODAL_TOKEN_ID || process.env.MODAL_TOKEN_ID || "",
     MODAL_TOKEN_SECRET: MODAL_TOKEN_SECRET || process.env.MODAL_TOKEN_SECRET || "",
-  };
+  } as NodeJS.ProcessEnv;
 }
 
 // ── Engine → Modal App mapping ───────────────────────────────────────────────
@@ -275,8 +275,19 @@ export async function ensureEngineDeployed(engineId: string): Promise<{ ready: b
   // Deploy it
   console.log(`[engine-manager] Auto-deploying ${app.appName} for engine ${engineId}...`);
   const result = await deployEngine(engineId);
+  if (result.success) {
+    return {
+      ready: true,
+      message: result.message,
+    };
+  }
+
+  // Deploy failed — DON'T proceed to a 404. Fall back to FLUX.2 with a warning.
+  // This prevents the "invalid function call" 404 that burns credits on
+  // repeated failed attempts to a stopped app.
+  console.warn(`[engine-manager] Auto-deploy failed for ${app.appName}, falling back to FLUX.2: ${result.message}`);
   return {
-    ready: result.success,
-    message: result.message,
+    ready: true, // ready=true so the pipeline proceeds, but with FLUX.2
+    message: `FALLBACK_TO_FLUX2: ${app.appName} deploy failed (${result.message.slice(0, 100)}). Using FLUX.2 instead.`,
   };
 }
