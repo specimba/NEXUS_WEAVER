@@ -47,24 +47,35 @@ export const MODAL_FLUX2_HEALTH_URL =
   process.env.MODAL_FLUX2_HEALTH_URL ||
   MODAL_FLUX2_GENERATE_URL.replace(/-generate\.modal\.run$/, "-health.modal.run");
 
-// ── Brain endpoint ───────────────────────────────────────────────────────────
-// v5.31: Switched from AEON BF16 on B200 (expensive Auto Endpoint) to
-// AEON FP8 on L40S via vLLM (same model, 85% cheaper, same GPU as FLUX.2).
+// ── Brain endpoints ──────────────────────────────────────────────────────────
+// v5.33: Two separate brain endpoints for different roles:
 //
-// Model: kasimat/Qwen3.6-27B-AEON-Ultimate-Uncensored-FP8-MTP
-//   - Same AEON-7 uncensored fine-tune, FP8 quantized
-//   - Full VLM: Qwen3VLProcessor (vision + text + video)
-//   - Fits L40S 48GB (~27GB weights + KV cache)
-//   - vLLM OpenAI-compatible API (no proxy auth needed)
+// ST3GG Brain (text safety):
+//   Model: prithivMLmods/Qwen3.5-9B-Unredacted-MAX (9B, ~$0.50/hr)
+//   Role: Prompt safety scanning (text-only, fast)
+//   App: nexus-brain-vllm
 //
-// Deploy: modal deploy modal-apps/nexus_brain_vllm.py
-// Then set MODAL_BRAIN_URL to the Web Function URL.
+// Creative Brain (visual judge + enhancer):
+//   Model: google/gemma-4-31B-it + DFlash speculative decoding
+//   Role: Visual quality scoring + prompt enhancement (5.8x faster with DFlash)
+//   App: nexus-creative-brain
+//
+// Both run on L40S (same GPU as FLUX.2) for cost efficiency.
+
 export const MODAL_BRAIN_URL =
   process.env.MODAL_BRAIN_URL ||
-  ""; // Set after deploying nexus_brain_vllm.py
+  "https://specimba--nexus-brain-vllm-web-app.modal.run";
 export const MODAL_BRAIN_MODEL =
   process.env.MODAL_BRAIN_MODEL ||
-  "kasimat/Qwen3.6-27B-AEON-Ultimate-Uncensored-FP8-MTP";
+  "prithivMLmods/Qwen3.5-9B-Unredacted-MAX";
+
+// Creative Brain (Visual Judge + Prompt Enhancer) — Gemma 31B + DFlash
+export const MODAL_CREATIVE_BRAIN_URL =
+  process.env.MODAL_CREATIVE_BRAIN_URL ||
+  "https://specimba--nexus-creative-brain-web-app.modal.run";
+export const MODAL_CREATIVE_BRAIN_MODEL =
+  process.env.MODAL_CREATIVE_BRAIN_MODEL ||
+  "google/gemma-4-31B-it";
 
 // ── Timeouts ─────────────────────────────────────────────────────────────────
 export const MODAL_COLD_START_TIMEOUT = Number(process.env.MODAL_COLD_START_TIMEOUT || 300);

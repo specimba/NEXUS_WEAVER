@@ -772,10 +772,57 @@ export async function runPipeline(
       };
     }
 
+    // Stage: Lore Enhancement — enrich the prompt with structured lore entries
+    // (garments, accessories, hairstyles, colors, composition) based on detected
+    // themes. This runs AFTER ST3GG (so blocked prompts don't waste GPU) and
+    // BEFORE FLUX (so the enriched prompt guides generation).
+    // The taste profile biases lore selection toward entries that historically
+    // produce high scores for this user.
+    let enrichedPrompt = input.prompt;
+    let loreEntriesUsed: string[] = [];
+    try {
+      const { findRelevantLore, getPairedLore, buildLoreEnrichment } = await import("@/lib/lore/lore-database");
+      const { getPreferredLoreIds } = await import("@/lib/taste-profile");
+
+      // Find lore matching the prompt themes
+      let matchedLore = findRelevantLore(input.prompt, 5);
+
+      // Boost with taste-profile-preferred lore
+      const preferredIds = await getPreferredLoreIds();
+      for (const loreId of preferredIds.slice(0, 3)) {
+        if (!matchedLore.find((l) => l.id === loreId)) {
+          const { LORE_DATABASE } = await import("@/lib/lore/lore-database");
+          const entry = LORE_DATABASE.find((e) => e.id === loreId);
+          if (entry) matchedLore.push(entry);
+        }
+      }
+
+      // Get paired lore (complementary entries)
+      const pairedLore = getPairedLore(matchedLore.map((l) => l.id)).slice(0, 3);
+      const allLore = [...matchedLore, ...pairedLore];
+
+      if (allLore.length > 0) {
+        const enrichment = buildLoreEnrichment(allLore, 400);
+        if (enrichment) {
+          enrichedPrompt = `${input.prompt}. ${enrichment}`;
+          loreEntriesUsed = allLore.map((l) => l.id);
+          await logEvent(
+            "stage_complete",
+            `Lore enrichment: ${allLore.length} entries matched (${matchedLore.length} direct + ${pairedLore.length} paired)`,
+            "info",
+            gen.id
+          );
+        }
+      }
+    } catch (loreErr) {
+      // Non-fatal — if lore fails, use the original prompt
+      console.log("[pipeline] Lore enrichment skipped:", loreErr instanceof Error ? loreErr.message : String(loreErr));
+    }
+
     // Stage: Image generation via the selected engine's Modal backend
     const stageEngine = getEngine(input.engineId);
     progress("flux", { status: "running", message: `${stageEngine.shortName} generating on ${stageEngine.family}…` });
-    const flux = await stageFlux(input.prompt, input.style, input.aspect, input.wardrobe, gen.id, calibration, input.loraIds, input.loraWeights ?? {}, input.engineId, runSeed);
+    const flux = await stageFlux(enrichedPrompt, input.style, input.aspect, input.wardrobe, gen.id, calibration, input.loraIds, input.loraWeights ?? {}, input.engineId, runSeed);
     progress("flux", { status: "done", ms: flux.ms, message: `Image rendered via ${flux.backend}` });
     timings.flux = flux.ms;
     await db.generation.update({
@@ -860,6 +907,61 @@ export async function runPipeline(
     );
 
     progress("output", { status: "done", ms: 1, message: "Persisted to gallery" });
+
+    // ── Experience Logger + Taste Profile Update ──────────────────────────
+    // Log this generation as an experience record for the MeGA LoRA pipeline.
+    // Update the taste profile so future lore selection is biased toward
+    // entries that produce high scores.
+    try {
+      const { logExperience } = await import("@/lib/experience-logger");
+      const { recordGenerationOutcome } = await import("@/lib/taste-profile");
+
+      const approved = judge.verdict === "approved";
+      await logExperience({
+        generationId: gen.id,
+        prompt: input.prompt,
+        enrichedPrompt,
+        style: input.style,
+        aspect: input.aspect,
+        engineId: input.engineId ?? "flux2-klein-9b",
+        calibrationId: input.calibrationId,
+        loraIds: input.loraIds,
+        loraWeights: input.loraWeights ?? {},
+        seed: runSeed,
+        loreEntriesUsed,
+        overallScore: judge.overallScore,
+        verdict: judge.verdict,
+        approved,
+        safetyScore: safety.score,
+        promptAdherence: judge.promptAdherence,
+        visualQuality: judge.visualQuality,
+        aestheticScore: judge.aestheticScore,
+        wardrobeMatch: judge.wardrobeMatch,
+        imagePath: flux.imagePath,
+      });
+
+      await recordGenerationOutcome({
+        prompt: input.prompt,
+        style: input.style,
+        aspect: input.aspect,
+        loraIds: input.loraIds,
+        loraWeights: input.loraWeights ?? {},
+        loreEntriesUsed,
+        overallScore: judge.overallScore,
+        approved,
+        verdict: judge.verdict,
+      });
+
+      await logEvent(
+        "stage_complete",
+        `Experience logged + taste profile updated (approved=${approved}, score=${judge.overallScore}, lore=${loreEntriesUsed.length})`,
+        "info",
+        gen.id
+      );
+    } catch (expErr) {
+      // Non-fatal — experience logging is best-effort
+      console.log("[pipeline] Experience logging skipped:", expErr instanceof Error ? expErr.message : String(expErr));
+    }
 
     return {
       id: gen.id,

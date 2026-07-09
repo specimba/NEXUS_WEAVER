@@ -1,54 +1,58 @@
-"""NEXUS Visual Weaver — Brain Endpoint v2 (vLLM on L40S)
+"""NEXUS Visual Weaver — ST3GG Brain (vLLM on L40S)
 
-Replaces the old AEON B200 Auto Endpoint with a vLLM-served deployment of
-the same AEON uncensored model, but in FP8 format on L40S (same GPU as
-FLUX.2, 3-4x cheaper than H100/B200).
+Deploys prithivMLmods/Qwen3.5-9B-Unredacted-MAX — a 9B parameter VLM that
+handles the ST3GG safety scanning stage. This is the cheapest brain model
+that still has full vision + text capabilities.
 
-Model: kasimat/Qwen3.6-27B-AEON-Ultimate-Uncensored-FP8-MTP
-  - Same AEON-7 uncensored fine-tune the user was already using
-  - FP8 quantized → ~27GB VRAM (fits L40S 48GB with room for KV cache)
-  - Full VLM: Qwen3_5ForConditionalGeneration + Qwen3VLProcessor
-  - Can analyze images (visual judge) + text (ST3GG safety)
-  - MTP (multi-token prediction) for faster inference
-  - 63K HF downloads, vLLM-tagged
+Model: prithivMLmods/Qwen3.5-9B-Unredacted-MAX
+  - Base: Qwen/Qwen3.5-9B (Modal-supported)
+  - Architecture: Qwen3_5ForConditionalGeneration (TRUE VLM)
+  - Uncensored: 94.5% non-refusal rate (abliterated)
+  - Format: Safetensors, BF16 — vLLM-deployable
+  - Size: 9B params (~18GB BF16, ~9GB FP8)
+  - GPU: L40S 48GB (massive headroom)
+  - Cost: ~$0.50/hr (vs ~$6/hr on B200 = 92% savings)
+
+Roles:
+  1. ST3GG safety scan (text-only, ~0.5s per call)
+  2. Light visual judge (if creative brain is unavailable)
 
 Deploy:
   modal deploy modal-apps/nexus_brain_vllm.py
-
-Cost comparison:
-  OLD: AEON on B200 (EU West Auto Endpoint) — ~$4-8/hr, cold-start 60-120s
-  NEW: vLLM on L40S (same GPU as FLUX.2) — ~$0.50-1.50/hr, cold-start ~20s
-  SAVINGS: ~85% per hour + shares volume cache with FLUX.2
 """
 import modal
 import os
+import subprocess
 
 APP_NAME = "nexus-brain-vllm"
-MODEL_ID = "kasimat/Qwen3.6-27B-AEON-Ultimate-Uncensored-FP8-MTP"
+MODEL_ID = "prithivMLmods/Qwen3.5-9B-Unredacted-MAX"
 HF_CACHE_DIR = "/root/.cache/huggingface"
 MINUTES = 60
 
 app = modal.App(APP_NAME)
 
-# vLLM image — includes the latest vLLM with VLM support
 image = (
     modal.Image.from_registry("nvidia/cuda:12.8.1-devel-ubuntu22.04", add_python="3.12")
     .entrypoint([])
     .apt_install("git", "ffmpeg")
-    .pip_install(
-        "vllm>=0.8.0",  # VLM support (Qwen3-VL)
-        "transformers>=4.57.0",  # Qwen3_5ForConditionalGeneration
+    .uv_pip_install(
+        "vllm>=0.8.0",
+        "transformers>=4.57.0",
         "huggingface-hub==0.36.0",
         "torch==2.7.1",
         "accelerate~=1.8.1",
         "fastapi[standard]",
+        "httpx",
         extra_options="--index-strategy unsafe-best-match",
         extra_index_url="https://download.pytorch.org/whl/cu128",
     )
-    .env({"HF_XET_HIGH_PERFORMANCE": "1", "HF_HOME": HF_CACHE_DIR, "VLLM_WORKER_MULTIPROC_METHOD": "spawn"})
+    .env({
+        "HF_XET_HIGH_PERFORMANCE": "1",
+        "HF_HOME": HF_CACHE_DIR,
+        "VLLM_WORKER_MULTIPROC_METHOD": "spawn",
+    })
 )
 
-# REUSE the existing hf-hub-cache volume — brain weights cache alongside FLUX.2
 hf_cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 volumes = {HF_CACHE_DIR: hf_cache_vol}
 secrets = [modal.Secret.from_name("huggingface-secret")]
@@ -60,7 +64,7 @@ secrets = [modal.Secret.from_name("huggingface-secret")]
     volumes=volumes,
     secrets=secrets,
     timeout=20 * MINUTES,
-    scaledown_window=5 * MINUTES,  # Cost: scale down fast after idle
+    scaledown_window=5 * MINUTES,
     min_containers=0,
     max_containers=1,
     cpu=8,
@@ -68,16 +72,15 @@ secrets = [modal.Secret.from_name("huggingface-secret")]
 )
 @modal.asgi_app()
 def web_app():
+    import time
     import subprocess
     import os
     from fastapi import FastAPI, Request
     from fastapi.responses import JSONResponse
+    import httpx
 
     web = FastAPI()
 
-    # Start vLLM server as a subprocess (non-blocking)
-    # vLLM provides an OpenAI-compatible API at /v1/chat/completions
-    # This is what the brain client already expects.
     vllm_port = 8000
     vllm_cmd = [
         "python", "-m", "vllm.entrypoints.openai.api_server",
@@ -85,14 +88,14 @@ def web_app():
         "--served-model-name", MODEL_ID,
         "--port", str(vllm_port),
         "--host", "127.0.0.1",
-        "--trust-remote-code",  # Required for Qwen3_5ForConditionalGeneration
-        "--dtype", "auto",  # FP8 model — vLLM auto-detects
-        "--max-model-len", "32768",  # 32K context (enough for image+prompt)
-        "--gpu-memory-utilization", "0.85",  # Leave room for vision encoder
-        "--limit-mm-per-prompt", "image=2",  # Allow up to 2 images per request
+        "--trust-remote-code",
+        "--dtype", "auto",
+        "--max-model-len", "16384",
+        "--gpu-memory-utilization", "0.80",
+        "--limit-mm-per-prompt", "image=2",
     ]
 
-    print(f"Starting vLLM server for {MODEL_ID}...")
+    print(f"Starting vLLM for {MODEL_ID}...")
     proc = subprocess.Popen(
         vllm_cmd,
         stdout=subprocess.PIPE,
@@ -100,12 +103,10 @@ def web_app():
         env={**os.environ, "VLLM_WORKER_MULTIPROC_METHOD": "spawn"},
     )
 
-    # Wait for vLLM to be ready (poll the /v1/models endpoint)
-    import time
     import urllib.request
     t0 = time.time()
     ready = False
-    while time.time() - t0 < 180:  # 3 min timeout for model loading
+    while time.time() - t0 < 180:
         try:
             req = urllib.request.urlopen(f"http://127.0.0.1:{vllm_port}/v1/models", timeout=2)
             if req.status == 200:
@@ -115,16 +116,6 @@ def web_app():
         except:
             pass
         time.sleep(2)
-
-    if not ready:
-        print("vLLM failed to start within 180s")
-        # Print last few lines of vLLM output for debugging
-        proc.terminate()
-        output = proc.stdout.read().decode() if proc.stdout else ""
-        print(output[-2000:])
-
-    # Proxy requests to the vLLM server
-    import httpx
 
     @web.get("/health")
     async def health():
@@ -139,14 +130,13 @@ def web_app():
                     "gpu": "L40S",
                     "vllm": r.json(),
                 })
-        except:
-            return JSONResponse({"status": "error", "model": MODEL_ID}, status_code=503)
+        except Exception as e:
+            return JSONResponse({"status": "error", "model": MODEL_ID, "error": str(e)}, status_code=503)
 
     @web.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
     async def proxy(path: str, request: Request):
         if not ready:
             return JSONResponse({"error": "vLLM server not ready"}, status_code=503)
-        # Forward to vLLM
         body = await request.body()
         async with httpx.AsyncClient(timeout=120) as client:
             r = await client.request(

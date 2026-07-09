@@ -1,24 +1,28 @@
-"""NEXUS Visual Weaver — Creative Brain + DFlash Speed Optimizer
+"""NEXUS Visual Weaver — Creative Brain (vLLM on L40S)
 
-Deploys the llmfan46/gemma-4-31B-it-uncensored-heretic model with
-z-lab/gemma-4-31B-it-DFlash speculative decoding for 5.8x speedup.
+Deploys google/gemma-4-31B-it as the visual judge + prompt enhancer.
+This is the standard vLLM deployment (no DFlash speculative decoding yet).
 
-DFlash Compatibility:
-- vLLM PR #41703 is NOT yet merged into mainline vLLM
-- We install vLLM from the PR branch: git+https://github.com/vllm-project/vllm.git@refs/pull/41703/head
-- SGLang PR #23000 is also open (alternative backend)
-- If DFlash fails to load, the app falls back to standard vLLM (no speedup
-  but still works)
+DFlash (5.8x speedup) requires vLLM PR #41703 which is NOT yet merged.
+Once it merges, we can switch to DFlash by adding the --speculative-config
+flag. For now, standard vLLM gives us a working visual judge.
 
-Models:
-- Main: google/gemma-4-31B-it (base, for DFlash verification)
-- Uncensored: llmfan46/gemma-4-31B-it-uncensored-heretic (10/100 refusals)
-- Drafter: z-lab/gemma-4-31B-it-DFlash (2B params, 5.8x speedup)
+Model: google/gemma-4-31B-it
+  - Base: google/gemma-4-31B-it (Modal-supported)
+  - Architecture: gemma4 — VLM (Text + Image)
+  - Size: 31B params (~32GB FP8, ~61GB BF16)
+  - GPU: L40S 48GB (FP8 fits with headroom)
+  - Cost: ~$1.50/hr (vs ~$6/hr on B200 = 75% savings)
 
 Roles:
-1. Visual Judge — analyzes generated images, scores quality
-2. Creative Enhancer — enriches prompts with lore-aware details
-3. Nemotron — aggregates evidence into structured output
+  1. Visual Judge — analyzes generated images, scores quality
+  2. Creative Enhancer — enriches prompts (future, via API)
+
+DFlash Upgrade Path (when PR #41703 merges):
+  Replace the vllm_cmd with:
+    --speculative-config '{"method": "dflash", "model": "z-lab/gemma-4-31B-it-DFlash", "num_speculative_tokens": 15, "attention_backend": "flash_attn"}'
+    --attention-backend triton_attn
+  This gives 5.8x speedup (6s → 1s per judge call).
 
 Deploy:
   modal deploy modal-apps/nexus_creative_brain.py
@@ -28,24 +32,18 @@ import os
 import subprocess
 
 APP_NAME = "nexus-creative-brain"
-MODEL_ID = "google/gemma-4-31B-it"  # Base model for DFlash
-UNCENSORED_MODEL = "llmfan46/gemma-4-31B-it-uncensored-heretic"
-DRAFT_MODEL = "z-lab/gemma-4-31B-it-DFlash"
+MODEL_ID = "google/gemma-4-31B-it"
 HF_CACHE_DIR = "/root/.cache/huggingface"
 MINUTES = 60
 
 app = modal.App(APP_NAME)
 
-# vLLM image — install from DFlash PR branch for speculative decoding support
-# Falls back to standard vLLM if the PR branch fails to install
 image = (
     modal.Image.from_registry("nvidia/cuda:12.8.1-devel-ubuntu22.04", add_python="3.12")
     .entrypoint([])
     .apt_install("git", "ffmpeg")
-    .pip_install(
-        # Install vLLM from DFlash PR branch (NOT yet merged into mainline)
-        # This enables --speculative-config '{"method": "dflash", ...}'
-        "vllm @ git+https://github.com/vllm-project/vllm.git@refs/pull/41703/head",
+    .uv_pip_install(
+        "vllm>=0.8.0",
         "transformers>=4.57.0",
         "huggingface-hub==0.36.0",
         "torch==2.7.1",
@@ -62,7 +60,6 @@ image = (
     })
 )
 
-# REUSE the existing hf-hub-cache volume
 hf_cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 volumes = {HF_CACHE_DIR: hf_cache_vol}
 secrets = [modal.Secret.from_name("huggingface-secret")]
@@ -91,30 +88,10 @@ def web_app():
 
     web = FastAPI()
 
-    # Start vLLM server with DFlash speculative decoding
-    # The DFlash drafter model drafts 15 tokens in parallel, main model verifies
-    # This gives 5.8x speedup at concurrency 1
     vllm_port = 8000
-
-    # Try DFlash first, fall back to standard vLLM if it fails
-    vllm_cmd_dflash = [
-        "python", "-m", "vllm.entrypoints.openai.api_server",
-        "--model", MODEL_ID,
-        "--served-model-name", "nexus-creative-brain",
-        "--port", str(vllm_port),
-        "--host", "127.0.0.1",
-        "--trust-remote-code",
-        "--dtype", "auto",
-        "--max-model-len", "32768",
-        "--gpu-memory-utilization", "0.85",
-        "--limit-mm-per-prompt", "image=2",
-        # DFlash speculative decoding config
-        "--speculative-config", '{"method": "dflash", "model": "' + DRAFT_MODEL + '", "num_speculative_tokens": 15, "attention_backend": "flash_attn"}',
-        "--attention-backend", "triton_attn",
-        "--max-num-batched-tokens", "32768",
-    ]
-
-    vllm_cmd_fallback = [
+    # Standard vLLM (no DFlash yet — PR #41703 not merged)
+    # Upgrade path documented in docstring above
+    vllm_cmd = [
         "python", "-m", "vllm.entrypoints.openai.api_server",
         "--model", MODEL_ID,
         "--served-model-name", "nexus-creative-brain",
@@ -127,54 +104,27 @@ def web_app():
         "--limit-mm-per-prompt", "image=2",
     ]
 
-    print(f"Starting vLLM with DFlash for {MODEL_ID}...")
+    print(f"Starting vLLM for {MODEL_ID}...")
     proc = subprocess.Popen(
-        vllm_cmd_dflash,
+        vllm_cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env={**os.environ, "VLLM_WORKER_MULTIPROC_METHOD": "spawn"},
     )
 
-    # Wait for vLLM to be ready (3 min timeout for model loading)
     import urllib.request
     t0 = time.time()
     ready = False
-    dflash_active = True
-
     while time.time() - t0 < 180:
         try:
             req = urllib.request.urlopen(f"http://127.0.0.1:{vllm_port}/v1/models", timeout=2)
             if req.status == 200:
                 ready = True
-                print(f"vLLM + DFlash ready in {time.time()-t0:.1f}s")
+                print(f"vLLM ready in {time.time()-t0:.1f}s")
                 break
         except:
             pass
         time.sleep(2)
-
-    # If DFlash failed, restart with fallback (standard vLLM, no speedup)
-    if not ready:
-        print("DFlash failed to start, falling back to standard vLLM...")
-        proc.terminate()
-        proc.wait(timeout=10)
-        dflash_active = False
-        proc = subprocess.Popen(
-            vllm_cmd_fallback,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            env={**os.environ, "VLLM_WORKER_MULTIPROC_METHOD": "spawn"},
-        )
-        t0 = time.time()
-        while time.time() - t0 < 120:
-            try:
-                req = urllib.request.urlopen(f"http://127.0.0.1:{vllm_port}/v1/models", timeout=2)
-                if req.status == 200:
-                    ready = True
-                    print(f"vLLM (fallback) ready in {time.time()-t0:.1f}s")
-                    break
-            except:
-                pass
-            time.sleep(2)
 
     @web.get("/health")
     async def health():
@@ -187,8 +137,8 @@ def web_app():
                     "status": "ok",
                     "model": MODEL_ID,
                     "gpu": "L40S",
-                    "dflash": dflash_active,
-                    "speedup": "5.8x" if dflash_active else "1x (fallback)",
+                    "dflash": False,
+                    "note": "Standard vLLM. DFlash (5.8x speedup) available when vLLM PR #41703 merges.",
                     "vllm": r.json(),
                 })
         except Exception as e:
