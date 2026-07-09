@@ -56,7 +56,7 @@ export function isFlux2Deployed(): boolean {
 // This is the single most important cost optimization: stop hitting Modal every
 // 10-15s. The dashboard polls /api/modal/status from 8 places; without this
 // cache, each poll either wastes idle H100 time or triggers a cold start.
-const HEALTH_CACHE_TTL_MS = 60_000; // 60 seconds
+const HEALTH_CACHE_TTL_MS = 300_000; // 5 minutes (was 60s — longer cache = fewer pings = less idle GPU cost)
 
 interface CachedHealth {
   data: ModalHealth;

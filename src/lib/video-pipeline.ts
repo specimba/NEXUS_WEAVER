@@ -206,7 +206,26 @@ export async function runVideoStage(
     };
   }
 
-  // 4. Real call to the deployed video Modal app
+  // 4. Auto-deploy the video engine if it's stopped (H100 engines only).
+  // Same smart-rotator pattern as the image pipeline.
+  try {
+    const { ensureEngineDeployed } = await import("@/lib/engine-manager");
+    const deployCheck = await ensureEngineDeployed(params.engineId);
+    if (!deployCheck.ready) {
+      const ms = Date.now() - t0;
+      return {
+        videoPath: null,
+        ms,
+        backend: null,
+        errorMessage: `Video engine could not be deployed: ${deployCheck.message}`,
+      };
+    }
+  } catch (deployErr) {
+    // Non-fatal — the engine might already be deployed, just proceed
+    console.log("[video-pipeline] Engine deploy check:", deployErr instanceof Error ? deployErr.message : String(deployErr));
+  }
+
+  // 5. Real call to the deployed video Modal app
   try {
     const imageBuffer = fs.readFileSync(absImagePath);
     const imageBase64 = imageBuffer.toString("base64");

@@ -156,6 +156,9 @@ export async function stageFlux(
   let backend: "modal" | "zai" = "modal";
   let base64: string | null = null;
   let usedSeed: number = seed ?? Math.floor(Math.random() * 2_147_483_647);
+  // The engineId actually used for generation. May differ from selectedEngine.id
+  // if the selected H100 engine couldn't be deployed (fallback to FLUX.2).
+  let effectiveEngineId: string | undefined = engineId;
 
   // Build the LoRA array for Modal: map our library IDs to HF repo IDs + weights
   const modalLoras: Array<{ repo: string; adapter: string; weight: number; weightName?: string } | null> = loraIds
@@ -178,10 +181,49 @@ export async function stageFlux(
   const validModalLoras = modalLoras.filter((l): l is { repo: string; adapter: string; weight: number; weightName?: string } => l !== null);
 
   // Modal is the PRIMARY and ONLY image generation path.
-  // The H100 serves FLUX.1-schnell with LoRA support.
-  // Cold starts take 10-60s; warm calls return in 2-5s.
+  // Each engine has its own Modal app. FLUX.2 (L40S) is always-on.
+  // H100 engines (Z-Image, Krea 2) are auto-deployed on-demand by the
+  // engine manager, and auto-stop after 5 min idle (scaledown_window).
   if (isModalEnabled()) {
     try {
+      // Auto-deploy the selected engine if it's stopped (H100 engines only).
+      // This is the "smart rotator" — the user selects an engine and the
+      // system ensures its Modal app is deployed before generating.
+      const { ensureEngineDeployed } = await import("@/lib/engine-manager");
+      const deployCheck = await ensureEngineDeployed(selectedEngine.id);
+
+      // If the engine fell back to FLUX.2, switch the backend to FLUX.2
+      // so we don't hit a 404 on the stopped H100 app.
+      if (deployCheck.message.startsWith("FALLBACK_TO_FLUX2")) {
+        await logEvent(
+          "stage_complete",
+          `Engine fallback: ${deployCheck.message}`,
+          "warn",
+          generationId
+        );
+        // Force the backend to FLUX.2 by overriding the engineId for this run
+        // (the user selected Z-Image/Krea, but we're using FLUX.2 instead)
+        effectiveEngineId = "flux2-klein-9b";
+      } else if (!deployCheck.ready) {
+        await logEvent(
+          "error",
+          `Engine deploy failed: ${deployCheck.message}`,
+          "error",
+          generationId
+        );
+        throw new Error(
+          `Engine "${selectedEngine.name}" could not be deployed: ${deployCheck.message}. ` +
+          `Try FLUX.2 (always-on) or deploy the engine manually.`
+        );
+      } else if (deployCheck.message.includes("Auto-deploying") || deployCheck.message.includes("deployed successfully")) {
+        await logEvent(
+          "stage_complete",
+          `Engine auto-deployed: ${deployCheck.message}`,
+          "info",
+          generationId
+        );
+      }
+
       const { width, height } = parseSize(size);
       // Use the seed passed from runPipeline (generated once per pipeline run
       // so it can be stored in the Generation row for provenance/repro).
@@ -196,7 +238,7 @@ export async function stageFlux(
         seed: effectiveSeed,
         loras: validModalLoras,
         isFirstCall: true, // allow long cold-start timeout (300s)
-        engineId: selectedEngine.id, // route to the correct Modal backend
+        engineId: effectiveEngineId, // route to the correct Modal backend (may be FLUX.2 fallback)
       });
       base64 = result.imageBase64;
       backend = "modal";
