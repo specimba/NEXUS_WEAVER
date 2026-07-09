@@ -47,14 +47,24 @@ export const MODAL_FLUX2_HEALTH_URL =
   process.env.MODAL_FLUX2_HEALTH_URL ||
   MODAL_FLUX2_GENERATE_URL.replace(/-generate\.modal\.run$/, "-health.modal.run");
 
-// Qwen3.6-27B-AEON brain endpoint (B200 GPU, EU West, OpenAI-compatible)
-// REQUIRES proxy auth (Modal-Key + Modal-Secret headers)
+// ── Brain endpoint ───────────────────────────────────────────────────────────
+// v5.31: Switched from AEON BF16 on B200 (expensive Auto Endpoint) to
+// AEON FP8 on L40S via vLLM (same model, 85% cheaper, same GPU as FLUX.2).
+//
+// Model: kasimat/Qwen3.6-27B-AEON-Ultimate-Uncensored-FP8-MTP
+//   - Same AEON-7 uncensored fine-tune, FP8 quantized
+//   - Full VLM: Qwen3VLProcessor (vision + text + video)
+//   - Fits L40S 48GB (~27GB weights + KV cache)
+//   - vLLM OpenAI-compatible API (no proxy auth needed)
+//
+// Deploy: modal deploy modal-apps/nexus_brain_vllm.py
+// Then set MODAL_BRAIN_URL to the Web Function URL.
 export const MODAL_BRAIN_URL =
   process.env.MODAL_BRAIN_URL ||
-  "https://specimba--ep-qwen3-6-27b-aeon-ultimate-uncensored-bf16-server.eu-west.modal.direct";
+  ""; // Set after deploying nexus_brain_vllm.py
 export const MODAL_BRAIN_MODEL =
   process.env.MODAL_BRAIN_MODEL ||
-  "AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16";
+  "kasimat/Qwen3.6-27B-AEON-Ultimate-Uncensored-FP8-MTP";
 
 // ── Timeouts ─────────────────────────────────────────────────────────────────
 export const MODAL_COLD_START_TIMEOUT = Number(process.env.MODAL_COLD_START_TIMEOUT || 300);
