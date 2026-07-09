@@ -379,7 +379,7 @@ export function getModalBaseUrl(): string {
 }
 
 // ── Modal Brain Endpoint (Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16) ─────────
-// Modal Auto Endpoint serving AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16
+// Modal Managed Endpoint serving Qwen 9B + Gemma 31B + Brisk 4B
 // on a B200 GPU (EU West). OpenAI-compatible /v1/chat/completions API.
 //
 // Used as the pipeline "brain" for ST3GG safety scan, visual judge, and

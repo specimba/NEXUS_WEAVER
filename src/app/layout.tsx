@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NEXUS Visual Weaver — Governed Visual Creation Pipeline",
   description:
-    "FLUX.2 Klein 9B image generation studio on Modal L40S GPU, with Qwen3.6-27B-AEON uncensored brain, calibrated quality presets, curated HF/Civitai LoRA library, NSFW 18+ safety gating, and EU-compliant legal policy. Async pipeline: FLUX.2 → ST3GG → Judge → Evidence.",
+    "FLUX.2 Klein 9B image generation studio on Modal L40S GPU, with Qwen 9B + Gemma 31B + Brisk 4B brain stack, calibrated quality presets, curated HF/Civitai LoRA library, NSFW 18+ safety gating, and EU-compliant legal policy. Async pipeline: FLUX.2 → ST3GG → Judge → Evidence.",
   keywords: [
     "NEXUS",
     "FLUX.2",

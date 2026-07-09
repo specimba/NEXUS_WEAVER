@@ -512,7 +512,7 @@ export function StudioView() {
 
   // CREDIT OPTIMIZATION: Do NOT auto-warm Modal on mount.
   // The previous code fired /api/modal/warmup on every page load, which
-  // pinged the FLUX.2 + AEON containers, keeping them warm 24/7. This burned
+  // pinged the FLUX.2 + brain containers, keeping them warm 24/7. This burned
   // ~$15-30/day in idle GPU costs. Now the container only warms when the
   // user actually clicks "Run Pipeline" — the async pipeline's cold-start
   // timeout (300s) handles the first-request latency.
@@ -554,9 +554,9 @@ export function StudioView() {
         const brainMs = data.brain?.latencyMs ?? "?";
         toast.success(`FLUX.2 warm — ${fluxMs}ms`, {
           description: brainOk
-            ? `AEON brain also warm — ${brainMs}ms. Both ready.`
+            ? `Brain also warm — ${brainMs}ms. Both ready.`
             : data.brain
-            ? `AEON brain still cold-starting — will fall through to z-ai.`
+            ? `Brain still cold-starting — will fall through to z-ai.`
             : `${data.model ?? "FLUX.2 Klein 9B"} on ${data.gpu ?? "L40S"}`,
         });
       } else if (!data.enabled) {
@@ -4709,7 +4709,7 @@ function BrainAssistantCard() {
   }, []);
 
   const onDeepAnalyze = useCallback(async () => {
-    // Try AEON first (via /api/aeon/advice), fall back to old /api/brain/analyze
+    // Try brain first (via /api/aeon/advice), fall back to old /api/brain/analyze
     try {
       const aeonRes = await fetch("/api/aeon/advice", {
         method: "POST",
@@ -4740,8 +4740,8 @@ function BrainAssistantCard() {
         const aeonData = await aeonRes.json() as { advice?: { summary?: string; issues?: Array<{ severity: string; message: string }>; loraWeightSuggestions?: Array<{ loraId: string; toWeight: number; reason?: string }>; promptRewrite?: { rewritten: string; rationale?: string } }; meta?: { backend: string } };
         if (aeonData.advice) {
           const adv = aeonData.advice;
-          const backendLabel = aeonData.meta?.backend === "aeon_modal" ? "AEON 27B" : "z-ai";
-          // Convert AEON advice to BrainSuggestion format
+          const backendLabel = aeonData.meta?.backend === "aeon_modal" ? "Qwen 9B" : aeonData.meta?.backend === "gemma_31b" ? "Gemma 31B" : "z-ai";
+          // Convert brain advice to BrainSuggestion format
           const suggestions: BrainSuggestion[] = [];
           for (const issue of adv.issues || []) {
             suggestions.push({
@@ -4754,7 +4754,7 @@ function BrainAssistantCard() {
             suggestions.push({
               kind: "optimization",
               title: `Adjust ${ws.loraId} weight → ${ws.toWeight}`,
-              detail: ws.reason || `AEON suggests weight ${ws.toWeight}`,
+              detail: ws.reason || `Brain suggests weight ${ws.toWeight}`,
               action: { label: `Set ${ws.toWeight}`, type: "adjust-cfg", value: String(ws.toWeight) },
             });
           }
@@ -4765,14 +4765,14 @@ function BrainAssistantCard() {
               detail: adv.promptRewrite.rationale || adv.promptRewrite.rewritten.slice(0, 200),
             });
           }
-          // Replace the analysis with AEON results
+          // Replace the analysis with brain results
           setAeonAnalysis({
             suggestions,
-            summary: `${adv.summary || "AEON analysis complete"} (via ${backendLabel})`,
+            summary: `${adv.summary || "Brain analysis complete"} (via ${backendLabel})`,
             confidence: 85,
             ms: 0,
           });
-          toast.success(`AEON analysis complete (via ${backendLabel})`);
+          toast.success(`Brain analysis complete (via ${backendLabel})`);
           return;
         }
       }

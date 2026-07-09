@@ -23,7 +23,7 @@ export interface BrainModel {
   specialty: string;
   quantization: string;
   // which pipeline roles this brain is suited for
-  roles: ("safety" | "judge" | "evidence")[];
+  roles: ("safety" | "judge" | "evidence" | "creative")[];
   // is this an uncensored / abliterated variant (can analyze mature content)
   uncensored: boolean;
   // fable5 / composer reasoning capability
@@ -37,95 +37,65 @@ export interface BrainModel {
 
 export const BRAIN_MODELS: BrainModel[] = [
   {
-    id: "qwen3-aeon-27b",
-    name: "Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16",
-    shortName: "AEON 27B",
-    hfUrl: "https://huggingface.co/AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-BF16",
+    id: "qwen3-5-9b-unredacted",
+    name: "Qwen3.5-9B-Unredacted-MAX",
+    shortName: "Qwen 9B",
+    hfUrl: "https://huggingface.co/prithivMLmods/Qwen3.5-9B-Unredacted-MAX",
     description:
-      "AEON-7's ultimate uncensored BF16 build of Qwen3.6-27B. Served on Modal B200 GPU " +
-      "(EU West). Vision-capable + broad uncensored reasoning — the recommended brain for " +
-      "ST3GG safety scan, visual judge, and evidence parsing. Benchmark: 1.9 req/s, 1.8s TTFT.",
-    specialty: "Vision + uncensored reasoning + 27B scale — handles all brain roles.",
+      "9B VLM, 94.5% non-refusal rate. Deployed as Modal Managed Endpoint on L40S. " +
+      "Handles ST3GG safety scan + evidence aggregation. Benchmark: 0.84 req/s, E2E 3.1s.",
+    specialty: "Fast text safety scanning + evidence aggregation (94.5% non-refusal).",
     quantization: "BF16",
-    roles: ["safety", "judge", "evidence"],
+    roles: ["safety", "evidence"],
     uncensored: true,
-    reasoning: "fable5",
-    params: "~27B",
+    reasoning: "standard",
+    params: "~9B",
     contextWindow: "128k",
-    estMsPerCall: 3000,
+    estMsPerCall: 3100,
     trend: "rising",
     recommended: true,
   },
   {
-    id: "gemma4-12b-fable5-abliterated",
-    name: "Gemma 4 12B — Agentic Fable5 Abliterated",
-    shortName: "Gemma4 Fable5",
-    hfUrl: "https://huggingface.co/huihui-ai/Huihui-gemma-4-12B-agentic-fable5-ablenerated-GGUF",
+    id: "gemma-4-31b-heretic",
+    name: "Gemma-4-31B-it-Uncensored-Heretic",
+    shortName: "Gemma 31B",
+    hfUrl: "https://huggingface.co/llmfan46/gemma-4-31B-it-uncensored-heretic",
     description:
-      "Huihui-ai's agentic fable5 abliterated GGUF. Fable5 reasoning + abliteration means it " +
-      "will analyze mature visual content instead of refusing. Self-deployed via Modal vLLM.",
-    specialty: "Uncensored fable5 reasoning — analyzes mature content without refusal.",
-    quantization: "GGUF (Q4–Q8)",
-    roles: ["safety", "judge", "evidence"],
-    uncensored: true,
-    reasoning: "fable5",
-    params: "~12B",
-    contextWindow: "128k",
-    estMsPerCall: 4000,
-    trend: "rising",
-  },
-  {
-    id: "gemma4-12b-heretic-composer",
-    name: "Gemma 4 12B — Coder Fable5 Composer2.5 Uncensored Heretic",
-    shortName: "Gemma4 Heretic",
-    hfUrl: "https://huggingface.co/llmfan46/gemma-4-12B-coder-fable5-composer2.5-v1-uncensored-heretic",
-    description:
-      "llmfan46's heretic composer2.5 build. Best for fable-style reasoning + uncensored analysis.",
-    specialty: "Fable reasoning + uncensored + strong JSON/evidence output.",
-    quantization: "Heretic",
-    roles: ["judge", "evidence"],
-    uncensored: true,
-    reasoning: "composer2.5",
-    params: "~12B",
-    contextWindow: "128k",
-    estMsPerCall: 4200,
-    trend: "rising",
-  },
-  {
-    id: "jarod2212-collection",
-    name: "jarod2212 Model Collection",
-    shortName: "jarod2212",
-    hfUrl: "https://huggingface.co/jarod2212/models",
-    description: "Curated collection of additional uncensored reasoning models.",
-    specialty: "Specialized uncensored variants — pick per task.",
-    quantization: "varies",
-    roles: ["judge", "evidence"],
-    uncensored: true,
-    reasoning: "fable5",
-    params: "varies",
-    contextWindow: "varies",
-    estMsPerCall: 4000,
-    trend: "rising",
-  },
-  {
-    id: "qwen3-vl-uncensored",
-    name: "Qwen3 VL Uncensored (nDimensional block)",
-    shortName: "Qwen3 VL",
-    hfUrl: "https://huggingface.co/nDimensional/Qwen3.5-35B-A3B-Uncensored-FP8_BLOCK",
-    description: "Vision-capable uncensored alternative. Larger footprint.",
-    specialty: "Vision + uncensored — visual judge fallback.",
-    quantization: "FP8",
+      "31B VLM, 10/100 refusals (heretic ARA), 0.0541 KL divergence. Deployed as Modal " +
+      "Managed Endpoint on L40S. Handles visual judge — analyzes generated images for " +
+      "quality scoring. Benchmark: 0.77 req/s, E2E 4.1s, MMLU 85.90%.",
+    specialty: "Vision quality scoring — 10/100 refusals, minimal quality loss from uncensoring.",
+    quantization: "BF16 + mmproj",
     roles: ["judge"],
     uncensored: true,
     reasoning: "standard",
-    params: "~35B A3B",
+    params: "~31B",
+    contextWindow: "256k",
+    estMsPerCall: 4100,
+    trend: "rising",
+  },
+  {
+    id: "brisk-evolution-4b",
+    name: "Brisk-Evolution-4B-v0.1",
+    shortName: "Brisk 4B",
+    hfUrl: "https://huggingface.co/ReadyArt/Brisk-Evolution-4B-v0.1",
+    description:
+      "4B model for lore-aware prompt enhancement + story generation + aesthetic quirks. " +
+      "Deployed as Modal Managed Endpoint on L40S. Fastest brain model. " +
+      "Benchmark: 0.90 req/s, E2E 2.3s. Used for NO8D Prompt+ Expand + creative enhancement.",
+    specialty: "Lore + story + prompt expansion — fastest brain (0.90 req/s).",
+    quantization: "BF16",
+    roles: ["creative"],
+    uncensored: true,
+    reasoning: "standard",
+    params: "~4B",
     contextWindow: "128k",
-    estMsPerCall: 6000,
-    trend: "stable",
+    estMsPerCall: 2300,
+    trend: "rising",
   },
 ];
 
-export const DEFAULT_BRAIN_ID = "qwen3-aeon-27b";
+export const DEFAULT_BRAIN_ID = "qwen3-5-9b-unredacted";
 
 export function getBrain(id: string | null | undefined): BrainModel {
   if (!id) return BRAIN_MODELS[0];

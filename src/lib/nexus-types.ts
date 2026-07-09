@@ -210,7 +210,6 @@ export const PIPELINE_STAGES: StageDef[] = [
  */
 export function getPipelineStages(engineId?: string, brainId?: string): StageDef[] {
   const engine = engineId ? getEngine(engineId) : null;
-  const brain = brainId ? getBrain(brainId) : null;
   return PIPELINE_STAGES.map((stage) => {
     if (stage.id === "flux" && engine) {
       return {
@@ -221,11 +220,21 @@ export function getPipelineStages(engineId?: string, brainId?: string): StageDef
         description: engine.description,
       };
     }
-    if ((stage.id === "st3gg" || stage.id === "judge" || stage.id === "evidence") && brain) {
+    // Each brain stage uses a different model:
+    // - ST3GG + Evidence → Qwen 9B (text reasoning)
+    // - Judge → Gemma 31B (vision)
+    if (stage.id === "st3gg" || stage.id === "evidence") {
       return {
         ...stage,
-        model: brain.shortName,
-        params: `${brain.params} · ${brain.reasoning}`,
+        model: "Qwen 9B",
+        params: "~9B · uncensored",
+      };
+    }
+    if (stage.id === "judge") {
+      return {
+        ...stage,
+        model: "Gemma 31B",
+        params: "~31B · vision · heretic",
       };
     }
     return stage;

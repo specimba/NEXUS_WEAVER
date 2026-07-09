@@ -299,7 +299,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3 font-mono">
             <span>FLUX.2 → ST3GG → Judge → Evidence</span>
             <span className="text-muted-foreground/50">·</span>
-            <span className="text-primary">Modal L40S GPU · AEON uncensored brain</span>
+            <span className="text-primary">Modal L40S GPU · Qwen 9B + Gemma 31B brain</span>
           </div>
         </div>
       </footer>
