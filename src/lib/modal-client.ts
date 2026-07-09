@@ -245,8 +245,10 @@ export async function generateImageViaModal(params: {
   loras?: Array<{ repo: string; adapter?: string; weight: number; weightName?: string }>;
   isFirstCall?: boolean;
   engineId?: string;
+  variationStrength?: number;
+  refinerPass?: boolean;
 }): Promise<ModalGenerateResult> {
-  const { prompt, width, height, steps, cfg, seed, loras, isFirstCall, engineId } = params;
+  const { prompt, width, height, steps, cfg, seed, loras, isFirstCall, engineId, variationStrength, refinerPass } = params;
   const timeoutMs = (isFirstCall ? COLD_START_TIMEOUT : WARM_TIMEOUT) * 1000;
 
   const backend = resolveBackend(engineId);
@@ -296,6 +298,8 @@ export async function generateImageViaModal(params: {
       seed: String(seed ?? 42),
       height: String(height),
       width: String(width),
+      variation_strength: String(variationStrength ?? 0.0),
+      refiner_pass: String(refinerPass ?? false),
     });
     generateUrl = `${backend.url}?${queryParams.toString()}`;
     fetchOptions = {

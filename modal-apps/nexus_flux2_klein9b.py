@@ -56,10 +56,10 @@ class NexusFlux2Generator:
         return {"status": "ok", "model": MODEL_ID, "gpu": "L40S", "version": "v5.1-flux2", "load_time_s": getattr(self, "load_time", 0)}
 
     @modal.fastapi_endpoint(method="POST")
-    def generate(self, prompt: str, negative_prompt: str = "", steps: int = 10, cfg: float = 3.5, seed: int = 42, height: int = 1024, width: int = 1024, loras: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    def generate(self, prompt: str, negative_prompt: str = "", steps: int = 4, cfg: float = 1.0, seed: int = 42, height: int = 1024, width: int = 1024, loras: list[dict[str, Any]] | None = None, variation_strength: float = 0.0, refiner_pass: bool = False) -> dict[str, Any]:
         t0 = time.time()
         # Log the actual parameters received — critical for debugging quality issues
-        print(f"[generate] prompt={prompt[:100]}... steps={steps} cfg={cfg} seed={seed} size={width}x{height} loras={len(loras) if loras else 0}")
+        print(f"[generate] prompt={prompt[:100]}... steps={steps} cfg={cfg} seed={seed} size={width}x{height} loras={len(loras) if loras else 0} variation={variation_strength} refiner={refiner_pass}")
         lora_status: list[dict[str, Any]] = []
         active_adapters: list[str] = []
         active_weights: list[float] = []
@@ -111,10 +111,23 @@ class NexusFlux2Generator:
                         print("All adapters failed to set — generating without LoRAs")
 
         generator = torch.Generator(device="cuda").manual_seed(seed)
-        # NOTE: Flux2KleinPipeline does NOT accept negative_prompt (unlike FluxPipeline).
-        # The Klein 9B model uses guidance_scale=1.0 (no CFG), so negative prompts
-        # are not applicable. Passing negative_prompt causes:
-        #   TypeError: Flux2KleinPipeline.__call__() got an unexpected keyword argument 'negative_prompt'
+
+        # ── LATENT NOISE INJECTION (P1: Creative Variation) ─────────────────
+        # ComfyUI technique: inject controlled secondary noise into the latent
+        # partway through sampling. This produces a FAMILY of variations from
+        # one base seed without changing the subject — exactly the cure for
+        # "they all look the same."
+        #
+        # How it works:
+        # 1. Run the first half of denoising normally (establishes composition)
+        # 2. Inject noise at variation_strength (0.0 = off, 0.15 = subtle, 0.30 = dramatic)
+        # 3. Run the second half of denoising (refines with the injected variation)
+        #
+        # variation_strength=0.0 → standard generation (no injection)
+        # variation_strength=0.10 → subtle variation (same composition, different details)
+        # variation_strength=0.20 → moderate variation (different lighting/angles)
+        # variation_strength=0.30 → dramatic variation (different pose/expression)
+
         pipe_kwargs: dict[str, Any] = {
             "prompt": prompt,
             "num_inference_steps": steps,
@@ -124,7 +137,74 @@ class NexusFlux2Generator:
             "generator": generator,
             "output_type": "pil",
         }
-        result = self.pipe(**pipe_kwargs).images[0]
+
+        if variation_strength > 0.0 and steps >= 4:
+            # Two-phase generation with noise injection at the midpoint
+            half_steps = max(2, steps // 2)
+
+            # Phase 1: Establish composition (first half of denoising)
+            print(f"[variation] Phase 1: {half_steps} steps (establishing composition)")
+            latents = self.pipe(
+                **pipe_kwargs,
+                num_inference_steps=half_steps,
+                output_type="latent",
+                return_dict=False,
+            )[0]
+
+            # Phase 2: Inject noise and complete denoising
+            print(f"[variation] Injecting noise at strength={variation_strength}")
+            noise = torch.randn_like(latents) * variation_strength
+            latents = latents + noise
+
+            # Create a new generator for the second phase (different noise schedule)
+            phase2_seed = seed + 1
+            generator2 = torch.Generator(device="cuda").manual_seed(phase2_seed)
+
+            print(f"[variation] Phase 2: {half_steps} steps (refining with variation)")
+            result = self.pipe(
+                prompt=prompt,
+                num_inference_steps=half_steps,
+                guidance_scale=cfg,
+                height=height,
+                width=width,
+                generator=generator2,
+                latents=latents,
+                output_type="pil",
+            ).images[0]
+        else:
+            # Standard single-pass generation (no variation injection)
+            result = self.pipe(**pipe_kwargs).images[0]
+
+        # ── TWO-STAGE REFINEMENT PASS (P1: Crispness + Detail) ─────────────
+        # ComfyUI technique: run a second sampler at low denoise over the first
+        # pass output. Adds crispness and breaks the "flat" look of single-pass
+        # distilled output. The Reddit FLUX.2 Klein 9B "All-in-One" guide
+        # explicitly uses this pattern.
+        #
+        # How it works:
+        # 1. Take the output image from the first pass
+        # 2. Run a second pass at denoise=0.6, 4 steps
+        # 3. The second pass refines detail without re-rolling composition
+        if refiner_pass:
+            print(f"[refiner] Running refinement pass (denoise=0.6, 4 steps)")
+            import io as _io
+            from PIL import Image as _Image
+            buf_temp = _io.BytesIO()
+            result.save(buf_temp, format="PNG")
+            refiner_image = _Image.open(buf_temp).convert("RGB")
+
+            refiner_generator = torch.Generator(device="cuda").manual_seed(seed + 2)
+            result = self.pipe(
+                prompt=prompt,
+                num_inference_steps=4,
+                guidance_scale=cfg,
+                height=height,
+                width=width,
+                generator=refiner_generator,
+                image=refiner_image,
+                strength=0.6,
+                output_type="pil",
+            ).images[0]
 
         gen_ms = (time.time() - t0) * 1000
         buf = io.BytesIO()
@@ -141,4 +221,7 @@ class NexusFlux2Generator:
             "model": MODEL_ID,
             "lora_status": lora_status,
             "lora_errors": {s["repo"]: s.get("error") for s in lora_status if s["status"] == "failed"} or None,
+            "variation_strength": variation_strength,
+            "refiner_pass": refiner_pass,
+            "seed": seed,
         }

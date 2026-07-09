@@ -66,6 +66,7 @@ export interface CalibrationPreset {
   resolution: string;     // WxH base resolution
   loraWeight: number;     // default weight 0..1 for applied LoRAs
   refinerPass: boolean;   // whether to run a second refiner pass
+  variationStrength: number; // 0.0-0.3 — latent noise injection for creative variation
   // tokens appended to the prompt for the z-ai backend (which has no step/cfg knobs)
   qualityTokens: string[];
   // expected wall-clock on a warm Modal H100
@@ -90,6 +91,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "1024x1024",
     loraWeight: 0.45,
     refinerPass: false,
+    variationStrength: 0.10,
     qualityTokens: ["sharp focus", "high detail", "professional composition"],
     estWarmMs: 1800,
     tag: "~2s · iteration",
@@ -110,6 +112,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "1024x1024",
     loraWeight: 0.45,
     refinerPass: false,
+    variationStrength: 0.10,
     qualityTokens: [
       "ultra detailed",
       "sharp focus",
@@ -136,6 +139,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "1344x768",
     loraWeight: 0.40,
     refinerPass: true,
+    variationStrength: 0.15,
     qualityTokens: [
       "cinematic film still",
       "dramatic volumetric lighting",
@@ -163,6 +167,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "864x1152",
     loraWeight: 0.40,
     refinerPass: true,
+    variationStrength: 0.15,
     qualityTokens: [
       "photorealistic",
       "natural skin texture",
@@ -191,6 +196,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "1024x1024",
     loraWeight: 0.50,
     refinerPass: false,
+    variationStrength: 0.10,
     qualityTokens: [
       "anime key visual",
       "clean linework",
@@ -217,6 +223,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "1344x768",
     loraWeight: 0.40,
     refinerPass: false,
+    variationStrength: 0.10,
     qualityTokens: [
       "concept art",
       "painterly brushwork",
@@ -244,6 +251,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "1024x1024",
     loraWeight: 0.45,
     refinerPass: false,
+    variationStrength: 0.10,
     qualityTokens: ["photorealistic", "ultra detailed", "natural lighting", "sharp focus", "high dynamic range"],
     estWarmMs: 1600,
     tag: "★ trending",
@@ -264,6 +272,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "832x1216",
     loraWeight: 0.408,
     refinerPass: false,
+    variationStrength: 0.10,
     qualityTokens: ["raw photorealistic", "natural skin texture", "85mm portrait", "subsurface scattering", "no makeup filter"],
     estWarmMs: 2400,
     tag: "raw · portrait",
@@ -285,6 +294,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "1024x1024",
     loraWeight: 0.40,
     refinerPass: false,
+    variationStrength: 0.10,
     qualityTokens: ["ultra detailed", "sharp focus", "professional composition"],
     estWarmMs: 1200,
     tag: "⚡ fastest",
@@ -306,6 +316,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "832x480",
     loraWeight: 0.5,
     refinerPass: false,
+    variationStrength: 0.10,
     qualityTokens: ["cinematic motion", "stable temporal coherence", "high quality video"],
     estWarmMs: 18000,
     tag: "video · I2V",
@@ -326,6 +337,7 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     resolution: "768x512",
     loraWeight: 0.62,
     refinerPass: false,
+    variationStrength: 0.10,
     qualityTokens: ["smooth motion", "camera tracking", "high temporal coherence"],
     estWarmMs: 12000,
     tag: "video · control",

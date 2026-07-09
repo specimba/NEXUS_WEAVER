@@ -239,6 +239,8 @@ export async function stageFlux(
         loras: validModalLoras,
         isFirstCall: true, // allow long cold-start timeout (300s)
         engineId: effectiveEngineId, // route to the correct Modal backend (may be FLUX.2 fallback)
+        variationStrength: (calibration as any).variationStrength ?? 0.1, // P1: latent noise injection for creative variation
+        refinerPass: (calibration as any).refinerPass ?? false, // P1: two-stage refinement for crispness
       });
       base64 = result.imageBase64;
       backend = "modal";
