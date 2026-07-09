@@ -379,7 +379,7 @@ Respond as JSON exactly in this shape:
 }
 
 // ----------------------------------------------------------------------------
-// Stage 3 — Visual judge (z-ai vision completions on generated image)
+// Stage 3 — Visual judge (managed Gemma 31B endpoint, z-ai vision fallback)
 // ----------------------------------------------------------------------------
 export async function stageJudge(
   imagePath: string,
@@ -389,7 +389,6 @@ export async function stageJudge(
   brainId?: string
 ): Promise<JudgeResult> {
   const start = nowMs();
-  const zai = await getZai();
   const brain = getBrain(brainId);
 
   // Read the generated PNG from disk and base64-encode it
@@ -430,10 +429,10 @@ Respond as JSON exactly:
   "weaknesses": string[]
 }`;
 
-  const response = await zai.chat.completions.createVision({
-    model: "glm-4.6v",
-    messages: [
-      { role: "assistant", content: sys },
+  // Try the managed Gemma 31B endpoint first (vision-capable)
+  const brainResult = await callModalBrain(
+    [
+      { role: "system", content: sys },
       {
         role: "user",
         content: [
@@ -442,10 +441,33 @@ Respond as JSON exactly:
         ],
       },
     ],
-    thinking: { type: "disabled" },
-  });
+    { temperature: 0.3, maxTokens: 2000, role: "judge" }
+  );
 
-  const raw = response.choices?.[0]?.message?.content ?? "";
+  let raw = "";
+  if (brainResult) {
+    raw = brainResult.content;
+  } else {
+    // Managed endpoint cold/unavailable — use z-ai vision as last resort
+    console.log("[judge] Managed endpoint unavailable, using z-ai vision");
+    const zai = await getZai();
+    const response = await zai.chat.completions.createVision({
+      model: "glm-4.6v",
+      messages: [
+        { role: "assistant", content: sys },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: user },
+            { type: "image_url", image_url: { url: dataUrl } },
+          ],
+        },
+      ],
+      thinking: { type: "disabled" },
+    });
+    raw = response.choices?.[0]?.message?.content ?? "";
+  }
+
   const parsed = extractJson<{
     promptAdherence?: number;
     visualQuality?: number;
@@ -520,7 +542,7 @@ Produce evidence JSON exactly:
   "provenance": {
     "generator": "FLUX.2 Klein 9B (via Modal L40S GPU)",
     "safetyModel": "ST3GG (via ${brain.shortName})",
-    "judgeModel": "Visual Judge (via z-ai vision)",
+    "judgeModel": "Visual Judge (via Gemma 31B heretic)",
     "aggregator": "Evidence (via ${brain.shortName})"
   },
   // NOTE: Use the actual brain name "${brain.shortName}" in the provenance above.

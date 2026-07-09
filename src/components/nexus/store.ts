@@ -156,8 +156,8 @@ interface NexusState {
 
 const initialStages = (): RunStageState[] => [
   { id: "prompt", status: "idle" },
-  { id: "flux", status: "idle" },
   { id: "st3gg", status: "idle" },
+  { id: "flux", status: "idle" },
   { id: "judge", status: "idle" },
   { id: "evidence", status: "idle" },
   { id: "output", status: "idle" },

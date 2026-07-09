@@ -65,7 +65,7 @@ class NexusWan22Generator:
     @modal.enter()
     def enter(self) -> None:
         import torch
-        from diffusers import AutoencoderKLWan, WanPipeline
+        from diffusers import AutoencoderKLWan, WanImageToVideoPipeline
 
         print(f"Loading {MODEL_ID}...")
         t0 = time.time()
@@ -74,7 +74,7 @@ class NexusWan22Generator:
         vae = AutoencoderKLWan.from_pretrained(
             MODEL_ID, subfolder="vae", torch_dtype=torch.float32, cache_dir=HF_CACHE_DIR
         )
-        self.pipe = WanPipeline.from_pretrained(
+        self.pipe = WanImageToVideoPipeline.from_pretrained(
             MODEL_ID, vae=vae, torch_dtype=torch.bfloat16, cache_dir=HF_CACHE_DIR
         )
         self.pipe.to("cuda")

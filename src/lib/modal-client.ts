@@ -454,7 +454,7 @@ export async function checkBrainHealth(): Promise<{
 
 export interface BrainChatMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
 }
 
 export interface BrainChatResult {
