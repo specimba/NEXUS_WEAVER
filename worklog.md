@@ -1560,3 +1560,54 @@ Stage Summary:
 - Recovery is COMPLETE and backed up to GitHub (commits 1d37ada + this one).
 - Persistent preview pending orchestrator restart (sandbox constraint, not a
   code defect). GPU generation pending Modal token restore in .env.
+
+---
+Task ID: v5.38-token-restore-blocked
+Agent: Z.ai Code (main)
+Task: Attempt automated Modal-token restore via restore-env.yml GitHub Actions workflow
+
+FINDING (important — do NOT retry blindly):
+The repo HAS the recovery infrastructure fully set up:
+- Secret NEXUS_ENV_BLOB exists (base64 .env, created 2026-07-08)
+- 6 individual token secrets exist: MODAL_TOKEN_ID, MODAL_TOKEN_SECRET,
+  MODAL_PROXY_KEY, MODAL_PROXY_SECRET, HF_TOKEN, BROWSERLESS_TOKEN
+- .github/workflows/restore-env.yml (workflow_dispatch) decodes the blob →
+  uploads restored.env as a 1-day artifact
+
+ATTEMPT: triggered restore-env.yml twice via REST API (PAT has Actions+Workflows
+read/write). BOTH runs (29091781637, 29091899268) FAILED in ~2s with:
+  - status: completed, conclusion: failure
+  - steps: [] (ZERO steps ran)
+  - runner_id: 0, runner_name: "" (NO RUNNER ALLOCATED)
+  - job logs: Azure BlobNotFound (logs never written — job never ran on a runner)
+
+Repo is PUBLIC (Actions minutes free/unlimited) + actions/permissions=enabled
++ allowed_actions=all + default_branch=main. So this is NOT billing-minutes and
+NOT a permissions/visibility issue. It is an ACCOUNT-LEVEL Actions provisioning
+problem (most likely: no payment method on file, or account-level Actions
+restriction) — NOT fixable from the sandbox.
+
+ROOT CONSTRAINT: GitHub secret VALUES are only readable by RUNNING Actions
+workflows. With Actions unable to allocate a runner, NEXUS_ENV_BLOB and the 6
+token secrets are UNREACHABLE programmatically. gh CLI is also not installed.
+
+TO UNBLOCK FULL PIPELINE (GPU generation + brain stages + Civitai scraping),
+the user must do ONE of:
+  A) Fix GitHub Actions on their account (github.com/settings/billing — add a
+     payment method; or check account Actions settings), then re-run
+     restore-env.yml and download the env-file artifact → .env
+  B) Provide the Modal tokens directly in chat (MODAL_TOKEN_ID/SECRET,
+     MODAL_PROXY_KEY/SECRET, HF_TOKEN, optional BROWSERLESS_TOKEN) — fastest
+  C) Run scripts/restore-env.sh on a machine with gh CLI + the tokens, or fill
+     .env manually from their secret store
+
+CURRENT .env STATE: DATABASE_URL + all public Modal endpoint URLs (from
+secrets.ts fallbacks) + empty token slots. So: UI renders, /api routes work,
+DB works. FLUX.2 endpoint is documented as public/no-auth so image generation
+MAY work; brain stages (proxy-auth) + Civitai scraping (browserless) WILL fail
+until tokens are restored.
+
+Stage Summary:
+- Token auto-restore BLOCKED by account-level Actions runner-allocation failure.
+- Recovery otherwise COMPLETE: code + backup + verification all done.
+- Awaiting user decision on token-restore path (A/B/C above).
