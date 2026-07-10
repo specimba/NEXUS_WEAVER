@@ -16,6 +16,7 @@ import {
   X,
   Library,
   DollarSign,
+  Boxes,
 } from "lucide-react";
 import type { ViewId } from "@/lib/nexus-types";
 import { useQuery } from "@tanstack/react-query";
@@ -26,6 +27,7 @@ import { LEGAL_DISCLAIMER } from "@/lib/policy";
 const NAV: { id: ViewId; label: string; icon: typeof Sparkles; hint: string }[] = [
   { id: "studio", label: "Studio", icon: Sparkles, hint: "Generate" },
   { id: "library", label: "LoRA Library", icon: Library, hint: "HF + Civitai" },
+  { id: "packs", label: "Workflow Packs", icon: Boxes, hint: "ComfyUI-style" },
   { id: "command", label: "Command Center", icon: LayoutDashboard, hint: "Overview" },
   { id: "pipeline", label: "Pipeline", icon: Workflow, hint: "Flow" },
   { id: "compliance", label: "Compliance", icon: ShieldCheck, hint: "Safety" },
@@ -98,6 +100,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           const k = ev.key.toLowerCase();
           if (k === "s") setView("studio");
           else if (k === "l") setView("library");
+          else if (k === "k") setView("packs");
           else if (k === "c") setView("command");
           else if (k === "p") setView("pipeline");
           else if (k === "f") setView("compliance");
@@ -320,6 +323,7 @@ function ShortcutsOverlay({ onClose }: { onClose: () => void }) {
         { keys: ["Esc"], desc: "Close overlay / dialog" },
         { keys: ["g", "s"], desc: "Go to Studio" },
         { keys: ["g", "l"], desc: "Go to LoRA Library" },
+        { keys: ["g", "k"], desc: "Go to Workflow Packs" },
         { keys: ["g", "c"], desc: "Go to Command Center" },
         { keys: ["g", "p"], desc: "Go to Pipeline" },
         { keys: ["g", "f"], desc: "Go to Compliance" },

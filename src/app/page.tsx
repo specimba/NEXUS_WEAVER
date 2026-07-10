@@ -10,6 +10,7 @@ import { GalleryView } from "@/components/nexus/gallery-view";
 import { MonitorView } from "@/components/nexus/monitor-view";
 import { LibraryView } from "@/components/nexus/library-view";
 import { CostLabView } from "@/components/nexus/cost-lab-view";
+import { PacksView } from "@/components/nexus/packs-view";
 
 export default function Home() {
   const view = useNexus((s) => s.view);
@@ -17,6 +18,7 @@ export default function Home() {
     <AppShell>
       {view === "studio" ? <StudioView /> : null}
       {view === "library" ? <LibraryView /> : null}
+      {view === "packs" ? <PacksView /> : null}
       {view === "command" ? <CommandView /> : null}
       {view === "pipeline" ? <PipelineView /> : null}
       {view === "compliance" ? <ComplianceView /> : null}

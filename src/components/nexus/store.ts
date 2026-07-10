@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { toast } from "sonner";
 import type {
   ViewId,
   StageId,
@@ -15,6 +16,12 @@ import { DEFAULT_IMAGE_ENGINE_ID } from "@/lib/engines";
 import { DEFAULT_BRAIN_ID } from "@/lib/brain";
 import { getLora } from "@/lib/lora-library";
 import type { LoraEntry } from "@/lib/lora-library";
+import { LORA_PACKS } from "@/lib/lora-packs";
+
+// Rule #5 (AGENTS.md): LoRA weights ≤ 0.5 when stacking, max 3 LoRAs
+// recommended. This module-level flag ensures the stacking-cap toast fires
+// ONCE per page-load (not on every slider drag).
+let _weightCapToastShown = false;
 
 // M5: per-LoRA active config used by the NO8D-style LoRA stack.
 export interface ActiveLoraConfig {
@@ -124,6 +131,18 @@ interface NexusState {
   // run + the LoraStack UI.
   activeLoraConfigs: () => ActiveLoraConfig[];
 
+  // Rule #5 (AGENTS.md): power mode is the soft-override for the 3-LoRA
+  // stacking warning. When true, the toggleLora warning toast is silenced
+  // (the LoRA is still added — soft enforcement). Defaults to false.
+  powerMode: boolean;
+  togglePowerMode: () => void;
+
+  // ComfyUI-style workflow packs — batch-applies engine + calibration + LoRA
+  // stack + prompt template in one click. Packs are pre-validated for rule #5
+  // (every weight ≤ 0.5; most use ≤ 3 LoRAs), so applyPack bypasses the
+  // toggleLora warning toast for pack LoRAs.
+  applyPack: (packId: string) => void;
+
   // v3: consent + policy
   fingerprint: string;
   consentStatus: "pending" | "accepted" | "rejected" | "revoked" | null;
@@ -217,49 +236,75 @@ export const useNexus = create<NexusState>((set, get) => ({
   // removing, delete its weight + enabled entries.
   loraWeights: {},
   loraEnabled: {},
-  toggleLora: (id) =>
-    set((s) => {
-      if (s.loraIds.includes(id)) {
-        // Remove: drop id + delete weight + enabled entries.
-        const nextWeights = { ...s.loraWeights };
-        const nextEnabled = { ...s.loraEnabled };
-        delete nextWeights[id];
-        delete nextEnabled[id];
-        return {
-          loraIds: s.loraIds.filter((x) => x !== id),
-          loraWeights: nextWeights,
-          loraEnabled: nextEnabled,
-        };
+  powerMode: false,
+  togglePowerMode: () => set((s) => ({ powerMode: !s.powerMode })),
+  toggleLora: (id) => {
+    const s = get();
+    if (s.loraIds.includes(id)) {
+      // Remove: drop id + delete weight + enabled entries.
+      const nextWeights = { ...s.loraWeights };
+      const nextEnabled = { ...s.loraEnabled };
+      delete nextWeights[id];
+      delete nextEnabled[id];
+      set({
+        loraIds: s.loraIds.filter((x) => x !== id),
+        loraWeights: nextWeights,
+        loraEnabled: nextEnabled,
+      });
+      return;
+    }
+    // Rule #5 (AGENTS.md): max 3 LoRAs recommended. Soft enforcement — still
+    // add the LoRA, but warn (unless power mode is on). The warning fires
+    // when adding would make loraIds.length > 3 (i.e. 4th, 5th, ...).
+    const willExceedStack = s.loraIds.length >= 3 && !s.powerMode;
+    // Apply: init weight + enabled. Prefer recommendedWeight; fall back to
+    // the active preset's loraWeight (the "global default" semantics from
+    // the M5 spec). Rule #5: default fallback is 0.5, never 0.8.
+    const lora = getLora(id);
+    let weight = 0.5;
+    if (lora && typeof lora.recommendedWeight === "number") {
+      weight = lora.recommendedWeight;
+    } else {
+      try {
+        weight = getPreset(s.calibrationId).loraWeight;
+      } catch {
+        weight = 0.5;
       }
-      // Apply: init weight + enabled. Prefer recommendedWeight; fall back to
-      // the active preset's loraWeight (the "global default" semantics from
-      // the M5 spec).
-      const lora = getLora(id);
-      let weight = 0.8;
-      if (lora && typeof lora.recommendedWeight === "number") {
-        weight = lora.recommendedWeight;
-      } else {
-        try {
-          weight = getPreset(s.calibrationId).loraWeight;
-        } catch {
-          weight = 0.8;
-        }
-      }
-      return {
-        loraIds: [...s.loraIds, id],
-        loraWeights: { ...s.loraWeights, [id]: weight },
-        loraEnabled: { ...s.loraEnabled, [id]: true },
-      };
-    }),
+    }
+    set({
+      loraIds: [...s.loraIds, id],
+      loraWeights: { ...s.loraWeights, [id]: weight },
+      loraEnabled: { ...s.loraEnabled, [id]: true },
+    });
+    if (willExceedStack) {
+      toast.warning("Max 3 LoRAs recommended (AGENTS rule #5).", {
+        description: "Disable one first, or enable Power Mode to silence this warning.",
+      });
+    }
+  },
   clearLoras: () =>
     set({ loraIds: [], loraWeights: {}, loraEnabled: {} }),
-  setLoraWeight: (id, weight) =>
-    set((s) => ({
+  setLoraWeight: (id, weight) => {
+    const s = get();
+    // Rule #5 (AGENTS.md): when stacking (loraIds.length > 1), clamp to
+    // [0, 0.5]. Single-LoRA mode allows [0, 1]. The cap toast fires once.
+    const stacking = s.loraIds.length > 1;
+    const cap = stacking ? 0.5 : 1;
+    const clamped = Math.max(0, Math.min(cap, weight));
+    const wasCapped = stacking && weight > 0.5;
+    set({
       loraWeights: {
         ...s.loraWeights,
-        [id]: Math.max(0, Math.min(1, weight)),
+        [id]: clamped,
       },
-    })),
+    });
+    if (wasCapped && !_weightCapToastShown) {
+      _weightCapToastShown = true;
+      toast.info("Weight capped at 0.5 when stacking (rule #5).", {
+        description: "Single-LoRA mode allows up to 1.0.",
+      });
+    }
+  },
   toggleLoraEnabled: (id) =>
     set((s) => {
       const cur = s.loraEnabled[id];
@@ -293,6 +338,43 @@ export const useNexus = create<NexusState>((set, get) => ({
       out.push({ lora, weight, enabled });
     }
     return out;
+  },
+  applyPack: (packId) => {
+    const pack = LORA_PACKS.find((p) => p.id === packId);
+    if (!pack) {
+      toast.error("Pack not found", { description: packId });
+      return;
+    }
+    const s = get();
+    // Batch: set engine + calibration, clear the existing LoRA stack, then
+    // set the prompt template (if the pack carries one). Done in one `set`
+    // call so React sees a single re-render.
+    set({
+      engineId: pack.engineId,
+      calibrationId: pack.calibrationId ?? s.calibrationId,
+      loraIds: [],
+      loraWeights: {},
+      loraEnabled: {},
+      prompt: pack.promptTemplate ?? s.prompt,
+    });
+    // Apply each LoRA in pack order. We bypass toggleLora's warning toast
+    // (packs are pre-validated for rule #5 — weights ≤0.5; most use ≤ 3
+    // LoRAs). Calling toggleLora directly would also work, but inline
+    // application avoids the toast noise on packs that legitimately use 3
+    // LoRAs at the recommended ceiling.
+    for (const entry of pack.loras) {
+      const lora = getLora(entry.loraId);
+      if (!lora) continue;
+      const cur = get();
+      set({
+        loraIds: [...cur.loraIds, entry.loraId],
+        loraWeights: { ...cur.loraWeights, [entry.loraId]: entry.weight },
+        loraEnabled: { ...cur.loraEnabled, [entry.loraId]: true },
+      });
+    }
+    toast.success(`Pack applied: ${pack.name}`, {
+      description: `${pack.loras.length} LoRA${pack.loras.length === 1 ? "" : "s"} · ${pack.engineId}`,
+    });
   },
 
   // v3 consent + policy

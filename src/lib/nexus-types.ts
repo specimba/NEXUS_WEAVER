@@ -361,4 +361,5 @@ export type ViewId =
   | "costlab"
   | "gallery"
   | "monitor"
-  | "library";
+  | "library"
+  | "packs";
