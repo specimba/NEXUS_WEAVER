@@ -308,7 +308,6 @@ export async function stageSt3gg(
   brainId?: string
 ): Promise<SafetyResult> {
   const start = nowMs();
-  const zai = await getZai();
   const brain = getBrain(brainId);
   const sys = BRAIN_ROLE_PROMPTS.safety + " (Running on " + brain.shortName + ".)";
   const user = `Evaluate this image generation request for safety.
@@ -332,8 +331,8 @@ Respond as JSON exactly in this shape:
   "rationale": string           // one short sentence
 }`;
 
-  // Try the Modal brain endpoint first (Huihui-Qwen-35B-A3B-abliterated,
-  // uncensored). Falls through to z-ai on failure (timeout, cold-start, error).
+  // Try the Modal brain endpoint (Qwen 9B managed endpoint).
+  // NO z-ai fallback — if the endpoint is cold, return a clear error.
   const brainMessages: BrainChatMessage[] = [
     { role: "system", content: sys },
     { role: "user", content: user },
@@ -345,16 +344,8 @@ Respond as JSON exactly in this shape:
       raw = brainResult.content;
     }
   }
-  // Fallback: z-ai chat completions (always available, reliable)
   if (!raw) {
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: "assistant", content: sys },
-        { role: "user", content: user },
-      ],
-      thinking: { type: "disabled" },
-    });
-    raw = completion.choices?.[0]?.message?.content ?? "";
+    throw new Error("ST3GG brain endpoint unavailable. The Qwen 9B managed endpoint is cold-starting. Wait 30s and retry.");
   }
 
   const parsed = extractJson<{
@@ -450,24 +441,7 @@ Respond as JSON exactly:
   if (brainResult) {
     raw = brainResult.content;
   } else {
-    // Managed endpoint cold/unavailable — use z-ai vision as last resort
-    console.log("[judge] Managed endpoint unavailable, using z-ai vision");
-    const zai = await getZai();
-    const response = await zai.chat.completions.createVision({
-      model: "glm-4.6v",
-      messages: [
-        { role: "assistant", content: sys },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: user },
-            { type: "image_url", image_url: { url: dataUrl } },
-          ],
-        },
-      ],
-      thinking: { type: "disabled" },
-    });
-    raw = response.choices?.[0]?.message?.content ?? "";
+    throw new Error("Judge brain endpoint unavailable. The Gemma 31B managed endpoint is cold-starting. Wait 30s and retry.");
   }
 
   const parsed = extractJson<{
@@ -518,7 +492,6 @@ export async function stageEvidence(
   brainId?: string
 ): Promise<{ evidence: Record<string, unknown>; ms: number }> {
   const start = nowMs();
-  const zai = await getZai();
   const brain = getBrain(brainId);
 
   const sys = BRAIN_ROLE_PROMPTS.evidence + " (Running on " + brain.shortName + ".)";
@@ -565,7 +538,7 @@ Produce evidence JSON exactly:
   }
 }`;
 
-  // Try Modal brain first, fall through to z-ai
+  // Try Modal brain — NO z-ai fallback
   const brainMessagesNem: BrainChatMessage[] = [
     { role: "system", content: sys },
     { role: "user", content: user },
@@ -578,14 +551,7 @@ Produce evidence JSON exactly:
     }
   }
   if (!raw) {
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: "assistant", content: sys },
-        { role: "user", content: user },
-      ],
-      thinking: { type: "disabled" },
-    });
-    raw = completion.choices?.[0]?.message?.content ?? "";
+    throw new Error("Evidence brain endpoint unavailable. The Qwen 9B managed endpoint is cold-starting. Wait 30s and retry.");
   }
 
   const evidence = (extractJson(raw) ?? { rawResponse: raw }) as Record<string, unknown>;
