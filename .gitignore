@@ -60,7 +60,7 @@ upload/
 .z-ai-config
 local-*
 test
-prompt
+
 
 # ── OS / Editor ──────────────────────────────────────────────────────────────
 Thumbs.db
