@@ -13,22 +13,39 @@ export const dynamic = "force-dynamic";
 /**
  * GET /api/modal/status
  *
- * Returns the status of BOTH the FLUX.2 container AND the AEON brain endpoint.
- * Uses a 60-second server-side cache for FLUX.2 health (getCachedModalHealth).
- * Brain health is checked on each call (lightweight GET /v1/models, <1s when warm).
- *
- * The client may pass ?force=1 to bypass the cache.
+ * Returns the status of BOTH the FLUX.2 container AND the brain endpoint.
+ * Both are cached server-side with a 5-minute TTL to avoid cold-starting GPU
+ * containers on every dashboard poll (6 views call this route). The client may
+ * pass ?force=1 to bypass both caches. (Cost audit 2-a, fix C-b-3.)
  */
+
+// Brain health cache (5min TTL) — mirrors the FLUX.2 health cache pattern in
+// modal-client.ts. Without this, every /api/modal/status call triggers a live
+// ping to the brain managed endpoint, which can cold-start a GPU container.
+let _brainHealthCache: { data: Awaited<ReturnType<typeof checkBrainHealth>>; fetchedAt: number } | null = null;
+const BRAIN_HEALTH_TTL_MS = 300_000;
+
+async function getCachedBrainHealth(force: boolean) {
+  if (!force && _brainHealthCache && Date.now() - _brainHealthCache.fetchedAt < BRAIN_HEALTH_TTL_MS) {
+    return _brainHealthCache.data;
+  }
+  const data = await checkBrainHealth();
+  _brainHealthCache = { data, fetchedAt: Date.now() };
+  return data;
+}
+
 export async function GET(req: Request) {
   const enabled = isModalEnabled();
   const baseUrl = getModalBaseUrl();
   const url = new URL(req.url);
   const force = url.searchParams.get("force") === "1";
 
-  // Check FLUX.2 (cached) + brain (live, lightweight) in parallel
+  // Check FLUX.2 (cached) + brain (cached) in parallel — both respect ?force=1
   const [health, brainHealth] = await Promise.all([
     getCachedModalHealth(force),
-    isBrainEndpointConfigured() ? checkBrainHealth() : Promise.resolve(null),
+    isBrainEndpointConfigured()
+      ? getCachedBrainHealth(force)
+      : Promise.resolve(null),
   ]);
 
   return NextResponse.json({

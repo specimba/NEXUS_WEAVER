@@ -1,26 +1,39 @@
 #!/bin/bash
-# NEXUS Visual Weaver — One-Command Modal Deployment Script
+# =============================================================================
+# NEXUS Visual Weaver — Safe Modal Deployment Script
+# =============================================================================
+# Deploys ONLY the L40S image apps (FLUX.2 + Kontext inpaint).
 #
-# This script deploys all three Modal apps:
-#   1. nexus-flux2-klein9b   — FLUX.2 Klein 9B image generation (L40S GPU)
-#   2. nexus-kontext-refine   — FLUX.1 Kontext garment editing (L40S GPU)
-#   3. nexus-brain-gemma4     — Uncensored Gemma 4 12B brain (H100 GPU)
+# ⚠️  AGENTS.md RULE #3: NEVER deploy H100 Modal apps unless explicitly asked.
+#     H100 video engines (Wan 2.2, LTX 2.3) and H100 image engines (Z-Image,
+#     Krea 2) are deployed ON-DEMAND via the Studio UI engine picker, which
+#     uses src/lib/engine-manager.ts to deploy/stop them per-session. They
+#     scale to zero (min_containers=0, 5min scaledown) so they cost $0 idle.
+#
+# ⚠️  The 3 brain stages (ST3GG/Judge/Creative) are Modal MANAGED ENDPOINTS
+#     (created via `modal endpoint create`), NOT Modal Apps. They are NOT
+#     deployed by this script. See HANDOFF.md §2.
+#
+# This script was rewritten (cost audit 2-a) to remove:
+#   - nexus_brain_gemma4.py (H100, 15min scaledown, fully replaced by managed
+#     endpoints — deploying it was a rule #3 violation + $0.99/cycle waste)
+#   - nexus_kontext_refine.py (redundant with the deployed nexus_kontext_inpaint)
 #
 # Prerequisites:
 #   pip install modal
-#   modal token set --token-id <YOUR_MODAL_TOKEN_ID> --token-secret <YOUR_MODAL_TOKEN_SECRET>
-#
-# Usage:
-#   chmod +x modal-apps/deploy_all.sh
-#   ./modal-apps/deploy_all.sh
-#
-# After deploy, update .env with the new endpoint URLs (printed at the end).
+#   modal token set --token-id <ID> --token-secret <SECRET>
+#   export HF_TOKEN=<your_hf_token>  # for gated FLUX.2-klein-9B downloads
+# =============================================================================
 
 set -e
 
 echo "=========================================="
-echo "NEXUS Visual Weaver — Modal Deployment"
+echo "NEXUS Visual Weaver — Safe Modal Deployment (L40S only)"
 echo "=========================================="
+echo ""
+echo "⚠️  This deploys ONLY L40S image apps (FLUX.2 + Kontext inpaint)."
+echo "    H100 engines are deployed on-demand via the Studio UI (rule #3)."
+echo "    Brain stages use Modal Managed Endpoints (not apps)."
 echo ""
 
 # Check if Modal is installed
@@ -37,58 +50,46 @@ if ! modal token info &> /dev/null; then
     exit 1
 fi
 
-echo "Modal authenticated. Workspace: $(modal token info 2>&1 | head -1)"
+echo "Modal authenticated. Workspace: $(modal profile current 2>&1 | head -1)"
 echo ""
 
 # Create the HuggingFace secret (idempotent — overwrites if exists)
-echo "=== Setting HuggingFace secret ==="
-export HF_TOKEN="${HF_TOKEN:-hf_YOUR_HF_TOKEN_HERE}"
-modal secret create huggingface-secret HF_TOKEN="$HF_TOKEN" 2>&1 || true
+# Required for FLUX.2-klein-9B (gated) + Kontext-dev (gated) weight downloads.
+# The hf-hub-cache Volume means this is only needed on FIRST deploy.
+if [ -z "${HF_TOKEN:-}" ]; then
+    echo "⚠️  HF_TOKEN not set. FLUX.2-klein-9B is gated — first cold start will fail"
+    echo "    without it. Set: export HF_TOKEN=hf_xxx  (https://huggingface.co/settings/tokens)"
+else
+    echo "=== Setting HuggingFace secret ==="
+    modal secret create huggingface-secret HF_TOKEN="$HF_TOKEN" 2>&1 || true
+fi
 echo ""
 
-# Deploy FLUX.2 Klein 9B
-echo "=== Deploying FLUX.2 Klein 9B (image generation) ==="
-echo "This loads the model on first call (~30-60s cold start)..."
+# Deploy FLUX.2 Klein 9B (primary image generation, L40S)
+echo "=== Deploying FLUX.2 Klein 9B (image generation, L40S) ==="
+echo "min_containers=0, scaledown=5min → $0 idle. First cold start ~24s (weights cached)."
 modal deploy modal-apps/nexus_flux2_klein9b.py
 echo ""
 echo "FLUX.2 Klein 9B deployed!"
-echo "  Health:  https://specimba--nexus-flux2-klein9b-web-app.modal.run/health"
-echo "  Generate: https://specimba--nexus-flux2-klein9b-web-app.modal.run/generate"
+echo "  Generate: https://specimba--nexus-flux2-klein9b-nexusflux2generator-generate.modal.run"
 echo ""
 
-# Deploy FLUX.1 Kontext (garment refinement)
-echo "=== Deploying FLUX.1 Kontext (garment editing) ==="
-echo "Note: FLUX.1-Kontext-dev is a gated model. Ensure your HF token has access."
-modal deploy modal-apps/nexus_kontext_refine.py
+# Deploy Kontext inpaint (L40S)
+echo "=== Deploying FLUX.1 Kontext inpaint (L40S) ==="
+echo "Used by the NO8D inpainting canvas (mask + redraw). min_containers=0, 5min scaledown."
+modal deploy modal-apps/nexus_kontext_inpaint.py
 echo ""
-echo "Kontext deployed!"
-echo "  Health: https://specimba--nexus-kontext-refine-web-app.modal.run/health"
-echo "  Edit:   https://specimba--nexus-kontext-refine-web-app.modal.run/edit"
-echo ""
-
-# Deploy Gemma 4 12B Brain
-echo "=== Deploying Gemma 4 12B Brain (uncensored) ==="
-echo "This loads a 12B model on H100 (~60-120s cold start)..."
-modal deploy modal-apps/nexus_brain_gemma4.py
-echo ""
-echo "Brain deployed!"
-echo "  Health: https://specimba--nexus-brain-gemma4-web-app.modal.run/health"
-echo "  Chat:   https://specimba--nexus-brain-gemma4-web-app.modal.run/chat"
+echo "Kontext inpaint deployed!"
+echo "  Inpaint:  https://specimba--nexus-kontext-inpaint-nexuskontextinpaint-web-app.modal.run"
 echo ""
 
 echo "=========================================="
-echo "All Modal apps deployed!"
+echo "✅ Safe deployment complete (2 L40S apps)"
 echo "=========================================="
 echo ""
-echo "Update your .env with these endpoints:"
+echo "H100 engines (Wan 2.2, LTX 2.3, Z-Image, Krea 2) are deployed on-demand"
+echo "via the Studio UI engine picker — they cost $0 when idle."
 echo ""
-echo "  # FLUX.2 Klein 9B (primary image generation)"
-echo "  MODAL_FLUX2_URL=https://specimba--nexus-flux2-klein9b-web-app.modal.run"
-echo ""
-echo "  # FLUX.1 Kontext (garment refinement)"
-echo "  MODAL_KONTEXT_URL=https://specimba--nexus-kontext-refine-web-app.modal.run"
-echo ""
-echo "  # Gemma 4 12B Brain (uncensored)"
-echo "  MODAL_BRAIN_URL=https://specimba--nexus-brain-gemma4-web-app.modal.run"
-echo ""
-echo "The dashboard will auto-detect these endpoints and route to them."
+echo "Brain stages (ST3GG/Judge/Creative) are Modal Managed Endpoints:"
+echo "  modal endpoint list"
+echo "  Verify min_containers=0 on the Modal dashboard (Endpoins → Scaling)."

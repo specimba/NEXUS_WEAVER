@@ -2,10 +2,10 @@
  * Modal client v4 — cost-optimized wrapper around the deployed Modal app.
  *
  * CRITICAL CHANGE (cost optimization): health checks are now CACHED with a
- * 60-second TTL. The previous version hit Modal's /health on every dashboard
+ * 5-minute TTL. The previous version hit Modal's /health on every dashboard
  * poll (8 loops × 10-30s intervals = ~310 checks/day), which either kept the
  * H100 container warm (idle waste) or triggered cold starts. Now, repeated
- * /api/modal/status calls within 60s return the cached result without touching
+ * /api/modal/status calls within 5min return the cached result without touching
  * Modal at all.
  *
  * Endpoint: https://specimba--nexus-visual-nexusmodel-serve.modal.run
@@ -56,10 +56,10 @@ export function isFlux2Deployed(): boolean {
   return MODAL_FLUX2_URL.length > 0;
 }
 
-// ── Health cache (60s TTL) ───────────────────────────────────────────────────
+// ── Health cache (5min TTL) ──────────────────────────────────────────────────
 // This is the single most important cost optimization: stop hitting Modal every
-// 10-15s. The dashboard polls /api/modal/status from 8 places; without this
-// cache, each poll either wastes idle H100 time or triggers a cold start.
+// 10-15s. The dashboard polls /api/modal/status from multiple places; without
+// this cache, each poll either wastes idle GPU time or triggers a cold start.
 const HEALTH_CACHE_TTL_MS = 300_000; // 5 minutes (was 60s — longer cache = fewer pings = less idle GPU cost)
 
 interface CachedHealth {
@@ -469,13 +469,9 @@ export interface BrainChatResult {
 
 /**
  * Call the Modal brain endpoint (OpenAI-compatible /v1/chat/completions).
- * Has a 60s timeout — if the brain container is cold-starting (vLLM takes
- * 60-120s to load a 27B model), we abort and let the caller fall through to
- * z-ai. Without this, ST3GG hangs forever and the pipeline stalls.
- *
- * v5.35: NO z-ai fallback. Uses the retry+backoff system from endpoint-warmup.ts.
- * If the endpoint is cold, waits up to 30s for it to warm up. If still cold,
- * returns null and the caller produces a CLEAR error message.
+ * Uses the retry+backoff system from endpoint-warmup.ts. If the endpoint is
+ * cold, waits up to 30s for it to warm up. If still cold, returns null so the
+ * caller surfaces a CLEAR error (NEVER falls back to z-ai — AGENTS rule #1).
  *
  * Returns null on failure so the caller can produce a clear error. NEVER throws.
  */

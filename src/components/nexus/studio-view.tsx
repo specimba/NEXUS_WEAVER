@@ -510,25 +510,24 @@ export function StudioView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [run, running, prompt]);
 
-  // SMART WARM-UP: On page load, trigger pre-warm of all 3 managed endpoints.
-  // This fires a lightweight GET /v1/models to each endpoint, which triggers
-  // the container startup. By the time the user writes a prompt and clicks Run,
-  // the endpoints are warm (~2-4s response time instead of 30-120s cold start).
-  //
-  // The warm-up is fire-and-forget — it doesn't block the UI. The endpoints
-  // scale to zero after ~10 min idle, so this only warms them for the current
-  // session.
+  // SMART WARM-UP: fires ONCE per browser session (sessionStorage gate) to avoid
+  // burning GPU credits on every Studio mount / React StrictMode dev double-fire.
+  // The FLUX.2 status check is cached server-side (5min) and cheap; the brain
+  // pre-warm triggers 3 managed-endpoint cold-starts (~$0.18-0.55 when all cold)
+  // so we gate it to once per session. (Cost audit 2-a, fix C-b-1.)
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        // Check FLUX.2 status (cached, fast)
+        // Check FLUX.2 status (cached server-side, fast, no GPU burn)
         const sr = await fetch("/api/modal/status", { cache: "no-store" });
         if (cancelled) return;
         const sd = await sr.json();
         if (sd.reachable) setModalWarm(true);
 
-        // Pre-warm all 3 brain endpoints (fire-and-forget, ~5s per endpoint)
+        // Pre-warm brain endpoints ONLY once per session (cost guard).
+        if (typeof window !== "undefined" && sessionStorage.getItem("nexus-brain-warmed") === "1") return;
+        if (typeof window !== "undefined") sessionStorage.setItem("nexus-brain-warmed", "1");
         fetch("/api/modal/warm-endpoints", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

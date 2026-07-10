@@ -208,10 +208,11 @@ export function CostLabView() {
   const [refreshingStatus, setRefreshingStatus] = useState(false);
 
   const onRefresh = useCallback(async () => {
-    // 1. Force-refresh Modal backend status (bypasses the 60s cache).
+    // 1. Refresh Modal backend status (uses the 5min server cache — force=1 was
+    //    removed because it cold-started FLUX.2 on every Cost Lab open. Cost audit 2-a.)
     setRefreshingStatus(true);
     try {
-      await fetch("/api/modal/status?force=1", { cache: "no-store" });
+      await fetch("/api/modal/status", { cache: "no-store" });
       // Invalidate the sidebar status query so the header reflects truth.
       qc.invalidateQueries({ queryKey: ["modal-status"] });
     } catch {

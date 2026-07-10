@@ -113,7 +113,18 @@ export async function pingEndpoint(name: EndpointName, timeoutMs = 5000): Promis
  * Pings each endpoint in parallel. The first ping triggers the container
  * startup. Subsequent calls within 5 min will find the container warm.
  */
+// 5-minute cooldown — prevents duplicate pre-warm calls from React StrictMode
+// double-fire + rapid Studio remounts. Each pre-warm pings 4 GPU endpoints and
+// can trigger cold-starts (~$0.18-0.55 when all cold). (Cost audit 2-a, fix C-b-4.)
+let _lastPreWarmAt = 0;
+const PRE_WARM_COOLDOWN_MS = 300_000;
+
 export async function preWarmAllEndpoints(): Promise<void> {
+  if (Date.now() - _lastPreWarmAt < PRE_WARM_COOLDOWN_MS) {
+    console.log("[warmup] Skipping pre-warm (within 5min cooldown)");
+    return;
+  }
+  _lastPreWarmAt = Date.now();
   console.log("[warmup] Pre-warming all endpoints (FLUX.2 + 3 brain endpoints)...");
   await Promise.allSettled([
     pingEndpoint("flux2", 10000),  // FLUX.2 takes longer to respond (10s timeout)
