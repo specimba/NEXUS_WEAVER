@@ -111,7 +111,10 @@ class NexusKrea2Generator:
             body = await request.json()
             prompt = body.get("prompt", "")
             negative_prompt = body.get("negative_prompt", "")
-            steps = body.get("steps", 4)
+            # Krea 2 Turbo defaults per Stable Yogi's guide:
+            # 8 steps, CFG 1.0, Euler, Simple scheduler, clip_skip 1.
+            # (RAW would be 28 steps, CFG 4.5 — but this app is Turbo-only.)
+            steps = body.get("steps", 8)
             cfg = body.get("cfg", 1.0)
             seed = body.get("seed", 42)
             height = body.get("height", 1024)
@@ -149,10 +152,13 @@ class NexusKrea2Generator:
                     except Exception as set_err:
                         print(f"set_adapters failed: {set_err}")
 
+            # Krea 2 is a 12B DiT with Qwen3VL text encoder. It rewards
+            # natural-language prompts and does NOT use negative prompts
+            # effectively (the DiT architecture doesn't have a separate
+            # negative-conditioning path like SDXL). Drop it silently.
             generator = torch.Generator(device="cuda").manual_seed(int(seed))
             result = self.pipe(
                 prompt=prompt,
-                negative_prompt=negative_prompt if negative_prompt else None,
                 num_inference_steps=int(steps),
                 guidance_scale=float(cfg),
                 height=int(height),
