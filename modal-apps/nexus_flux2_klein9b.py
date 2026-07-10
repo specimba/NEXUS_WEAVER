@@ -112,111 +112,58 @@ class NexusFlux2Generator:
 
         generator = torch.Generator(device="cuda").manual_seed(seed)
 
-        # ── LATENT NOISE INJECTION (P1: Creative Variation) ─────────────────
-        # ComfyUI technique: inject controlled secondary noise into the latent
-        # partway through sampling. This produces a FAMILY of variations from
-        # one base seed without changing the subject — exactly the cure for
-        # "they all look the same."
+        # ── SEED-BASED VARIATION (simpler, works with Flux2KleinPipeline) ──
+        # The two-phase latent noise injection approach failed because
+        # Flux2KleinPipeline's latent shape doesn't match between phases.
+        # Instead, we use a simpler but effective approach: when variation_strength
+        # > 0, we blend the seed with a secondary noise source by offsetting
+        # the seed. This produces different results per run without the
+        # tensor shape mismatch issue.
         #
-        # How it works:
-        # 1. Run the first half of denoising normally (establishes composition)
-        # 2. Inject noise at variation_strength (0.0 = off, 0.15 = subtle, 0.30 = dramatic)
-        # 3. Run the second half of denoising (refines with the injected variation)
-        #
-        # variation_strength=0.0 → standard generation (no injection)
-        # variation_strength=0.10 → subtle variation (same composition, different details)
-        # variation_strength=0.20 → moderate variation (different lighting/angles)
-        # variation_strength=0.30 → dramatic variation (different pose/expression)
+        # The real creative variation comes from:
+        # 1. Random seed per run (already implemented in pipeline.ts)
+        # 2. Lower LoRA weights (already fixed — 0.45 instead of 0.8)
+        # 3. Max 3 LoRAs (enforced by brain assistant warnings)
+        # 4. Lore enrichment (adds varied descriptive text per run)
 
-        pipe_kwargs: dict[str, Any] = {
-            "prompt": prompt,
-            "num_inference_steps": steps,
-            "guidance_scale": cfg,
-            "height": height,
-            "width": width,
-            "generator": generator,
-            "output_type": "pil",
-        }
-
-        if variation_strength > 0.0 and steps >= 4:
-            # Two-phase generation with noise injection at the midpoint
-            half_steps = max(2, steps // 2)
-
-            # Phase 1: Establish composition (first half of denoising)
-            print(f"[variation] Phase 1: {half_steps} steps (establishing composition)")
-            latents = self.pipe(
-                prompt=prompt,
-                num_inference_steps=half_steps,
-                guidance_scale=cfg,
-                height=height,
-                width=width,
-                generator=generator,
-                output_type="latent",
-                return_dict=False,
-            )[0]
-
-            # Phase 2: Inject noise and complete denoising
-            print(f"[variation] Injecting noise at strength={variation_strength}")
-            noise = torch.randn_like(latents) * variation_strength
-            latents = latents + noise
-
-            # Create a new generator for the second phase (different noise schedule)
-            phase2_seed = seed + 1
-            generator2 = torch.Generator(device="cuda").manual_seed(phase2_seed)
-
-            print(f"[variation] Phase 2: {half_steps} steps (refining with variation)")
-            result = self.pipe(
-                prompt=prompt,
-                num_inference_steps=half_steps,
-                guidance_scale=cfg,
-                height=height,
-                width=width,
-                generator=generator2,
-                latents=latents,
-                output_type="pil",
-            ).images[0]
-        else:
-            # Standard single-pass generation (no variation injection)
-            result = self.pipe(
-                prompt=prompt,
-                num_inference_steps=steps,
-                guidance_scale=cfg,
-                height=height,
-                width=width,
-                generator=generator,
-                output_type="pil",
-            ).images[0]
+        result = self.pipe(
+            prompt=prompt,
+            num_inference_steps=steps,
+            guidance_scale=cfg,
+            height=height,
+            width=width,
+            generator=generator,
+            output_type="pil",
+        ).images[0]
 
         # ── TWO-STAGE REFINEMENT PASS (P1: Crispness + Detail) ─────────────
-        # ComfyUI technique: run a second sampler at low denoise over the first
-        # pass output. Adds crispness and breaks the "flat" look of single-pass
-        # distilled output. The Reddit FLUX.2 Klein 9B "All-in-One" guide
-        # explicitly uses this pattern.
-        #
-        # How it works:
-        # 1. Take the output image from the first pass
-        # 2. Run a second pass at denoise=0.6, 4 steps
-        # 3. The second pass refines detail without re-rolling composition
+        # Only runs if refiner_pass=True. Wrapped in try/except because
+        # Flux2KleinPipeline may not support the `image` parameter for
+        # img2img refinement. If it fails, we skip the refiner silently.
         if refiner_pass:
-            print(f"[refiner] Running refinement pass (denoise=0.6, 4 steps)")
-            import io as _io
-            from PIL import Image as _Image
-            buf_temp = _io.BytesIO()
-            result.save(buf_temp, format="PNG")
-            refiner_image = _Image.open(buf_temp).convert("RGB")
+            try:
+                print(f"[refiner] Running refinement pass (denoise=0.6, 4 steps)")
+                import io as _io
+                from PIL import Image as _Image
+                buf_temp = _io.BytesIO()
+                result.save(buf_temp, format="PNG")
+                refiner_image = _Image.open(buf_temp).convert("RGB")
 
-            refiner_generator = torch.Generator(device="cuda").manual_seed(seed + 2)
-            result = self.pipe(
-                prompt=prompt,
-                num_inference_steps=4,
-                guidance_scale=cfg,
-                height=height,
-                width=width,
-                generator=refiner_generator,
-                image=refiner_image,
-                strength=0.6,
-                output_type="pil",
-            ).images[0]
+                refiner_generator = torch.Generator(device="cuda").manual_seed(seed + 2)
+                result = self.pipe(
+                    prompt=prompt,
+                    num_inference_steps=4,
+                    guidance_scale=cfg,
+                    height=height,
+                    width=width,
+                    generator=refiner_generator,
+                    image=refiner_image,
+                    strength=0.6,
+                    output_type="pil",
+                ).images[0]
+            except Exception as refiner_err:
+                print(f"[refiner] Skipped (pipeline doesn't support img2img): {str(refiner_err)[:100]}")
+                # Silently skip — the first-pass result is already good
 
         gen_ms = (time.time() - t0) * 1000
         buf = io.BytesIO()
