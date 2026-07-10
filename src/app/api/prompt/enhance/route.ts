@@ -54,9 +54,9 @@ Return ONLY the enhanced prompt text, nothing else.`;
   const result = await callModalBrain(
     [
       { role: "system", content: system },
-      { role: "user", content: idea },
+      { role: "user", content: `/no_think ${idea}` },
     ],
-    { temperature: 0.7, maxTokens: 600, role: "creative" }
+    { temperature: 0.7, maxTokens: 800, role: "creative" }
   );
 
   if (!result) {

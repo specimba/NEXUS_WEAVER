@@ -71,8 +71,13 @@ export async function pingEndpoint(name: EndpointName, timeoutMs = 5000): Promis
     headers["Modal-Secret"] = MODAL_PROXY_SECRET;
   }
 
+  // Brain managed endpoints need /v1/models (the base URL returns 404 with no
+  // root handler, which would falsely mark a warm endpoint as "error"). FLUX.2
+  // uses its dedicated /health URL (already set in secrets.ts).
+  const pingUrl = needsAuth ? `${url}/v1/models` : url;
+
   try {
-    const res = await fetch(url, {
+    const res = await fetch(pingUrl, {
       headers,
       signal: AbortSignal.timeout(timeoutMs),
     });

@@ -84,7 +84,7 @@ Rules:
         ],
       },
     ],
-    { temperature: 0.4, maxTokens: 600, role: "judge" }
+    { temperature: 0.4, maxTokens: 1500, role: "judge" }
   );
 
   if (!result) {

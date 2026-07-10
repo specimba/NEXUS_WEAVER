@@ -515,10 +515,29 @@ export async function callModalBrain(
     return null;
   }
 
-  const data = result.data as { choices?: Array<{ message?: { content?: string } }> };
-  const content = data.choices?.[0]?.message?.content ?? "";
+  const data = result.data as {
+    choices?: Array<{
+      message?: { content?: string; reasoning_content?: string };
+      finish_reason?: string;
+    }>;
+  };
+  let content = data.choices?.[0]?.message?.content ?? "";
+  const finishReason = data.choices?.[0]?.finish_reason ?? "";
+
+  // Thinking models (Qwen3, Brisk-Evolution, Gemma-4-heretic) put chain-of-thought
+  // in `reasoning_content` and the final answer in `content`. If the model ran out
+  // of tokens during reasoning (finish_reason="length", content=""), fall back to
+  // reasoning_content so the caller gets useful output instead of null.
   if (!content) {
-    console.log(`[modal-brain:${role}] empty response content`);
+    const reasoning = data.choices?.[0]?.message?.reasoning_content ?? "";
+    if (reasoning) {
+      console.log(`[modal-brain:${role}] empty content, using reasoning_content (finish_reason=${finishReason})`);
+      content = reasoning.trim();
+    }
+  }
+
+  if (!content) {
+    console.log(`[modal-brain:${role}] empty response content (finish_reason=${finishReason})`);
     return null;
   }
 
