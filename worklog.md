@@ -1858,3 +1858,73 @@ Stage Summary:
 - Packs count: 10 (3 AEON ported + 7 curated). All weights ≤ 0.5 (rule #5 compliant). Pack LoRA IDs all verified against LORA_LIBRARY (80 entries).
 - Rule #5 enforcement: soft warning toast in toggleLora when loraIds.length > 3 (silenced by powerMode); weight clamp in setLoraWeight to [0, 0.5] when stacking (toast once per page-load); applyPack bypasses both for pre-validated packs.
 - Issues: dev server was not running when I started; I started it manually in the background to verify the page compiles cleanly (HTTP 200). No TypeScript or runtime errors observed. No Prisma/db:push/modal/commit operations performed (per task constraints).
+
+---
+Task ID: v5.39-impl-security-cleanup
+Agent: Z.ai Code (main)
+Task: Restore Modal tokens, implement cost/prompt/packs features, clean leaked credentials from public git history
+
+TOKENS RESTORED (backup loop closed):
+- User provided 4 Modal tokens (API: ak-4aeKY7.../as-neoFg...; Proxy: wk-Drl1t.../ws-kAXU7...).
+- Written to .env (gitignored). modal CLI installed (v1.5.1), `modal token set` →
+  profile specimba verified. `modal app list` shows 4 deployed apps (flux2, wan22,
+  ltx23, kontext) all Tasks=0 (no idle burn).
+- Pushed all 4 tokens + NEXUS_ENV_BLOB to GitHub Secrets via push-env-to-github.sh
+  (API-direct, no Actions runner needed — works despite the Actions allocation
+  failure documented in v5.38). Future wipes now fully restorable.
+- HF_TOKEN + BROWSERLESS_TOKEN still pending from user (HF needed only for gated
+  model re-downloads; browserless for Civitai.red HTML scraping).
+
+COST AUDIT (subagent 2-a) — KEY FINDING:
+The real credit burn was NOT always-on containers (all apps already scale-to-zero,
+min_containers=0, 5min scaledown — the worklog v5.29 "always-on $12-36/day" claim
+was WRONG). The actual burn was the Studio auto-warm useEffect firing 4 GPU
+cold-starts on EVERY page mount (~$1.80-5.50/day, doubled by React StrictMode).
+
+FIXES IMPLEMENTED (commit ae1a0ef→073a1d5, TS-only, no Modal redeploy):
+1. studio-view.tsx: auto-warm now sessionStorage-gated (once per session, not per mount)
+2. cost-lab-view.tsx: removed ?force=1 (was cold-starting FLUX.2 on every Cost Lab open)
+3. status/route.ts: brain health now cached 5min (getCachedBrainHealth), was uncached
+4. endpoint-warmup.ts: preWarmAllEndpoints 5min cooldown (StrictMode + remount guard)
+5. modal-client.ts: stale comments fixed (60s→5min TTL; z-ai fallback mention removed)
+6. deploy_all.sh: rewritten — removed H100 brain_gemma4 trap (rule #3 violation +
+   $0.99/cycle) + redundant kontext_refine. Now deploys only L40S apps (FLUX.2 + inpaint)
+Est. savings: $1.80-5.50/day. Rule #4 (FLUX.2 steps≤4) verified fully compliant.
+
+PROMPT+ NO8D RESTORED (commit 1554e15→c8d7235):
+UI existed but both backend routes 404'd. Created:
+- /api/prompt/enhance → Creative brain (Brisk 4B) expands rough idea → FLUX.2 prompt
+- /api/prompt/reverse → Visual Judge (Gemma 31B vision) image→prompt reverse-engineer
+Both use callModalBrain (proxy auth via restored tokens). Results in editable textarea
+(NO8D "auto off"). Also fixed .gitignore: bare 'prompt' pattern was silently excluding
+src/app/api/prompt/* from git (would have broken backup) — scoped to root-only.
+
+LORA PACKS SYSTEM (subagent 3, commit 6a4b53b→6e8342e):
+- lora-packs.ts: 10 ComfyUI-style packs (3 AEON-ported + 7 curated). Each = engine +
+  calibration + LoRA stack (weights ≤0.5) + prompt template + bestFor/avoidFor + advice.
+- packs-view.tsx: responsive grid, search, engine filter, mature gate, stack preview.
+- store.ts: applyPack() batch-applies; rule #5 ENFORCED (weight clamp [0,0.5] when
+  stacking, >3 warning with powerMode override). 65 library weights retuned >0.5→0.5.
+- app-shell.tsx: "Workflow Packs" nav (Boxes icon). page.tsx wired.
+
+SECURITY CLEANUP (CRITICAL):
+Discovered OLD Modal tokens (ak-lODc1.../as-C5e2v.../wk-n1u0R.../ws-Wd1W4...) +
+HF token (hf_...) leaked in PUBLIC git history across 7 commits (b516e2f→8573ebe)
+in BOTH .env AND hardcoded in historical secrets.ts + in a commit MESSAGE (0490dfc).
+User's NEW tokens (ak-4aeKY7...) are different and NOT compromised.
+- Installed git-filter-repo. Ran 3 passes: --replace-text (file contents),
+  --invert-paths --path .env (remove .env entirely), --replace-message (commit+tag msgs).
+- VERIFIED: 0 old-token occurrences in all history (content + messages + tags). .env gone.
+- Force-pushed rewritten main + 6 tags to GitHub (f455ab6→fe59f00 forced update).
+- Remote HEAD matches local. Public history is now clean.
+USER MUST STILL: (1) revoke the OLD Modal tokens at modal.com/settings/tokens,
+(2) revoke the old HF token at huggingface.co/settings/tokens, (3) optionally ask
+GitHub support to GC old commits (they may remain accessible by SHA temporarily).
+
+Stage Summary:
+- Tokens restored + backed up to GitHub Secrets. Backup loop closed.
+- Credit burn fixed (~$1.80-5.50/day savings, no redeploy).
+- PROMPT+ NO8D fully functional (enhance + reverse, proxy-auth).
+- 10 ComfyUI-style LoRA packs + rule #5 enforcement.
+- Public git history scrubbed of all leaked credentials (force-pushed).
+- 4 versioned commits pushed: 073a1d5 (cost), c8d7235 (prompt), 6e8342e (packs), fe59f00 (worklog).
