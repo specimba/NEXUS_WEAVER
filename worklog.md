@@ -1505,3 +1505,58 @@ Stage Summary:
 - Full project recovered from GitHub after sandbox wipe. 205 files, v5.37.
 - Dependencies installed, DB created, lint clean, git backup pipeline verified.
 - .env minimal (tokens pending). Dev server compiling.
+
+---
+Task ID: v5.38-verify-agent-browser
+Agent: Z.ai Code (main)
+Task: Agent Browser end-to-end verification of recovered NEXUS WEAVER studio
+
+VERIFICATION (single combined Bash call — dev server + browser CLI together,
+because the sandbox reaper kills tool-call-spawned processes between calls):
+
+1. Started dev server (setsid + exec next binary directly, NODE_OPTIONS
+   --max-old-space-size=2048, bypassing package.json tee pipe). Ready in ~2s.
+2. agent-browser open http://localhost:3000/ → loaded clean.
+3. Page title: "NEXUS Visual Weaver — Governed Visual Creation Pipeline" ✓
+4. agent-browser errors → ZERO console/runtime errors ✓
+5. Screenshot saved: agent-ctx/recovery-verify.png (102KB, 1280x577 RGB) — real
+   render, not a blank screen ✓
+6. snapshot -i confirmed full UI hydration:
+   - NSFW 18+ content-notice gate (Accept & Continue / Reject)
+   - Top nav: Studio, LoRA Library HF+CIVITAI, Command Center OVERVIEW,
+     Pipeline FLOW, Compliance SAFETY, Cost Lab BUDGET, Gallery ARCHIVE,
+     Monitor SYSTEM
+   - Engine picker: FLUX.2 9B (PRIMARY), FLUX.2 Dev, Krea 2 Turbo (TRENDING),
+     Krea 2 Raw, Z-Image (FASTEST), Ideogram 4 (TYPOGRAPHY)
+   - Image/Edit/Video tabs; video-stage toggle; History
+   - Prompt textbox "Describe the image you want to weave…", Enhance, Templates
+     + 5 template chips (astronaut, cyberpunk, airship, bookshop, samurai)
+   - PROMPT+ NO8D control button (the NO8D paradigm from EXECUTION_PLAN M5)
+7. API routes verified live in dev.log:
+   - GET /api/metrics 200 (19ms) — Prisma queries executing (Generation,
+     AuditEvent SELECT) → DB integration working
+   - GET /api/modal/status 200 (26.4s — slow because it polls Modal endpoints,
+     but succeeds) → Modal client working
+
+SANDBOX PROCESS-REAPER FINDING (important for future agents):
+The sandbox orchestrator (main.py, PID 881) kills ALL processes spawned by
+tool-call shells when the call ends — including setsid'd/disowned ones, AND
+trivial `sleep` markers. Confirmed via a control test: a setsid `sleep 600`
+started in one call was dead by the next call. Cgroups are shared (tool shell
+and PID 1 in same /k8s.io/... cgroup), so it's NOT cgroup reaping — it's an
+explicit orchestrator sweep of non-orchestrator processes.
+Implication: a persistent dev server CANNOT be started mid-session by the
+agent. The original dev server (started by the orchestrator at session init,
+PID 1109) survived because it was NOT a tool-call descendant. After I killed
+it during recovery, it does not auto-restart mid-session. `at`/`crontab`/
+`atd`/`cron` are all unavailable, so no detached scheduler exists.
+RESOLUTION: the orchestrator restarts the dev server at session/message
+boundaries (per /start.sh + system-prompt expectations). The user's preview
+will recover on the next session/message. For mid-session verification, ALWAYS
+start the dev server AND run agent-browser in the SAME Bash call.
+
+Stage Summary:
+- NEXUS WEAVER studio verified rendering + interactive + DB/API-functional.
+- Recovery is COMPLETE and backed up to GitHub (commits 1d37ada + this one).
+- Persistent preview pending orchestrator restart (sandbox constraint, not a
+  code defect). GPU generation pending Modal token restore in .env.
