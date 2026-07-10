@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NEXUS Weaver Agent Handoff Protocol",
+  "description": "Schema for transferring state between AI agents working on NEXUS Visual Weaver",
+  "type": "object",
+  "required": ["handoff_id", "timestamp", "from_agent", "to_agent", "project_state", "changes_made", "current_status", "next_steps"],
+  "properties": {
+    "handoff_id": {
+      "type": "string",
+      "description": "Unique ID for this handoff (e.g., 'handoff-2026-07-10-001')"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of handoff"
+    },
+    "from_agent": {
+      "type": "string",
+      "description": "Name/ID of the agent handing off"
+    },
+    "to_agent": {
+      "type": "string",
+      "description": "Name/ID of the receiving agent"
+    },
+    "project_state": {
+      "type": "object",
+      "required": ["version", "git_tag", "dev_server", "modal_apps", "managed_endpoints"],
+      "properties": {
+        "version": { "type": "string", "description": "Current version tag (e.g., 'v5.37')" },
+        "git_tag": { "type": "string", "description": "Latest git tag" },
+        "dev_server": {
+          "type": "object",
+          "properties": {
+            "running": { "type": "boolean" },
+            "port": { "type": "number" },
+            "last_log_line": { "type": "string" }
+          }
+        },
+        "modal_apps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "state": { "type": "string", "enum": ["deployed", "stopped", "error"] },
+              "gpu": { "type": "string" }
+            }
+          }
+        },
+        "managed_endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "status": { "type": "string", "enum": ["live", "inactive", "cold"] },
+              "model": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "changes_made": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": { "type": "string" },
+          "change": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "current_status": {
+      "type": "object",
+      "required": ["working", "broken", "untested"],
+      "properties": {
+        "working": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Features confirmed working"
+        },
+        "broken": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Features confirmed broken"
+        },
+        "untested": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Features deployed but not tested"
+        }
+      }
+    },
+    "next_steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "priority": { "type": "string", "enum": ["P0", "P1", "P2"] },
+          "task": { "type": "string" },
+          "estimated_effort": { "type": "string" }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "blocker": { "type": "string" },
+          "workaround": { "type": "string" }
+        }
+      }
+    },
+    "credits_remaining": {
+      "type": "number",
+      "description": "Modal credits remaining (USD)"
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Critical warnings for the next agent"
+    }
+  }
+}
