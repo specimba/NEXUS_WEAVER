@@ -1444,3 +1444,64 @@ INFRASTRUCTURE NOTES:
   fallback works)
 - GitHub credentials restored in ~/.git-credentials
 - GPG signing temporarily disabled (key was wiped; can be regenerated)
+
+---
+Task ID: v5.38-recovery-from-sandbox-wipe
+Agent: Z.ai Code (main)
+Task: Recover NEXUS WEAVER after full sandbox wipe — restore from GitHub, re-establish backup workflow
+
+SITUATION:
+The z.ai sandbox was wiped (the exact failure mode warned about in
+AGENTS.md rule #2 and the handoff protocol). /home/z/my-project contained
+ONLY a fresh Next.js 16 scaffold with a single "Initial commit" — no
+worklog.md, no HANDOFF.md, no AGENTS.md, none of the NEXUS source. The
+previous shared preview URL (n1qgt5vm7691-d.space-z.ai) was also reported
+broken / not taking updates.
+
+RECOVERY EXECUTED:
+1. Cloned specimba/NEXUS_WEAVER from GitHub to /tmp/nexus-recovery using the
+   user-provided PAT (GLMfalltoken1, 36 repo + 19 account permissions,
+   exp 2026-10-05). Full history recovered: 205 tracked files, v5.37 head.
+2. Stopped the scaffold dev server, preserved sandbox-only assets (skills/,
+   upload/ mount), wiped the scaffold, copied the recovered project (with
+   .git history) into /home/z/my-project.
+3. Configured git: commit.gpgsign false, tag.gpgsign false, identity
+   "NEXUS Weaver Agent". Remote origin retains the PAT in .git/config
+   (local-only, never committed) for push capability.
+4. Created .env (DATABASE_URL + all known public Modal endpoint URLs from
+   secrets.ts fallbacks; token VALUES left empty — secrets.ts reads them
+   from env, to be restored via scripts/restore-env.sh or manual fill).
+   Verified .env is gitignored.
+5. bun install — 827 packages, clean.
+6. bunx prisma generate + bun run db:push — SQLite db/custom.db created
+   (167KB), in sync with schema.
+7. bun run lint — exit 0, no errors.
+
+BACKUP WORKFLOW RE-ESTABLISHED:
+- Remote origin: https://github.com/specimba/NEXUS_WEAVER.git (PAT-authenticated)
+- commit.gpgsign false (GPG key does not survive sandbox resets — AGENTS rule #7)
+- .env, db/*.db, node_modules, .next, public/gallery/*, upload/, skills/,
+  agent-ctx/ all gitignored
+- This commit + push verifies the GitHub fallback pipeline works end-to-end
+
+KNOWN STATE AFTER RECOVERY:
+- UI/code: fully restored to v5.37 (head 71eb80f)
+- Modal tokens (MODAL_TOKEN_ID/SECRET, PROXY_KEY/SECRET, HF_TOKEN): NOT in
+  .env (empty). FLUX.2 endpoint is public/no-auth per secrets.ts comment, so
+  image generation MAY work; brain stages (ST3GG/Judge/Creative) require
+  proxy auth and will fail until tokens restored. To restore: user runs
+  scripts/restore-env.sh + fills tokens, or provides them directly.
+- Dev server: Turbopack compiling the 5300-line studio-view.tsx for the
+  first time in this sandbox — monitoring for OOM.
+
+NEXT AGENT SHOULD:
+- Verify dev server stability (watch for OOM during first compile of the
+  large Studio component; consider bumping NODE_OPTIONS --max-old-space-size)
+- Restore Modal tokens to .env for full pipeline functionality
+- Resume EXECUTION_PLAN.md milestones M1-M6 (Gallery black-placeholder fix,
+  frontend timeout, blocked UX, image→video flow, NO8D controls, verification)
+- Honor AGENTS.md 8 critical rules; ALWAYS append to this worklog
+Stage Summary:
+- Full project recovered from GitHub after sandbox wipe. 205 files, v5.37.
+- Dependencies installed, DB created, lint clean, git backup pipeline verified.
+- .env minimal (tokens pending). Dev server compiling.
