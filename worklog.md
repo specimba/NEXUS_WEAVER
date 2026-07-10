@@ -1611,3 +1611,250 @@ Stage Summary:
 - Token auto-restore BLOCKED by account-level Actions runner-allocation failure.
 - Recovery otherwise COMPLETE: code + backup + verification all done.
 - Awaiting user decision on token-restore path (A/B/C above).
+
+---
+Task ID: 2-b-lora-audit
+Agent: Explore (LoRA audit)
+Task: Research-only audit of NEXUS WEAVER LoRA system to plan ComfyUI-pack-style combination workflows
+
+Work Log:
+- Read AGENTS.md (rule #5: max 3 LoRAs / weight ≤0.5 when stacking), EXECUTION_PLAN.md (M5 NO8D control system), worklog tail (v5.38 token-restore blocked → Civitai scraping currently dead).
+- Globbed src/** for *lora* / *Lora* and grep'd for "lora/LoRA/civitai/browserless" across src/ — found 35 referencing files. Read full LoRA library (1,456 lines), scraper, calibration, store, library-view, studio-view (LoRA + M5 sections), pipeline.ts stageFlux, /api/lora/scrape, /api/library, /api/inpaint/run, /api/aeon/advice + workflow-advice, /api/aeon/prompts, types/aeon.ts, prisma/schema.prisma, secrets.ts.
+- Verified which M5 NO8D backend routes actually exist (find src/app/api -type d). Cross-checked PromptPlusCard fetch URLs vs. installed route directories.
+- Found the AEONWorkflowPreset TypeScript interface — it IS a ComfyUI-pack data model (engine + LoRAs + weights + ranges + bestFor/avoidFor + examplePrompt) but only as a hardcoded fallback fixture, NOT persisted to DB or surfaced in UI.
+
+Stage Summary:
+- FULL STRUCTURED REPORT BELOW (also returned in final message):
+
+A) CURRENT LoRA CATALOG — 80 entries, all in src/lib/lora-library.ts (hardcoded TypeScript, NOT DB-backed). ALL 80 are source="huggingface" — ZERO actual Civitai / Civitai.red entries (despite the nav button labelled "LoRA Library HF + CIVITAI"). Schema per entry: { id, name, category, source, url, engineFamilies[], purpose, recommendedWeight, tags[], mature, license, isControl, priority?, weightName?, triggerWord?, needsReference?, notes? }.
+  Categories: garment(4), face(6), style(16), light(1), control(11), detailer(12), video(10), ocr-tool(1), safety(1), mature(7), + 11 unsorted add-ons (NO8D hi-res, Krea2 cluster, Z-Image cluster).
+  Engine-family breakdown: FLUX.2-only = 27, FLUX.1+FLUX.2 = 4, FLUX.1-only = 6, Krea 2 = 9, Z-Image = 6, Wan = 4, LTX = 6, Qwen-Image = 4, Ideogram = 1, SDXL = 1 (UltraSharp), Universal (empty families) = 2 (OCR, safety).
+  Weight distribution: many recommendedWeight >0.5 (NO8D FaceControl 0.8, fal-virtual-tryoff 0.85, agbr-anime 0.8, krea-retroanime 0.8, etc.). 3 LoRAs flagged INCOMPATIBLE with FLUX.2 Klein 9B (UltraSharp V2, Heartsync Flux-NSFW, BIGJUTT True V2) with notes.
+  Descriptions: every entry has a `purpose` string (1 line). ~7 have rich `notes` (incompatibility, multi-file warnings). NONE have triggerWord set despite the schema field existing. ~12 have `weightName` set (prevents diffusers loading the wrong .safetensors).
+
+B) LoRA SELECTION / STACKING UX (src/components/nexus/studio-view.tsx LoraStack + src/components/nexus/store.ts):
+  - Selection: Library view (library-view.tsx) renders the 80-entry grid with search + category chips + engine-family chips + curated-only toggle. Click "Apply" → toggleLora(id) → adds to loraIds[] and initialises weight=recommendedWeight, enabled=true. Studio's LoraStack panel then shows the applied stack with per-LoRA sliders.
+  - Per-LoRA weights: ✅ EXIST (loraWeights map, setLoraWeight, resetLoraWeight, toggleLoraEnabled). Slider min=0, max=1, step=0.05. The preset.loraWeight is shown as "default w:" but is informational only — every curated LoRA overrides it with its own recommendedWeight.
+  - Max-stack enforcement: ❌ NONE. toggleLora() in store.ts has no length check. User can apply all 80 LoRAs. Advisory-only warning in src/lib/brain-assistant.ts: >3 → warning, >5 → stronger warning, >1 style LoRA → warning. Pure advisory (does not block generation).
+  - Weight cap enforcement (rule #5 compliance): ❌ NONE. setLoraWeight clamps to [0,1] not [0,0.5]. Slider allows dragging to 1.0. The brain-assistant only warns when total combined weight >1.0 or >2 LoRAs are individually >0.85. AGENTS.md rule #5 is therefore VIOLATED by default for ~50 of the 80 entries (whose recommendedWeight ≥0.5).
+  - Provenance: Generation.loraIds stored as comma-separated string; ExperienceLog.loraWeights stored as JSON string. Per-LoRA weights flow end-to-end to Modal via stageFlux() → modalLoras array (pipeline.ts L164-181) — Modal receives {repo, adapter, weight, weightName?} per LoRA.
+
+C) NO8D / PROMPT+ STATUS (EXECUTION_PLAN M5):
+  - ✅ Per-LoRA weight sliders — DONE (LoraStack, lines 2711-2746).
+  - ✅ Per-LoRA enable/disable switches — DONE.
+  - ✅ InpaintCard UI — DONE (canvas mask-draw, brush/feather sliders, clear/invert mask, denoise slider, prompt textarea, session history). Backend route /api/inpaint/run EXISTS and calls MODAL_INPAINT_URL (configured in secrets.ts L123). Will return errorMessage "Inpaint backend not deployed" if the Modal app isn't deployed.
+  - ✅ ABPreviewCard UI — DONE (draggable split-line, A/B swap, gallery picker). Pure client-side, no backend needed.
+  - ⚠️ PromptPlusCard UI — DONE (Collapsible, "Expand" + "Reverse" tabs, editable textarea, "Send to Studio" button). BUT BOTH BACKEND ROUTES ARE MISSING:
+    - /api/prompt/enhance — ❌ DOES NOT EXIST (no src/app/api/prompt/enhance/ directory). Clicking "Expand" → fetch returns 404 → "Enhance failed: HTTP 404".
+    - /api/prompt/reverse — ❌ DOES NOT EXIST. Clicking "Reverse" → "Reverse-engineer failed: HTTP 404".
+    - The NO8D "PROMPT+" button therefore renders but is NON-FUNCTIONAL in the sandbox.
+
+D) CIVITAI / HF / CIVITAI.RED INTEGRATION GAPS:
+  - HuggingFace API: ✅ USED. src/lib/lora-scraper.ts scrapeHuggingFaceModel(repo) calls `https://huggingface.co/api/models/{repo}` (free, structured JSON: tags, downloads, likes, siblings (.safetensors files), pipeline_tag). No auth needed for public models; HF_TOKEN used only for gated models by Modal apps.
+  - Civitai REST API: ❌ NOT USED. Civitai has a public REST API (https://civitai.com/api/v1/models/{id}) returning structured JSON (name, description, model type, base model, trained words, tags, stats, images). The scraper instead uses Browserless to fetch the rendered HTML and parse og: tags — much less reliable.
+  - Civitai.red: ❌ STUB. Same Browserless /content path as civitai.com. Hardcoded to mature=true. Returns "Browserless not configured" if BROWSERLESS_TOKEN is empty (current state per worklog v5.38-token-restore-blocked).
+  - LORA_LIBRARY actual sources: ALL 80 are HuggingFace. The "HF + Civitai" label on the nav button is aspirational, not factual.
+  - The /api/lora/scrape route exists but is NOT wired into any UI. The library view reads from the static LORA_LIBRARY constant (src/lib/lora-library.ts), not from scraped data. There is no "Add LoRA by URL" input anywhere in the studio or library UI.
+  - BROWSERLESS_TOKEN enablement: when restored, scrapeCivitaiModel works for civitai.com + civitai.red. Would NOT enable the Civitai REST API (still HTML scraping). Would also enable: dynamic scraping of HF model pages with JS-rendered content (rare need), and any other headless-browser task.
+
+E) COMFYUI-PACK WORKFLOW GAPS:
+  - The AEON `AEONWorkflowPreset` interface (src/types/aeon.ts L234-243) IS a ComfyUI-pack data model: { id, label, description, examplePrompt, engineConfig (engine+steps+cfg+resolution+aspect), loras[] (loraId+role+weight+weightRange+notes), bestFor[], avoidFor[] }.
+  - A hardcoded fallback fixture in src/app/api/aeon/workflow-advice/route.ts L83-178 contains 3 canonical packs: "High-End Editorial Portrait", "Commercial Fashion Ad", "Cinematic Concept Frame" — each with engine + LoRAs + weights + ranges + bestFor/avoidFor. This is the closest thing to packs today.
+  - Gaps preventing packs as first-class combinable objects:
+    1. NO DB model — Prisma schema has no `Pack` / `Workflow` / `LoraEntry` table. Packs exist only as a TS interface + hardcoded fixture.
+    2. NO UI to browse/apply packs. The /api/aeon/workflow-advice endpoint is cached + returns the fixture, but no studio component renders canonicalPresets[] as one-click cards.
+    3. NO pack import (from a Civitai/HF pack page URL or JSON file) or pack export (save current LoRA stack + calibration as a named pack).
+    4. NO pack→studio apply action (a pack click should set engineId, calibrationId, loraIds, loraWeights, prompt in one batch).
+    5. NO trigger-word auto-injection (LoRA entries have a triggerWord field but it's never set; packs should carry the trigger phrase and inject it into the prompt).
+    6. NO weight-cap enforcement tied to packs (rule #5: ≤0.5 per LoRA when stacking; ≤3 LoRAs).
+  - Concrete data-model proposal for packs:
+    • Prisma `LoraPack` model: { id, name, description, source ("civitai"|"hf"|"user"|"aeon"), sourceUrl?, engineId, calibrationId?, loras JSON (array of {loraId, weight, role, notes}), promptTemplate?, negativePrompt?, bestFor JSON, avoidFor JSON, mature Boolean, createdAt, updatedAt }.
+    • The TS `AEONWorkflowPreset` is already ~90% structurally compatible — promote it to `LoraPack` and persist.
+    • Pack↔LoRA is many-to-many via a join (or store loras[] as JSON, simpler for SQLite).
+    • Studio gets a "Packs" tab/sidebar: grid of pack cards (thumbnail, name, engine, LoRA count, weight sum, mature badge). Click → batch-applies engine + calibration + LoRA stack + prompt template. Long-press → previews the LoRA stack before applying.
+
+F) RECOMMENDED IMPLEMENTATION PLAN (ranked by impact, UI-only vs backend noted):
+  RANK 1 — Restore Prompt+ (NO8D M5) backend routes — UI-only callers already exist, just add 2 route files. IMPACT: unblocks the headline NO8D feature.
+    • CREATE src/app/api/prompt/enhance/route.ts — POST { prompt, extraRules? } → call MODAL_CREATIVE_URL (brisk-evolution-4b, already in secrets.ts) with a prompt-expansion system prompt → return { enhanced }.
+    • CREATE src/app/api/prompt/reverse/route.ts — POST { imagePath | imageDataUrl } → load image, call MODAL_JUDGE_URL (gemma-4-31b, vision-capable, already in secrets.ts) with "describe this image as a generation prompt" → return { prompt }.
+    Both ~40 lines each, no GPU, no new deps. Same pattern as /api/inpaint/run.
+  RANK 2 — Wire ComfyUI-style packs into the Studio UI (UI-only, no GPU) — IMPACT: directly addresses the user's "meaningful combination workflows" goal.
+    • CREATE src/components/nexus/packs-view.tsx — new view id="packs", renders packs as cards. Add NAV entry in app-shell.tsx.
+    • CREATE src/lib/lora-packs.ts — exports LORA_PACKS: LoraPack[] (port the 3 AEON fallback presets + add 5–10 more curated packs: "Editorial Fashion FLUX.2", "Krea 2 Realism", "Z-Image Speedrun", "Wan 2.2 Lightning I2V", "LTX Pose-Controlled Video", "NO8D Full Control Suite", "Anime Illustration Klein", "Analog Film Klein", "Brazilian Realism Z-Image", "8090 Cult Film").
+    • MODIFY src/components/nexus/store.ts — add applyPack(packId) action that batches setEngine + setCalibration + clearLoras + per-LoRA toggleLora(id)+setLoraWeight(id, w) + setPrompt(template).
+    • MODIFY src/components/nexus/app-shell.tsx — add nav entry { id: "packs", label: "Workflow Packs", icon: Boxes, hint: "ComfyUI-style" }.
+  RANK 3 — Enforce AGENTS.md rule #5 in the UI (UI-only, no GPU) — IMPACT: stops quality collapse from over-stacking; closes the LoRA-system correctness gap.
+    • MODIFY src/components/nexus/store.ts toggleLora() — when loraIds.length >= 3 and adding a new id, return early + emit a Zustand `warning` field the UI can toast. (Soft-cap: allow override via a "power user" toggle, but default blocks.)
+    • MODIFY src/components/nexus/store.ts setLoraWeight() — clamp to [0, 0.5] when loraIds.length > 1 (stacked), [0, 1] when single. Surface a tooltip explaining the cap.
+    • MODIFY src/lib/lora-library.ts — add `weightCapOverride?` field for LoRAs that legitimately need >0.5 when stacked (rare). Most importantly: RE-TUNE recommendedWeight values that are >0.5 down to ≤0.5 for stacking-friendly defaults (e.g. NO8D FaceControl 0.8 → 0.5, fal-virtual-tryoff 0.85 → 0.5). Single-LoRA users can still bump back up via the slider.
+  RANK 4 — Civitai REST API integration (backend, no GPU) — IMPACT: enables real Civitai pack discovery + import.
+    • MODIFY src/lib/lora-scraper.ts — add scrapeCivitaiByRest(modelId) calling https://civitai.com/api/v1/models/{id} (structured JSON, no auth needed for SFW; NSFW requires API key header `Authorization: Bearer {CIVITAI_API_TOKEN}`). Returns: name, description, type, baseModel, trainedWords[], tags, stats{downloadCount, thumbsUpCount}, images[]. Migrate scrapeCivitaiModel to call this FIRST, fall back to Browserless only for civitai.red.
+    • CREATE src/app/api/lora/import/route.ts — POST { url } → detects HF vs Civitai vs Civitai.red, scrapes, returns a LoraEntry-shaped object the user can edit + save.
+    • CREATE src/app/api/library/import/route.ts — POST { loraEntry } → persists to a new Prisma `LoraEntry` table (so user-added LoRAs survive restarts, unlike the hardcoded TS array).
+  RANK 5 — Persist packs + LoRAs to Prisma (backend, no GPU) — IMPACT: makes packs + user-imported LoRAs first-class DB entities.
+    • MODIFY prisma/schema.prisma — add `model LoraEntry` (mirror the TS interface) + `model LoraPack` (engine + LoRA JSON + prompt template + bestFor/avoidFor) + `model LoraPackLora` join (or keep loras as JSON for SQLite simplicity). Run db:push.
+    • CREATE src/app/api/packs/route.ts — GET (list) + POST (create) + PATCH (update) + DELETE.
+    • MODIFY src/components/nexus/packs-view.tsx — fetch from /api/packs instead of static TS constant; add "Save current stack as pack" button.
+  RANK 6 — Civitai.red + NSFW pack browsing (backend + UI, requires BROWSERLESS_TOKEN) — IMPACT: full Civitai.red coverage.
+    • Reuse existing Browserless scraper once BROWSERLESS_TOKEN is restored (worklog v5.38 path A/B/C).
+    • ADD a "Pack URL" import field that accepts civitai.red/models/... URLs and uses Browserless. Gated behind matureUnlocked().
+  RANK 7 — Pack thumbnails + preview gallery (UI + image proxy, no GPU) — IMPACT: visual pack browsing parity with ComfyUI.
+    • MODIFY src/components/nexus/packs-view.tsx — render pack thumbnail from first LoRA's HF thumbnail (already scraped by scrapeHuggingFaceModel, but not stored). Add a thumbnailUrl? field to LoraEntry.
+    • CREATE src/app/api/image/proxy/route.ts — proxies remote HF/Civitai thumbnails through the backend to avoid mixed-content + CORS issues.
+
+---
+Task ID: 2-a-cost-audit
+Agent: Explore (cost audit)
+Task: Audit all Modal apps + TS client code for GPU credit-burning risks; report per-app config, ranked risks, and exact fixes
+
+Work Log:
+- Read AGENTS.md (rules #3, #4 verified) + worklog tail (last 3 entries: v5.38 sandbox recovery + token-restore blocked).
+- Read all 9 modal-apps/*.py files + deploy_all.sh.
+- Read src/lib/{engine-manager,modal-client,endpoint-warmup,secrets,modal-budget,calibration}.ts.
+- Read src/app/api/modal/{status,warmup,warm-endpoints}/route.ts + engine-manager route.
+- Ran `modal app list --json` (4 apps deployed: flux2, wan22, ltx23, kontext-inpaint; Tasks=0 all).
+- Ran `modal endpoint list --json` (3 managed endpoints: qwen3-5-9b, gemma-4-31b-uncensored-heretic, brisk-evolution-4b — all live).
+- Ran `modal app logs nexus-flux2-klein9b` (confirmed cold-start = ~24-30s weight load).
+- Grep'd studio-view.tsx for the auto-warm useEffect (line 521-542) + refetchInterval polling patterns.
+- Confirmed `modal app show` / `modal app get` don't exist in CLI v1.5.1; `modal endpoint list --json` doesn't expose min_containers/scaledown → managed endpoint scale config is dashboard-only.
+
+Stage Summary:
+
+## A) Per-app cost config table
+
+| App (file:line) | GPU | min_cont | max_cont | scaledown_window | timeout | proxy_auth | cold-start weight-cache | Est. idle cost/day |
+|---|---|---|---|---|---|---|---|---|
+| nexus-flux2-klein9b (nexus_flux2_klein9b.py:44) | L40S | 0 | 1 | 300s | 600s | NO (@modal.fastapi_endpoint, public) | hf-hub-cache volume + cache_dir arg | $0 (scales to zero); $0.016/cold-start cycle |
+| nexus-kontext-inpaint (nexus_kontext_inpaint.py:43-54) | L40S | 0 | 1 | 300s | 1200s | NO (@modal.asgi_app, public) | hf-hub-cache volume | $0 idle; $0.016/cycle |
+| nexus-kontext-refine (nexus_kontext_refine.py:37) | L40S | 0 | 1 | 300s | 600s | NO (fastapi_endpoint, public) | hf-hub-cache volume | $0 idle. **NOT DEPLOYED.** |
+| nexus-zimage-turbo (nexus_zimage_turbo.py:45-56) | H100 | 0 | 1 | 300s | 1200s | NO (asgi_app, public) | hf-hub-cache volume | $0 idle; $0.033/cycle. **NOT DEPLOYED.** |
+| nexus-krea2-turbo (nexus_krea2_turbo.py:47-58) | H100 | 0 | 1 | 300s | 1200s | NO (asgi_app, public) | hf-hub-cache volume | $0 idle. **NOT DEPLOYED.** |
+| nexus-wan22-i2v (nexus_wan22_i2v.py:50-61) | H100 | 0 | 1 | 300s | 1200s | NO (asgi_app, public) | hf-hub-cache volume | $0 idle; $0.033/cycle |
+| nexus-ltx23-i2v (nexus_ltx23_i2v.py:45-56) | H100 | 0 | 1 | 300s | 900s | NO (asgi_app, public) | hf-hub-cache volume | $0 idle; $0.033/cycle |
+| nexus-brain-vllm (nexus_brain_vllm.py:61-72) | L40S | 0 | 1 | 300s | 1200s | NO (asgi_app, public) | hf-hub-cache volume | $0 idle. **NOT DEPLOYED.** LEGACY (replaced by managed endpoint) |
+| nexus-brain-uncensored (nexus_brain_gemma4.py:65-78) | H100 | 0 | 1 | **900s (15min)** ⚠️ | 600s | NO (web_server, public) | hf-hub-cache + vllm-cache volumes | $0 idle BUT 15min scaledown = $0.99/cycle. **NOT DEPLOYED.** ⚠️ deploy_all.sh would deploy this |
+| nexus-creative-brain (nexus_creative_brain.py:68-79) | L40S | 0 | 1 | 300s | 1200s | NO (asgi_app, public) | hf-hub-cache volume | $0 idle. **NOT DEPLOYED.** LEGACY |
+| nexus-visual (nexus_flux1_schnell.py:46-49) | H100 | 0 | 1 | 300s | 600s | NO (web_server, public) | hf-hub-cache volume | $0 idle. **NOT DEPLOYED.** LEGACY (old FLUX.1) |
+
+**Cold-start weight-cache strategy (all apps)**: All mount `modal.Volume.from_name("hf-hub-cache", create_if_missing=True)` at `/root/.cache/huggingface` and pass `cache_dir=HF_CACHE_DIR` to `from_pretrained()`. Weights persist across cold starts → only the FIRST cold start downloads (slow); subsequent cold starts load from the volume (FLUX.2: 24s confirmed via `modal app logs`). GOOD — no re-download burn.
+
+**Live deployed apps (modal app list)**: 4 — nexus-flux2-klein9b, nexus-wan22-i2v, nexus-ltx23-i2v, nexus-kontext-inpaint. All Tasks=0.
+
+## B) Credit-burn risks ranked
+
+1. **HIGHEST — studio-view.tsx auto-warm on mount**: `studio-view.tsx:521-542` useEffect on EVERY Studio page mount fires `POST /api/modal/warm-endpoints {action:"warm"}` → `preWarmAllEndpoints()` pings 4 endpoints in parallel (FLUX.2 + 3 brain managed endpoints). Each ping on a cold container triggers a cold start: FLUX.2 ~30s L40S = $0.016; each brain endpoint ~60-120s = $0.066-$0.21 each. **Per page-load cost when all 4 cold: ~$0.18-$0.55**. User opens Studio 10x/day = **$1.80-$5.50/day just from page loads**. React StrictMode in dev doubles this (useEffect fires twice).
+
+2. **HIGH — Cost Lab force-refresh**: `cost-lab-view.tsx:214` calls `/api/modal/status?force=1` which BYPASSES the 5min FLUX.2 cache. Every Cost Lab open triggers a fresh FLUX.2 health probe → cold-starts FLUX.2 if cold ($0.016 each).
+
+3. **MEDIUM — Brain health uncached in /api/modal/status**: `src/app/api/modal/status/route.ts:31` calls `checkBrainHealth()` LIVE on every request (only FLUX.2 health is cached 5min). 6 views (studio/monitor/command/cost-lab/pipeline/app-shell) call /api/modal/status → when FLUX.2 cache is stale, brain endpoint gets pinged 6x in quick succession → potential cold-start of 9B Qwen managed endpoint.
+
+4. **MEDIUM (latent) — deploy_all.sh trap**: `modal-apps/deploy_all.sh:72` deploys `nexus_brain_gemma4.py` (H100, scaledown=15min). Running this blindly would (a) violate AGENTS rule #3 if not explicitly asked, (b) deploy a redundant vLLM brain app that's been replaced by 3 managed endpoints, (c) burn $0.99/cycle due to 15min scaledown. Also deploys `nexus_kontext_refine.py` (L40S, also not in current deploy set). Script is OUTDATED.
+
+5. **LOW (latent) — brain_gemma4 15min scaledown**: `nexus_brain_gemma4.py:71` has `scaledown_window=15 * MINUTES` while all other H100 apps use 5min. 3x more idle cost per request. Not currently deployed.
+
+6. **LOW — stale worklog claim**: worklog v5.29 line 1424 claims "FLUX.2 (L40S): always-on, ~$0.50-1.50/hr idle → ~$12-36/day max". This is INCORRECT — actual `nexus_flux2_klein9b.py:44` has `min_containers=0`. FLUX.2 is NOT always-on; it scales to zero after 5min idle. The "alwaysOn: true" flag in `engine-manager.ts:57` only prevents UI stop — does NOT keep container warm. Misleading doc should be corrected.
+
+7. **LOW — doc mismatch in modal-client.ts**: comments at lines 9, 17, 95, 157 say "60-second TTL" but `HEALTH_CACHE_TTL_MS = 300_000` (5min) at line 63. Stale comment; 5min cache is actually BETTER for cost.
+
+8. **LOW — 6 views still call /api/modal/status**: studio/monitor/command/cost-lab/pipeline/app-shell. 5min cache mitigates most, but each navigation can still trigger uncached brain health check. Historical "8 polling loops" issue (modal-budget.ts:9) is partially mitigated but not fully eliminated. Most other refetchInterval loops (monitor 15s, command 12s/30s, gallery 20s, compliance 30s, pipeline 15s) poll DB-only endpoints (/api/metrics, /api/library) — NOT GPU endpoints — so they don't burn GPU credits.
+
+## C) Recommended fixes (with exact file:line)
+
+### (a) Changes requiring `modal deploy` (Python app code):
+
+**C-a-1** `modal-apps/nexus_brain_gemma4.py:71` (latent — only matters if re-deployed)
+- OLD: `scaledown_window=15 * MINUTES,`
+- NEW: `scaledown_window=5 * MINUTES,`
+- Rationale: Align with other H100 apps (wan22/ltx23/zimage/krea2 all use 5min). 15min = 3x more idle cost per request. Not currently deployed.
+
+**C-a-2 (recommendation, not code change)** `modal-apps/deploy_all.sh` — DELETE or rewrite. Currently deploys `nexus_brain_gemma4.py` (H100, rule #3 trap) + `nexus_kontext_refine.py` (L40S, redundant with the deployed `nexus_kontext_inpaint.py`). The brain app is fully replaced by 3 managed endpoints. Script also references outdated URLs (`nexus-flux2-klein9b-web-app.modal.run` vs actual `nexusflux2generator-generate.modal.run`).
+
+### (b) Changes only in TS (no Modal redeploy needed):
+
+**C-b-1 (HIGHEST PRIORITY — biggest win)** `src/components/nexus/studio-view.tsx:521-542`
+- OLD: useEffect on mount ALWAYS POSTs to /api/modal/warm-endpoints {action:"warm"} which pings all 4 GPU endpoints.
+- NEW: Three options (pick one):
+  - (a) REMOVE the auto-warm entirely — rely on the existing "Warm up" button (line 999) for user-initiated warm.
+  - (b) Add `sessionStorage.getItem("nexus-warmed")` guard so warm only fires ONCE per browser session.
+  - (c) Lazy-warm: only fire on the first "Run Pipeline" click, not on page mount.
+- Estimated savings: $1.80-$5.50/day per active user.
+
+**C-b-2 (HIGH)** `src/components/nexus/cost-lab-view.tsx:214`
+- OLD: `await fetch("/api/modal/status?force=1", { cache: "no-store" });`
+- NEW: `await fetch("/api/modal/status", { cache: "no-store" });`
+- Rationale: Drop `?force=1`. Cost Lab doesn't need a fresh cold-start probe — 5min cache is sufficient for a budget dashboard. Use "Warm up" button if a real probe is needed.
+
+**C-b-3 (MEDIUM)** `src/app/api/modal/status/route.ts:29-32`
+- OLD: `const [health, brainHealth] = await Promise.all([getCachedModalHealth(force), isBrainEndpointConfigured() ? checkBrainHealth() : Promise.resolve(null)]);`
+- NEW: Wrap `checkBrainHealth()` in a `getCachedBrainHealth()` with the same 5min TTL pattern (mirror `_healthCache` in modal-client.ts:65-70). Add `let _brainHealthCache: { data: ...; fetchedAt: number } | null = null;` and gate the call.
+- Rationale: Brain health is uncached → every status call (when FLUX.2 cache is stale) pings the brain endpoint → potential cold-start of 9B Qwen managed endpoint. 6 views trigger this.
+
+**C-b-4 (LOW — defense in depth)** `src/lib/endpoint-warmup.ts:116-125` `preWarmAllEndpoints()`
+- Add a 5-min cooldown gate at the top of the function: `if (_lastPreWarmAt && Date.now() - _lastPreWarmAt < 300_000) return;` then `_lastPreWarmAt = Date.now();`
+- Prevents duplicate warm calls from React StrictMode double-fire + rapid navigations.
+
+**C-b-5 (LOW — doc fix)** `src/lib/modal-client.ts:9, 17, 95, 157`
+- Update comments from "60-second TTL" → "5-minute TTL" to match `HEALTH_CACHE_TTL_MS = 300_000` (line 63). No behavior change.
+
+### (c) Managed Endpoint config changes (Modal dashboard only — CANNOT be done from code):
+
+The 3 managed endpoints are configured via Modal dashboard (modal.com → Endpoints). User MUST manually verify for EACH of the 3 endpoints:
+1. `min_containers = 0` (if >0, that's 24/7 burn — reduce to 0 immediately).
+2. `scaledown_window` is short (5-15min — shorter = less idle waste).
+3. GPU type (worklog says B200 for gemma-4-31b but UNCONFIRMED for the other 2).
+
+`modal endpoint list --json` only returns `name, endpoint_id, status, created_at, created_by` — NO scale config exposed. Dashboard is the ONLY source of truth.
+
+## D) Managed Endpoints
+
+Confirmed live via `modal endpoint list`:
+| Name | Endpoint ID | Status | Created |
+|---|---|---|---|
+| qwen3-5-9b-unredacted-max (ST3GG brain) | ep-clkeImY9nHsw1oCXatoPxB | live | 2026-07-09 11:11 |
+| gemma-4-31b-it-uncensored-heretic (Judge) | ep-AnKxOx94YtLM3kZXmBlK0m | live | 2026-07-09 11:15 |
+| brisk-evolution-4b-v0-1 (Creative) | ep-PZKsnA69TKk0fS9FrvpZhV | live | 2026-07-09 11:21 |
+
+**min_containers / scaledown_window: CANNOT be determined from any file in the repo.** Managed endpoints are created via `modal endpoint create` (CLI/dashboard) and their scale config is NOT stored in any committed file. The CLI command `modal endpoint list --json` does NOT expose scale settings. **The user MUST check the Modal dashboard** (modal.com → Endpoints → click each → Scaling tab) to verify min_containers=0 and a reasonable scaledown window. If any of the 3 endpoints has min_containers >= 1, that is a 24/7 burn and must be reduced to 0.
+
+## E) AGENTS.md rule compliance
+
+**Rule #3 (NEVER deploy H100 Modal apps unless explicitly asked)**:
+- ⚠️ Two H100 apps are CURRENTLY DEPLOYED right now: `nexus-wan22-i2v` + `nexus-ltx23-i2v` (confirmed via `modal app list`). Both have Tasks=0 (no running containers, just app registration). They are idle and not burning credits at this moment, but they are deployed H100 apps. Whether this violates rule #3 depends on whether the user explicitly asked — they're video engines, likely user-initiated via the engine picker. Not a strict violation but worth flagging.
+- ⚠️ `modal-apps/deploy_all.sh:72` would deploy `nexus_brain_gemma4.py` (H100) if run blindly — this WOULD be a rule #3 violation (the brain app has been replaced by 3 managed endpoints; deploying it is pure waste). **Recommend deleting or rewriting deploy_all.sh.**
+- ✅ NO H100 app has `min_containers >= 1` — all scale to zero. Compliant on the idle-cost dimension. No 24/7 H100 burn from app code.
+
+**Rule #4 (NEVER increase FLUX.2 steps above 4)**:
+- ✅ `modal-apps/nexus_flux2_klein9b.py:59` — `steps: int = 4` (default). Compliant.
+- ✅ `src/lib/modal-client.ts:47` — `FLUX2_MAX_STEPS = 4` constant.
+- ✅ `src/lib/modal-client.ts:264` — `Math.min(steps ?? backend.maxSteps, backend.maxSteps)` caps client-side.
+- ✅ No code path can send steps > 4 to FLUX.2. **Fully compliant.**
+
+**Bonus finding (rule #1 — never use z-ai as fallback)**:
+- `src/lib/modal-client.ts:480` callModalBrain now uses `callEndpointWithRetry` (no z-ai fallback). Compliant.
+- `src/app/api/modal/warmup/route.ts:55` comment says "Brain is optional — the pipeline falls through to z-ai if brain is cold." — STALE COMMENT. The actual code (modal-client.ts:517-519) returns `null` and the pipeline throws a clear error, NOT a z-ai fallback. Comment should be updated.
+
+---
+
+---
+Task ID: 3-packs-system
+Agent: full-stack-developer (Packs system)
+Task: Implement ComfyUI-style workflow packs (catalog + view + store actions + rule #5 enforcement)
+
+Work Log:
+- Read worklog.md (tail 300) for project state + 2-b-lora-audit entry; read AGENTS.md (8 rules, esp. #5: weights ≤0.5 when stacking, max 3 LoRAs).
+- Read src/types/aeon.ts (AEONWorkflowPreset interface — confirmed structural alignment), src/app/api/aeon/workflow-advice/route.ts (3 fallback presets at L83-178), src/lib/lora-library.ts (80 entries, 1457 lines), src/components/nexus/{store,app-shell,library-view,command-view}.tsx, src/lib/{nexus-types,engines,calibration}.ts.
+- Wrote /home/z/my-project/agent-ctx/3-packs-system.md (work record).
+- Step 1: lora-library.ts — retuned 65 entries with recommendedWeight > 0.5 → 0.5 (regex via Python; verified 0 remaining >0.5). Added a comment block on the recommendedWeight field explaining rule #5 + the stacking clamp behavior in store.setLoraWeight.
+- Step 2: Created src/lib/lora-packs.ts — exports LoraPack + LoraPackLoRA + LoraPackSource + LORA_PACKS (10 packs) + getPack + packWeightSum helpers. Ported 3 AEON canonical presets (flux2_high_end_editorial, flux2_commercial_fashion_ad, flux2_cinematic_concept_frame) with LoRA IDs normalised to real library entries (analog-photography-klein9b → agbr-analog; cinematic-film-still-klein9b → agbr-cinematic). Added 7 curated packs: Editorial Fashion FLUX.2, Cinematic Concept FLUX.2, Krea 2 Realism, Z-Image Speedrun, Anime Illustration, Analog Film, Portrait Detail. Every per-LoRA weight ≤ 0.5. Each description carries usage advice ("best for X, avoid for Y, pair with Z").
+- Step 3: nexus-types.ts — added "packs" to ViewId union.
+- Step 4: store.ts — added: `powerMode: boolean` state (default false) + `togglePowerMode` action; `applyPack(packId)` action (batch-sets engine + calibration, clears LoRAs, applies each pack LoRA in order via direct set calls — bypasses toggleLora warning toast since packs are pre-validated for rule #5; sets prompt to promptTemplate; toasts success). Refactored `toggleLora` to use get()/set() pattern (was set callback) — added soft rule #5 warning toast when adding would make loraIds.length > 3 (silenced if powerMode). Default fallback weight in toggleLora changed from 0.8 → 0.5. Refactored `setLoraWeight` to clamp to [0, 0.5] when loraIds.length > 1 (stacking), [0, 1] when single-LoRA. Stacking-cap toast fires ONCE per page-load via module-level _weightCapToastShown flag. Added `import { toast } from "sonner"` + `import { LORA_PACKS } from "@/lib/lora-packs"`.
+- Step 5: Created src/components/nexus/packs-view.tsx — `PacksView` named export. Renders a responsive grid (mobile 1 col / sm 2 / lg 3) of PackCard components. Each card shows thumbnailEmoji, name, description, engine badge (family), LoRA count, total weight sum (Σw), mature badge, bestFor tags (3 max + N more). "Preview stack" expand button reveals the LoRA list with per-LoRA name + weight + role + notes + the prompt template + avoidFor tags. "Apply Pack" button calls applyPack(packId) + setAppliedPackId (triggers sticky bottom action bar with "Open in Studio"). Search input (name/description/role/bestFor/loraId) + engine-family filter chips + Power Mode toggle switch (silences rule #5 warning). Mature gate: clicking Apply on a mature pack when matureUnlocked() is false toasts an error.
+- Step 6: app-shell.tsx — added Boxes import; added `{ id: "packs", label: "Workflow Packs", icon: Boxes, hint: "ComfyUI-style" }` to NAV array (after "LoRA Library"); added `g+k` keyboard shortcut for view switching; added "g k → Go to Workflow Packs" entry in shortcuts overlay. page.tsx — added `import { PacksView }` + `{view === "packs" ? <PacksView /> : null}`.
+- Verified: page returns HTTP 200 on a fresh dev-server boot (curl localhost:3000). HTML contains "Workflow Packs" + "ComfyUI-style" nav labels. No compile errors in dev.log.
+
+Stage Summary:
+- Files created (2): src/lib/lora-packs.ts (10 packs, 3 AEON ports + 7 curated), src/components/nexus/packs-view.tsx (PacksView + PackCard).
+- Files modified (4): src/lib/lora-library.ts (65 recommendedWeight >0.5 retuned to 0.5 + rule #5 comment), src/lib/nexus-types.ts (added "packs" to ViewId), src/components/nexus/store.ts (applyPack + powerMode + togglePowerMode + rule #5 enforcement in toggleLora + setLoraWeight), src/components/nexus/app-shell.tsx (Boxes nav entry + g+k shortcut), src/app/page.tsx (PacksView wired).
+- Packs count: 10 (3 AEON ported + 7 curated). All weights ≤ 0.5 (rule #5 compliant). Pack LoRA IDs all verified against LORA_LIBRARY (80 entries).
+- Rule #5 enforcement: soft warning toast in toggleLora when loraIds.length > 3 (silenced by powerMode); weight clamp in setLoraWeight to [0, 0.5] when stacking (toast once per page-load); applyPack bypasses both for pre-validated packs.
+- Issues: dev server was not running when I started; I started it manually in the background to verify the page compiles cleanly (HTTP 200). No TypeScript or runtime errors observed. No Prisma/db:push/modal/commit operations performed (per task constraints).
