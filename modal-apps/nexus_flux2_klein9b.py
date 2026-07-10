@@ -145,8 +145,12 @@ class NexusFlux2Generator:
             # Phase 1: Establish composition (first half of denoising)
             print(f"[variation] Phase 1: {half_steps} steps (establishing composition)")
             latents = self.pipe(
-                **pipe_kwargs,
+                prompt=prompt,
                 num_inference_steps=half_steps,
+                guidance_scale=cfg,
+                height=height,
+                width=width,
+                generator=generator,
                 output_type="latent",
                 return_dict=False,
             )[0]
@@ -173,7 +177,15 @@ class NexusFlux2Generator:
             ).images[0]
         else:
             # Standard single-pass generation (no variation injection)
-            result = self.pipe(**pipe_kwargs).images[0]
+            result = self.pipe(
+                prompt=prompt,
+                num_inference_steps=steps,
+                guidance_scale=cfg,
+                height=height,
+                width=width,
+                generator=generator,
+                output_type="pil",
+            ).images[0]
 
         # ── TWO-STAGE REFINEMENT PASS (P1: Crispness + Detail) ─────────────
         # ComfyUI technique: run a second sampler at low denoise over the first
