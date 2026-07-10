@@ -4,13 +4,22 @@
  * ARCHITECTURE:
  * - HuggingFace models: uses the free HF API (https://huggingface.co/api/models/{repo})
  *   Returns structured JSON: tags, downloads, likes, siblings (file list), pipeline_tag.
- * - Civitai + Civitai.red models: uses Browserless /content endpoint to fetch the
- *   rendered HTML, then extracts og:title, og:description, og:image metadata.
- *   Browserless handles JS-rendered pages and NSFW (civitai.red) content.
+ * - Civitai (civitai.com): uses the FREE public REST API
+ *   (https://civitai.com/api/v1/models/{id}) — no auth required for public models.
+ *   Returns structured JSON: name, description, type, baseModel, trainedWords, tags,
+ *   stats (download/favorite/rating counts), nsfw flag, preview images.
+ * - Civitai.red (NSFW mirror): JS-rendered, no public REST API. Uses Browserless
+ *   /scrape endpoint (POST with {url, elements:[{selector}]}) to extract og: meta
+ *   tags from the rendered HTML.
  *
- * BROWSERLESS TOKEN: stored in src/lib/secrets.ts (committed to git, bulletproof).
+ * ROUTING (scrapeCivitaiModel):
+ *   - civitai.red URL  → scrapeCivitaiRedModel (Browserless /scrape only)
+ *   - civitai.com URL  → scrapeCivitaiByRest (extract model ID, call REST API)
  *
- * This is a backend-only service — called from /api/lora/scrape routes.
+ * BROWSERLESS TOKEN: stored in src/lib/secrets.ts (reads from process.env).
+ *
+ * This is a backend-only service — called from /api/lora/scrape and
+ * /api/lora/import routes.
  */
 
 import { BROWSERLESS_TOKEN } from "@/lib/secrets";
@@ -118,64 +127,257 @@ export async function scrapeHuggingFaceModel(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Civitai REST API — FREE public endpoint (no auth for public models)
+// Docs: https://github.com/civitai/civitai/wiki/REST-API-Howto
+//
+// GET https://civitai.com/api/v1/models/{modelId}
+// Returns: { id, name, description, type, baseModel, modelVersions[], tags[],
+//            stats, nsfw, images[] }
+//   - modelVersions[0].baseModel is the authoritative base model string
+//     (e.g. "Flux.1", "Flux.2", "SDXL 1.0", "Krea 2", "Z-Image")
+//   - modelVersions[0].trainedWords[] are trigger words to inject in prompts
+//   - modelVersions[0].images[0].url is the primary preview image
+//   - stats: { downloadCount, favoriteCount, commentCount, rating, ratingCount }
+// ---------------------------------------------------------------------------
+
+interface CivitaiModelResponse {
+  id: number;
+  name: string;
+  description?: string;
+  type?: string; // "LORA", "Checkpoint", "Controlnet", "TextualInversion", "VAE", "AestheticGradient"
+  nsfw?: boolean;
+  tags?: string[];
+  stats?: {
+    downloadCount?: number;
+    favoriteCount?: number;
+    commentCount?: number;
+    rating?: number;
+    ratingCount?: number;
+  };
+  modelVersions?: Array<{
+    baseModel?: string; // e.g. "Flux.1", "Flux.2", "SDXL 1.0", "Krea 2", "Z-Image"
+    trainedWords?: string[];
+    images?: Array<{ url?: string; nsfw?: string }>;
+    files?: Array<{ name?: string }>;
+  }>;
+  images?: Array<{ url?: string }>;
+}
+
+/** Map a Civitai baseModel string → our internal EngineFamily-ish label. */
+function mapCivitaiBaseModel(baseModel?: string): string[] {
+  if (!baseModel) return [];
+  const bm = baseModel.toLowerCase();
+  const out: string[] = [];
+  if (bm.includes("flux") || bm.includes("klein")) out.push("FLUX");
+  if (bm.includes("krea")) out.push("Krea 2");
+  if (bm.includes("z-image") || bm.includes("zimage") || bm.includes("zit")) out.push("Z-Image");
+  if (bm.includes("ideogram")) out.push("Ideogram");
+  if (bm.includes("sdxl") || bm.includes("sd 1.") || bm.includes("sd1.")) out.push("SDXL");
+  if (bm.includes("wan")) out.push("Wan");
+  if (bm.includes("ltx")) out.push("LTX");
+  if (bm.includes("hunyuan")) out.push("Hunyuan");
+  if (bm.includes("longcat")) out.push("LongCat");
+  if (bm.includes("joyai")) out.push("JoyAI");
+  if (bm.includes("sulphur")) out.push("Sulphur");
+  if (bm.includes("qwen")) out.push("Qwen-Image");
+  return out;
+}
+
 /**
- * Scrape a Civitai or Civitai.red model page using Browserless.
- * Handles both SFW (civitai.com) and NSFW (civitai.red) content.
+ * Scrape a Civitai (civitai.com) model via the FREE public REST API.
+ * No auth required for public models.
  *
- * Extracts og:title, og:description, og:image from the rendered HTML.
+ * @param modelId  Numeric Civitai model ID (e.g. "123456" from /models/123456/...)
  */
-export async function scrapeCivitaiModel(
+export async function scrapeCivitaiByRest(
+  modelId: string
+): Promise<ScrapedLoraMetadata> {
+  const apiUrl = `https://civitai.com/api/v1/models/${modelId}`;
+  const pageUrl = `https://civitai.com/models/${modelId}`;
+  try {
+    const res = await fetch(apiUrl, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(15_000),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      return {
+        source: "civitai",
+        url: pageUrl,
+        error: `Civitai REST HTTP ${res.status}`,
+      };
+    }
+    const data = (await res.json()) as CivitaiModelResponse;
+
+    // Pick the latest (first) model version for baseModel + trainedWords + images
+    const latestVersion = data.modelVersions?.[0];
+    const baseModels = mapCivitaiBaseModel(latestVersion?.baseModel);
+    const trainedWords = latestVersion?.trainedWords ?? [];
+    const thumbnailUrl =
+      latestVersion?.images?.[0]?.url ?? data.images?.[0]?.url;
+    const safetensorsFiles = (latestVersion?.files ?? [])
+      .map((f) => f.name ?? "")
+      .filter((n) => n.endsWith(".safetensors"));
+
+    // Determine model type from the `type` field
+    const rawType = (data.type ?? "").toLowerCase();
+    const modelType =
+      rawType === "lora" ? "lora" :
+      rawType === "checkpoint" ? "checkpoint" :
+      rawType === "controlnet" ? "controlnet" :
+      rawType === "textualinversion" ? "embedding" :
+      rawType === "vae" ? "vae" : "lora";
+
+    // Tags: combine model-level tags + trainedWords (deduped, capped)
+    const tagSet = new Set<string>();
+    for (const t of data.tags ?? []) tagSet.add(t);
+    for (const tw of trainedWords) {
+      // Skip overly-long trained-word phrases (they're prompt fragments, not tags)
+      if (tw.length <= 32) tagSet.add(tw);
+    }
+    const tags = Array.from(tagSet).slice(0, 30);
+
+    // Downloads/likes from stats
+    const downloads = data.stats?.downloadCount;
+    const likes = data.stats?.favoriteCount;
+
+    // Build a clean description (strip HTML if present, cap length)
+    let description = data.description ?? "";
+    if (description) {
+      description = description
+        .replace(/<[^>]*>/g, " ") // strip HTML tags
+        .replace(/&[a-z]+;/gi, " ") // strip HTML entities
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 600);
+    }
+
+    return {
+      source: "civitai",
+      url: pageUrl,
+      repo: String(data.id ?? modelId),
+      name: data.name,
+      description: description || undefined,
+      thumbnailUrl,
+      tags,
+      downloads,
+      likes,
+      modelType,
+      mature: Boolean(data.nsfw),
+      baseModels,
+      // Trained words are stored as a custom field for the import route to
+      // surface as a triggerWord on the resulting LoraEntry.
+      safetensorsFiles: safetensorsFiles.length ? safetensorsFiles : undefined,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { source: "civitai", url: pageUrl, error: msg };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Browserless /scrape endpoint — for JS-rendered pages (civitai.red).
+// POST https://production-sfo.browserless.io/scrape?token=TOKEN
+// Body: { url, elements: [{ selector }] }
+// Response: { data: { results: [ { selector, html, text, ... } ] } }
+// We request selector "head" to grab the <head> (which contains all og: meta
+// tags), then parse with regex.
+// ---------------------------------------------------------------------------
+
+/** Extract the first capture group from a meta-tag regex against raw HTML. */
+function extractMeta(html: string, property: string): string | undefined {
+  // Match either property="X" or name="X" attribute, then capture content="..."
+  const re = new RegExp(
+    `(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']`,
+    "i",
+  );
+  return html.match(re)?.[1];
+}
+
+/** Pull the HTML string out of a Browserless /scrape JSON response. */
+function extractBrowserlessHtml(json: unknown): string {
+  if (!json || typeof json !== "object") return "";
+  const obj = json as Record<string, unknown>;
+  // Browserless /scrape returns { data: { results: [{ html, ... }] } }
+  const data = obj.data as { results?: Array<{ html?: string }> } | undefined;
+  if (data?.results?.[0]?.html) return data.results[0].html;
+  // Some Browserless versions return { results: [...] } at top level
+  const topResults = obj.results as Array<{ html?: string }> | undefined;
+  if (topResults?.[0]?.html) return topResults[0].html;
+  // Fallback: if the whole response is a string (HTML), return it
+  if (typeof json === "string") return json;
+  return "";
+}
+
+/**
+ * Scrape a Civitai.red (NSFW mirror) model page using Browserless /scrape.
+ * civitai.red is fully JS-rendered and has no public REST API, so we MUST
+ * use a headless browser to extract og:title / og:description / og:image.
+ *
+ * Gated behind BROWSERLESS_TOKEN — returns a clear error if not configured.
+ */
+export async function scrapeCivitaiRedModel(
   url: string
 ): Promise<ScrapedLoraMetadata> {
   if (!isBrowserlessConfigured()) {
-    return { source: url.includes("civitai.red") ? "civitai.red" : "civitai", url, error: "Browserless not configured" };
+    return {
+      source: "civitai.red",
+      url,
+      error: "BROWSERLESS_TOKEN not configured",
+    };
   }
 
-  const isRed = url.includes("civitai.red");
-
   try {
-    // Use Browserless /content endpoint — renders the page with a real browser
-    const res = await fetch(`${BROWSERLESS_BASE}/content?token=${BROWSERLESS_TOKEN}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-      signal: AbortSignal.timeout(45_000),
-    });
+    const res = await fetch(
+      `${BROWSERLESS_BASE}/scrape?token=${BROWSERLESS_TOKEN}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url,
+          elements: [{ selector: "head" }],
+        }),
+        signal: AbortSignal.timeout(45_000),
+      },
+    );
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
-      return { source: isRed ? "civitai.red" : "civitai", url, error: `Browserless HTTP ${res.status}: ${text.slice(0, 200)}` };
+      return {
+        source: "civitai.red",
+        url,
+        error: `Browserless /scrape HTTP ${res.status}: ${text.slice(0, 200)}`,
+      };
     }
 
-    const html = await res.text();
+    // Response is JSON; extract the head HTML
+    const json = await res.json().catch(() => null);
+    const headHtml = extractBrowserlessHtml(json);
+    if (!headHtml) {
+      return {
+        source: "civitai.red",
+        url,
+        error: "Browserless /scrape returned no HTML",
+      };
+    }
 
-    // Extract metadata from og: tags and meta tags
-    const getMetaContent = (property: string): string | undefined => {
-      const regex = new RegExp(`(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']`, "i");
-      const match = html.match(regex);
-      return match?.[1];
-    };
-
-    const ogTitle = getMetaContent("og:title");
-    const ogDescription = getMetaContent("og:description");
-    const ogImage = getMetaContent("og:image");
-    const description = getMetaContent("description");
+    const ogTitle = extractMeta(headHtml, "og:title");
+    const ogDescription = extractMeta(headHtml, "og:description");
+    const ogImage = extractMeta(headHtml, "og:image");
+    const descriptionMeta = extractMeta(headHtml, "description");
 
     // Extract model name from og:title (format: "Model Name - Base | Type | Civitai")
     let name = ogTitle;
-    if (name && name.includes(" - ")) {
-      name = name.split(" - ")[0];
-    }
-    if (name && name.includes(" | ")) {
-      name = name.split(" | ")[0];
-    }
+    if (name && name.includes(" - ")) name = name.split(" - ")[0];
+    if (name && name.includes(" | ")) name = name.split(" | ")[0];
 
     // Determine base model from title/description
-    const fullText = `${ogTitle} ${ogDescription} ${description}`.toLowerCase();
+    const fullText = `${ogTitle ?? ""} ${ogDescription ?? ""} ${descriptionMeta ?? ""}`.toLowerCase();
     const baseModels: string[] = [];
     if (fullText.includes("flux") || fullText.includes("klein")) baseModels.push("FLUX");
     if (fullText.includes("krea")) baseModels.push("Krea 2");
-    if (fullText.includes("z-image") || fullText.includes("zit")) baseModels.push("Z-Image");
+    if (fullText.includes("z-image") || fullText.includes("zimage")) baseModels.push("Z-Image");
     if (fullText.includes("ideogram")) baseModels.push("Ideogram");
     if (fullText.includes("sdxl")) baseModels.push("SDXL");
     if (fullText.includes("wan")) baseModels.push("Wan");
@@ -186,19 +388,53 @@ export async function scrapeCivitaiModel(
                       fullText.includes("controlnet") ? "controlnet" : "lora";
 
     return {
-      source: isRed ? "civitai.red" : "civitai",
+      source: "civitai.red",
       url,
       name: name || undefined,
-      description: ogDescription || description,
+      description: ogDescription || descriptionMeta,
       thumbnailUrl: ogImage,
       modelType,
-      mature: isRed, // civitai.red is always NSFW
+      mature: true, // civitai.red is always NSFW
       baseModels,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { source: isRed ? "civitai.red" : "civitai", url, error: msg };
+    return { source: "civitai.red", url, error: msg };
   }
+}
+
+/**
+ * Scrape a Civitai model page.
+ *
+ * ROUTING:
+ *   - civitai.red URL  → scrapeCivitaiRedModel (Browserless /scrape)
+ *   - civitai.com URL  → scrapeCivitaiByRest (FREE REST API, extract model ID
+ *                        from URL via regex /civitai\.com\/models\/(\d+)/)
+ *
+ * Civitai.com has a free public REST API, so we use that as the primary path
+ * (fast, structured, no auth). Civitai.red (the NSFW mirror) has no public REST
+ * API, so it MUST go through Browserless.
+ */
+export async function scrapeCivitaiModel(
+  url: string
+): Promise<ScrapedLoraMetadata> {
+  const isRed = url.includes("civitai.red");
+
+  if (isRed) {
+    return scrapeCivitaiRedModel(url);
+  }
+
+  // civitai.com — try REST first (extract numeric model ID)
+  const idMatch = url.match(/civitai\.com\/models\/(\d+)/);
+  if (idMatch) {
+    return scrapeCivitaiByRest(idMatch[1]);
+  }
+
+  return {
+    source: "civitai",
+    url,
+    error: "Could not extract Civitai model ID from URL (expected /models/{id})",
+  };
 }
 
 /**
