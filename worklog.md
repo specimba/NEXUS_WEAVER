@@ -2022,3 +2022,56 @@ Stage Summary:
 - Gallery images now load from DB (survive restarts)
 - Civitai REST + browserless Civitai.red + import-by-URL UI all functional
 - Preview should work (allowedDevOrigins + dev.sh persistence)
+
+---
+Task ID: v5.41-stable-yogi-integration
+Agent: Z.ai Code (main)
+Task: Deep integration of Stable Yogi's Krea 2 + LoRA realism guide — architecture fix, official LoRA catalog, workflow packs, partnership doc
+
+ANALYSIS OF STABLE YOGI GUIDE (311KB, ~20K lines):
+- Krea 2 is a 12B single-stream DiT with Qwen3-VL text encoder + Qwen-Image VAE
+- Flow matching training, rewards natural-language prompts over tag soup
+- Does NOT support negative prompts effectively (DiT, no separate neg path)
+- Correct settings: Turbo=8 steps/CFG 1.0, RAW=28 steps/CFG 4.5, Euler/Simple, clip_skip 1
+- Enhancement Suite: Prompt-Adherence Engine (double text conditioning + blend + clamp)
+  and Detail Boost PRO (per-layer 12-layer text conditioning control)
+
+CRITICAL BUGS FOUND + FIXED:
+1. Krea 2 calibration presets had WRONG settings: steps=4 (should be 8 Turbo/28 RAW),
+   cfg=7.5 (should be 1.0 Turbo/4.5 RAW). 4 steps on an 8-step distilled model = noise.
+   CFG 7.5 on flow-matching = artifacting. Fixed.
+2. Krea 2 Modal app default steps=4 (should be 8). Fixed.
+3. Krea 2 Modal app passed negative_prompt to the pipe() call — Krea 2 DiT doesn't
+   support it. Removed.
+4. Engine defaults had defaultSampler="dpmpp_2m" — wrong for flow-matching DiT.
+   Fixed to "euler" only.
+
+INTEGRATION (24 new LoRAs + 5 new packs):
+- 9 official Comfy-Org/Krea-2 style LoRAs (darkbrush, dotmatrix, kidsdrawing, neondrip,
+  rainywindow, softwatercolor, sunsetblur, vintagetarot, turbo-training-adapter)
+  with triggerWord + weightName for each
+- 15 Stable Yogi community LoRAs from civitai.red (realism Pony/SDXL/Illustrious,
+  ultra-realistic, babes, musecraft, demo-influencer, analog-core, intorealism,
+  realistic-skin-face, event-horizon, amateur-slider, lut-color-grading)
+  all tagged engineFamilies:['SDXL'] (NOT Krea 2 — critical compat note)
+- 5 new workflow packs: Krea 2 Turbo Realism, Krea 2 Raw Portrait, Krea 2 Artistic
+  Styles, Krea 2 Turbo Quality Maximizer, Stable Yogi SDXL Partnership
+
+PARTNERSHIP READINESS: 70%
+- ✅ Krea 2 correctly configured per Stable Yogi's guide
+- ✅ Official + community LoRA catalog integrated
+- ✅ Workflow packs deployed
+- ✅ Civitai REST + Browserless scraping for import-by-URL
+- 🔲 SDXL engine deployment (needed for Stable Yogi's Pony/Illustrious LoRAs)
+- 🔲 Prompt-Adherence Engine implementation (2-3 days, custom text-encoder forward)
+- 🔲 End-to-end quality validation against Stable Yogi's Forge baseline
+
+CREDIT-CONSCIOUS: All changes are code-only — NO Modal redeploy. ~$12 of $145
+budget remaining. Krea 2 app picks up new defaults on next natural redeploy.
+
+Stage Summary:
+- Krea 2 architecture understood + correctly configured for the first time
+- 24 new LoRAs (9 official + 15 Stable Yogi) — library now 123 entries
+- 5 new packs — catalog now 15 packs
+- STABLE_YOGI_COLLABORATION.md created (partnership plan + next steps)
+- 5 commits pushed to GitHub
