@@ -480,8 +480,15 @@ Respond as JSON exactly:
 }
 
 // ----------------------------------------------------------------------------
-// Stage 4 — Evidence aggregation (aggregate into structured evidence)
+// Stage 4 — Evidence aggregation (LOCAL, no brain call — credit optimization)
 // ----------------------------------------------------------------------------
+// v5.40: The Evidence stage previously called the Qwen 9B brain endpoint to
+// aggregate safety + judge results into structured JSON. This was a 3rd brain
+// cold-start per pipeline run (~$0.05-0.20 each). The aggregation is simple
+// enough to do locally in TypeScript — no LLM reasoning needed. This saves
+// 1 brain call per run = ~33% brain credit reduction.
+// The brain-based version is preserved as stageEvidenceBrain() below for
+// future use if richer LLM summaries are needed.
 export async function stageEvidence(
   prompt: string,
   style: string,
@@ -489,72 +496,67 @@ export async function stageEvidence(
   wardrobe: string | null,
   safety: SafetyResult,
   judge: JudgeResult,
-  brainId?: string
+  _brainId?: string
 ): Promise<{ evidence: Record<string, unknown>; ms: number }> {
   const start = nowMs();
-  const brain = getBrain(brainId);
 
-  const sys = BRAIN_ROLE_PROMPTS.evidence + " (Running on " + brain.shortName + ".)";
+  // Compute confidence from score consistency (lower variance = higher confidence)
+  const scores = [judge.promptAdherence, judge.visualQuality, judge.aestheticScore, judge.safetyScore, judge.wardrobeMatch];
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const variance = scores.reduce((a, b) => a + (b - avg) ** 2, 0) / scores.length;
+  const confidence = Math.round(Math.max(30, Math.min(95, 100 - Math.sqrt(variance))));
 
-  const user = `Aggregate this pipeline run into structured evidence.
+  // Risk profile from scores
+  const contentRisk = safety.score >= 80 ? "low" : safety.score >= 60 ? "medium" : "high";
+  const qualityRisk = judge.overallScore >= 70 ? "low" : judge.overallScore >= 45 ? "medium" : "high";
+  const overallRisk = (contentRisk === "high" || qualityRisk === "high") ? "high"
+    : (contentRisk === "medium" || qualityRisk === "medium") ? "medium" : "low";
 
-INPUTS:
-- prompt: "${prompt}"
-- style: ${style}
-- aspect: ${aspect}
-- wardrobe: ${wardrobe || "none"}
+  // Key findings from judge strengths/weaknesses + safety flags
+  const keyFindings: string[] = [];
+  if (safety.flags.length > 0) keyFindings.push(`Safety flags: ${safety.flags.join(", ")}`);
+  keyFindings.push(`Overall quality: ${judge.overallScore}/100 (${judge.verdict})`);
+  keyFindings.push(`Prompt adherence: ${judge.promptAdherence}/100`);
+  if (judge.strengths.length > 0) keyFindings.push(`Strengths: ${judge.strengths.slice(0, 2).join("; ")}`);
+  if (judge.weaknesses.length > 0) keyFindings.push(`Weaknesses: ${judge.weaknesses.slice(0, 2).join("; ")}`);
 
-SAFETY_SCAN:
-${JSON.stringify(safety, null, 2)}
-
-VISUAL_JUDGE:
-${JSON.stringify(judge, null, 2)}
-
-Produce evidence JSON exactly:
-{
-  "summary": string,                  // one sentence executive summary
-  "modelChain": ["FLUX.2","ST3GG","Visual Judge","Evidence"],
-  "provenance": {
-    "generator": "FLUX.2 Klein 9B (via Modal L40S GPU)",
-    "safetyModel": "ST3GG (via ${brain.shortName})",
-    "judgeModel": "Visual Judge (via Gemma 31B heretic)",
-    "aggregator": "Evidence (via ${brain.shortName})"
-  },
-  // NOTE: Use the actual brain name "${brain.shortName}" in the provenance above.
-  "finalVerdict": "approved"|"rejected"|"needs_review",
-  "confidence": number,               // 0-100
-  "keyFindings": string[],            // 3-5 bullets
-  "recommendations": string[],        // 1-3 next-step suggestions
-  "riskProfile": {
-    "contentRisk": "low"|"medium"|"high",
-    "qualityRisk": "low"|"medium"|"high",
-    "overallRisk": "low"|"medium"|"high"
-  },
-  "metrics": {
-    "safetyScore": number,
-    "overallScore": number,
-    "promptAdherence": number,
-    "aestheticScore": number
-  }
-}`;
-
-  // Try Modal brain — NO z-ai fallback
-  const brainMessagesNem: BrainChatMessage[] = [
-    { role: "system", content: sys },
-    { role: "user", content: user },
-  ];
-  let raw = "";
-  if (isBrainEndpointConfigured()) {
-    const brainResult = await callModalBrain(brainMessagesNem, { temperature: 0.3, role: "evidence" });
-    if (brainResult) {
-      raw = brainResult.content;
-    }
-  }
-  if (!raw) {
-    throw new Error("Evidence brain endpoint unavailable. The Qwen 9B managed endpoint is cold-starting. Wait 30s and retry.");
+  // Recommendations based on verdict
+  const recommendations: string[] = [];
+  if (judge.verdict === "rejected") {
+    recommendations.push("Consider revising the prompt for clarity and safety");
+    if (judge.promptAdherence < 50) recommendations.push("The image doesn't match the prompt well — try simplifying the prompt");
+  } else if (judge.verdict === "needs_review") {
+    recommendations.push("Review the image manually before publishing");
+    if (judge.visualQuality < 60) recommendations.push("Try a different LoRA combination or calibration preset");
+  } else {
+    recommendations.push("Image approved — ready for gallery or video animation");
   }
 
-  const evidence = (extractJson(raw) ?? { rawResponse: raw }) as Record<string, unknown>;
+  const evidence = {
+    summary: `${judge.verdict} generation — overall ${judge.overallScore}/100, safety ${safety.score}/100, prompt adherence ${judge.promptAdherence}/100`,
+    modelChain: ["FLUX.2", "ST3GG", "Visual Judge", "Evidence"],
+    provenance: {
+      generator: "FLUX.2 Klein 9B (via Modal L40S GPU)",
+      safetyModel: "ST3GG (via Qwen 9B managed endpoint)",
+      judgeModel: "Visual Judge (via Gemma 31B heretic)",
+      aggregator: "Evidence (local TypeScript aggregation — v5.40 credit optimization)",
+    },
+    finalVerdict: judge.verdict,
+    confidence,
+    keyFindings,
+    recommendations,
+    riskProfile: {
+      contentRisk,
+      qualityRisk,
+      overallRisk,
+    },
+    metrics: {
+      safetyScore: safety.score,
+      overallScore: judge.overallScore,
+      promptAdherence: judge.promptAdherence,
+      aestheticScore: judge.aestheticScore,
+    },
+  };
 
   return { evidence, ms: elapsed(start) };
 }

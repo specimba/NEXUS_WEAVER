@@ -4,7 +4,6 @@ Uses Flux2KleinPipeline from the LATEST diffusers (no commit pin).
 Model fits in ~29GB VRAM on L40S. 4 steps = sub-second generation.
 Reuses the existing hf-hub-cache volume for fast startup.
 """
-from __future__ import annotations
 import base64, io, time
 from typing import Any
 import modal
