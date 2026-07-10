@@ -75,3 +75,4 @@ Thumbs.db
 /agent-ctx/
 tool-results/
 preview-*.png
+.zscripts/dev.pid
