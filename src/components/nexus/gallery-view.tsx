@@ -240,9 +240,18 @@ export function GalleryView() {
                   {it.imagePath ? (
                     
                     <img
-                      src={it.imagePath}
+                      src={`/api/image/${it.id}`}
                       alt={it.prompt}
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                      onError={(e) => {
+                        // Fallback to disk path, then hide if that fails too
+                        const img = e.currentTarget;
+                        if (img.src.includes("/api/image/")) {
+                          img.src = it.imagePath!;
+                        } else {
+                          img.style.display = "none";
+                        }
+                      }}
                     />
                   ) : (
                     <div className="grid h-full place-items-center text-muted-foreground/40">
@@ -519,7 +528,7 @@ function DetailDrawer({
                 <div className="overflow-hidden rounded-lg border border-border/50 bg-background/40">
                   {data.imagePath ? (
                      
-                    <img src={data.imagePath} alt={data.prompt} className="w-full" />
+                    <img src={`/api/image/${data.id}`} alt={data.prompt} className="w-full" onError={(e) => { const img = e.currentTarget; if (img.src.includes('/api/image/')) { img.src = data.imagePath!; } else { img.style.display = 'none'; } }} />
                   ) : (
                     <div className="grid aspect-square place-items-center text-muted-foreground">
                       <X className="h-8 w-8" />
@@ -723,7 +732,7 @@ function CompareDrawer({
                   {data?.imagePath ? (
                     <div className="overflow-hidden rounded-xl border border-border/40">
                       { }
-                      <img src={data.imagePath} alt={data.prompt} className="w-full" />
+                      <img src={`/api/image/${data.id}`} alt={data.prompt} className="w-full" onError={(e) => { const img = e.currentTarget; if (img.src.includes('/api/image/')) { img.src = data.imagePath!; } else { img.style.display = 'none'; } }} />
                     </div>
                   ) : null}
                   <p className="text-sm text-foreground">{data?.prompt}</p>
