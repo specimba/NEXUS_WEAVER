@@ -63,7 +63,7 @@ secrets = [
     gpu="H100",
     volumes=volumes,
     secrets=secrets,
-    timeout=20 * MINUTES,
+    timeout=30 * MINUTES,  # v5.49: 30 min timeout for first cold start (12.8GB download + model load)
     scaledown_window=5 * MINUTES,
     min_containers=0,
     max_containers=1,
@@ -77,24 +77,25 @@ class NexusKrea2MuseGenerator:
     @modal.enter()
     def enter(self) -> None:
         import torch
-        from transformers import AutoConfig
+        from transformers import AutoConfig, AutoModel
         from diffusers import Krea2Pipeline
         from safetensors.torch import load_file
 
         t0 = time.time()
 
         # 1. Download the Muse checkpoint if not cached
+        # v5.49: Increased timeout to 1200s (20 min) for 12.8GB download
         muse_path = os.path.join(MUSE_CACHE_DIR, MUSE_CHECKPOINT_FILE)
         if not os.path.exists(muse_path) or os.path.getsize(muse_path) < 1_000_000_000:
             if not MUSE_CHECKPOINT_URL:
                 print("[muse] WARNING: MUSE_CHECKPOINT_URL not set — falling back to base Krea 2 Turbo")
                 self.use_muse = False
             else:
-                print(f"[muse] Downloading Muse checkpoint ({12.8:.1f}GB)...")
+                print(f"[muse] Downloading Muse checkpoint ({12.8:.1f}GB) — this may take 5-10 min...")
                 os.makedirs(MUSE_CACHE_DIR, exist_ok=True)
                 result = subprocess.run(
-                    ["curl", "-sS", "-L", "--max-time", "600", "-o", muse_path, MUSE_CHECKPOINT_URL],
-                    capture_output=True, text=True, timeout=660
+                    ["curl", "-sS", "-L", "--max-time", "1200", "-o", muse_path, MUSE_CHECKPOINT_URL],
+                    capture_output=True, text=True, timeout=1260
                 )
                 if result.returncode != 0 or not os.path.exists(muse_path) or os.path.getsize(muse_path) < 1_000_000_000:
                     print(f"[muse] Download failed (rc={result.returncode}): {result.stderr[:200]}")
@@ -110,14 +111,25 @@ class NexusKrea2MuseGenerator:
             self.use_muse = True
 
         # 2. Load the base Krea 2 Turbo pipeline (for structure + text encoder + VAE)
+        # v5.49: Load text encoder as a MODEL (not config) — fixes the crash
         print(f"[muse] Loading base {BASE_MODEL_ID}...")
-        text_encoder_config = AutoConfig.from_pretrained(BASE_MODEL_ID, subfolder="text_encoder")
+        text_encoder_config = AutoConfig.from_pretrained(BASE_MODEL_ID, subfolder="text_encoder", trust_remote_code=True)
         if not hasattr(text_encoder_config, "rope_scaling") or text_encoder_config.rope_scaling is None:
             text_encoder_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
 
+        print("[muse] Loading Qwen3VL text encoder model...")
+        text_encoder = AutoModel.from_pretrained(
+            BASE_MODEL_ID,
+            subfolder="text_encoder",
+            config=text_encoder_config,
+            torch_dtype=torch.bfloat16,
+            cache_dir=HF_CACHE_DIR,
+            trust_remote_code=True,
+        )
+
         self.pipe = Krea2Pipeline.from_pretrained(
             BASE_MODEL_ID,
-            text_encoder=text_encoder_config,
+            text_encoder=text_encoder,
             torch_dtype=torch.bfloat16,
             cache_dir=HF_CACHE_DIR,
         )

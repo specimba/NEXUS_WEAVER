@@ -103,13 +103,26 @@ class NexusSDXLPonyGenerator:
 
         # Load the Pony V6 LoRA on startup — it's the base checkpoint modifier
         # that makes the model understand Pony-style prompts (score_9, etc.)
+        # v5.49: The repo has multiple .safetensors files — specify weight_name
         try:
-            self.pipe.load_lora_weights(PONY_LORA_REPO, adapter_name="pony-v6")
+            # Try loading with explicit weight_name (the main Pony V6 file)
+            self.pipe.load_lora_weights(
+                PONY_LORA_REPO,
+                adapter_name="pony-v6",
+                weight_name="pony-diffusion-v6-xl.safetensors",
+            )
             self.pipe.set_adapters(["pony-v6"], adapter_weights=[1.0])
             print(f"Pony V6 LoRA loaded from {PONY_LORA_REPO}")
         except Exception as e:
-            print(f"Warning: Pony V6 LoRA failed to load: {e}")
-            print("Continuing with base SDXL — prompts should still work but won't have Pony aesthetics.")
+            print(f"Warning: Pony V6 LoRA failed to load with weight_name: {e}")
+            print("Trying without weight_name (may pick wrong file)...")
+            try:
+                self.pipe.load_lora_weights(PONY_LORA_REPO, adapter_name="pony-v6")
+                self.pipe.set_adapters(["pony-v6"], adapter_weights=[1.0])
+                print(f"Pony V6 LoRA loaded from {PONY_LORA_REPO} (fallback)")
+            except Exception as e2:
+                print(f"Warning: Pony V6 LoRA failed completely: {e2}")
+                print("Continuing with base SDXL — prompts should still work but won't have Pony aesthetics.")
 
         self.load_time = time.time() - t0
         print(f"{MODEL_ID} + Pony V6 loaded in {self.load_time:.1f}s")

@@ -62,25 +62,40 @@ class NexusKrea2Generator:
     @modal.enter()
     def enter(self) -> None:
         import torch
-        from transformers import AutoConfig
+        from transformers import AutoConfig, AutoModel
         from diffusers import Krea2Pipeline
 
         print(f"Loading {MODEL_ID}...")
         t0 = time.time()
 
-        # FIX: Qwen3VLModel crashes if config.rope_scaling is None
-        # (transformers bug: modeling_qwen3_vl.py line 297 calls
-        # config.rope_scaling.get("mrope_section", [...]) but rope_scaling
-        # can be None for some model configs). Pre-load the text encoder
-        # config, set a default rope_scaling if missing, then pass it
-        # explicitly to the pipeline.
-        text_encoder_config = AutoConfig.from_pretrained(MODEL_ID, subfolder="text_encoder")
+        # FIX (v5.49): The previous code passed text_encoder=text_encoder_config
+        # (a CONFIG object) to Krea2Pipeline.from_pretrained(). Diffusers expects
+        # a PreTrainedModel, not a config — this caused:
+        #   ValueError: Qwen3VLConfig is of type Qwen3VLConfig, but should be PreTrainedModel
+        #
+        # Correct approach: Load the text encoder MODEL separately with the fixed
+        # config, then pass the model to the pipeline. This is what Stable Yogi's
+        # Forge extension does — it loads Qwen3VLModel from the text_encoder
+        # subfolder with the rope_scaling fix applied, then passes the loaded model.
+        text_encoder_config = AutoConfig.from_pretrained(MODEL_ID, subfolder="text_encoder", trust_remote_code=True)
         if not hasattr(text_encoder_config, "rope_scaling") or text_encoder_config.rope_scaling is None:
             text_encoder_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
 
+        # Load the text encoder as a MODEL (not just config)
+        print("Loading Qwen3VL text encoder model...")
+        text_encoder = AutoModel.from_pretrained(
+            MODEL_ID,
+            subfolder="text_encoder",
+            config=text_encoder_config,
+            torch_dtype=torch.bfloat16,
+            cache_dir=HF_CACHE_DIR,
+            trust_remote_code=True,
+        )
+
+        # Now pass the loaded MODEL (not config) to the pipeline
         self.pipe = Krea2Pipeline.from_pretrained(
             MODEL_ID,
-            text_encoder=text_encoder_config,  # pass fixed config
+            text_encoder=text_encoder,
             torch_dtype=torch.bfloat16,
             cache_dir=HF_CACHE_DIR,
         )
