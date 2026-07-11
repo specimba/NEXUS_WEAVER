@@ -1,0 +1,18 @@
+{
+  "url": "https://stableyogi.com/api/models/dl/eyJtb2RlbElkIjoiNmE0NmQ0MzliNjI4MzI1ZTYzZjE5ZDJkIiwidmVyc2lvbklkIjoiNmE0NmQ0MzliNjI4MzI1ZTYzZjE5ZDJlIiwiZmlsZUlkIjoiNmE0NmQ0MzliNjI4MzI1ZTYzZjE5ZDJmIiwidXNlcklkIjoiNmE1MTA4Y2M3OGNjZWFkYmQxZjIxNTgxIiwiZXhwaXJlcyI6MTc4Mzg2NTQxMSwic2lnIjoiNzUyYmE1YjEzZTM1ZDcyZmM0ZWRhYzBkYmM4ZjAzYjEzNDAxMWY4YzZmN2IwNjUxOTEwNzgzYjAyNTRjMjc1YiJ9",
+  "fileName": "Muse-BSY-Krea2-V1.5-Pro-Fp8-C73.safetensors",
+  "sizeBytes": 12824597932,
+  "sizeGB": 12.82,
+  "expiresIn": 86400,
+  "expiresAt": "2026-07-12T14:10:51.422430",
+  "model": "Muse by Stable Yogi Krea2 V1.5 Pro Fp8 C73",
+  "recommendedSettings": {
+    "sampler": "Euler",
+    "scheduler": "Simple",
+    "steps": "8",
+    "cfg": "1",
+    "clipSkip": 1,
+    "resolution": "896x1152"
+  },
+  "description": "Photoreal portraits & full-body across any age / hair / styling · fashion, editorial & lifestyle · every lighting mood · faithful prompts + natural skin. More vibrance, detail, presence, refined lighting."
+}
