@@ -610,6 +610,33 @@ export function StudioView() {
     }
   }, [prompt, style, setPrompt]);
 
+  // Stable Yogi Prompt Engine — curated Pony/SDXL prompts from Stable Yogi's API
+  const [syLoading, setSyLoading] = useState(false);
+  const fetchSYPrompt = useCallback(async () => {
+    setSyLoading(true);
+    try {
+      const res = await fetch("/api/prompt/sy-engine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subjects: "Solo Female", count: 1 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "SY Prompt failed");
+      if (data.prompts && data.prompts.length > 0) {
+        setPrompt(data.prompts[0]);
+        toast.success(`Stable Yogi prompt loaded (${data.remaining} left today)`, {
+          description: `Rating: ${data.rating} · Curated for Pony/SDXL`
+        });
+      } else {
+        toast.error("No prompt returned from Stable Yogi");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "SY Prompt failed");
+    } finally {
+      setSyLoading(false);
+    }
+  }, [setPrompt]);
+
   const aspectDef = ASPECTS.find((a) => a.id === aspect) ?? ASPECTS[0];
   const filteredTemplates =
     tplCategory === "All"
@@ -744,6 +771,15 @@ export function StudioView() {
                 )}
               >
                 <LayoutGrid className="h-3 w-3" /> Templates
+              </button>
+              <button
+                onClick={fetchSYPrompt}
+                disabled={syLoading}
+                title="Get a curated Stable Yogi prompt (Pony/SDXL tag format)"
+                className="nexus-chip inline-flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-[11px] font-medium text-amber-300 transition hover:bg-amber-500/20 disabled:opacity-40"
+              >
+                {syLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                SY Prompt
               </button>
               {prompt ? (
                 <button

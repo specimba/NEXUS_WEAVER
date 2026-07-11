@@ -41,6 +41,10 @@ export const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN || "";
 // Create free at civitai.com → Account → API Keys. Passed to Modal apps for LoRA downloads.
 export const CIVITAI_API_TOKEN = process.env.CIVITAI_API_TOKEN || "";
 
+// Stable Yogi Prompt Engine API key — for curated Pony/SDXL prompts.
+// Free plan: 100/day, 30/hour. Pro: 3600/day. Get at stableyogi.com → Settings → API.
+export const STABLE_YOGI_API_KEY = process.env.STABLE_YOGI_API_KEY || "";
+
 // ── Modal Endpoint URLs (public, NOT secrets — safe as fallbacks) ────────────
 
 // FLUX.2 Klein 9B — image generation endpoint (L40S GPU, public, no auth)
