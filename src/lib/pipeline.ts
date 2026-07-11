@@ -721,16 +721,14 @@ export async function runPipeline(
     // The generation is marked "unchecked" — NOT a z-ai fallback (rule #1).
     let safety: SafetyResult;
     if (input.skipBrain) {
-      progress("st3gg", { status: "skipped", message: "Skipped — brain unavailable (degraded mode)" });
-      safety = {
-        passed: true,
-        score: 50,
-        riskLevel: "safe" as SafetyResult["riskLevel"],
-        flags: [],
-        rationale: "ST3GG skipped — brain endpoints unavailable (budget/capacity). Generation is UNCHECKED.",
-        stageMs: 0,
-      };
-      await logEvent("warn", "ST3GG skipped — degraded mode (brain unavailable). Generation will be UNCHECKED.", "warn", gen.id);
+      // v5.46: Use LOCAL safety checker instead of just skipping.
+      // The local checker enforces the HARD blocklist (csam, nonconsensual,
+      // real-person, etc.) even in degraded mode + scores policy categories.
+      progress("st3gg", { status: "running", message: "Local safety check (brain unavailable)…" });
+      const { localSafetyScan } = await import("@/lib/local-safety");
+      safety = localSafetyScan(input.prompt, input.style, input.wardrobe);
+      progress("st3gg", { status: "done", ms: 1, message: `${safety.riskLevel} risk · score ${safety.score} (local heuristic)` });
+      await logEvent("warn", `Local safety check (brain unavailable): ${safety.riskLevel} risk, score ${safety.score}, flags=[${safety.flags.join(",")}]. Hard blocklist enforced.`, "warn", gen.id);
     } else {
       progress("st3gg", { status: "running", message: "ST3GG scanning prompt for safety…" });
       safety = await stageSt3gg(input.prompt, input.style, input.wardrobe, input.brainId);
@@ -889,21 +887,18 @@ export async function runPipeline(
     // v5.42: In degraded mode (skipBrain), skip the judge — no quality scoring.
     let judge: JudgeResult;
     if (input.skipBrain) {
-      progress("judge", { status: "skipped", message: "Skipped — brain unavailable (degraded mode)" });
-      judge = {
-        promptAdherence: 0,
-        visualQuality: 0,
-        aestheticScore: 0,
-        safetyScore: 0,
-        wardrobeMatch: 0,
-        overallScore: 0,
-        verdict: "needs_review" as JudgeResult["verdict"],
-        observations: ["Judge skipped — brain endpoints unavailable (degraded mode). Manual review required."],
-        strengths: [],
-        weaknesses: ["Quality not assessed — brain unavailable."],
-        stageMs: 0,
-      };
-      await logEvent("warn", "Judge skipped — degraded mode. Image quality UNCHECKED. Manual review required.", "warn", gen.id);
+      // v5.46: Use LOCAL quality scorer instead of just skipping.
+      // Scores based on prompt structure, LoRA config, calibration settings.
+      // NOT vision-based — can't analyze the actual image. But provides
+      // meaningful quality assessment of the configuration.
+      progress("judge", { status: "running", message: "Local quality scoring (brain unavailable)…" });
+      const { localJudge } = await import("@/lib/local-judge");
+      judge = localJudge(
+        input.prompt, input.style, input.loraIds, input.loraWeights ?? {},
+        input.engineId, calibration
+      );
+      progress("judge", { status: "done", ms: 1, message: `${judge.verdict} · ${judge.overallScore} (local heuristic)` });
+      await logEvent("warn", `Local quality scoring (brain unavailable): ${judge.verdict}, overall ${judge.overallScore}. Heuristic — not vision-based.`, "warn", gen.id);
     } else {
       progress("judge", { status: "running", message: "Visual judge analyzing generated image…" });
       judge = await stageJudge(flux.imagePath, input.prompt, input.style, input.wardrobe, input.brainId);
