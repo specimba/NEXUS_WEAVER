@@ -61,49 +61,65 @@ class NexusKrea2Generator:
 
     @modal.enter()
     def enter(self) -> None:
-        import torch
-        from transformers import AutoConfig, AutoModel
+        import torch, json, os
         from diffusers import Krea2Pipeline
+        from huggingface_hub import snapshot_download
 
         print(f"Loading {MODEL_ID}...")
         t0 = time.time()
 
-        # FIX (v5.50): The Qwen3VL text encoder crashes because config.rope_scaling
-        # is None at the TOP LEVEL. The transformers code at modeling_qwen3_vl.py:297
-        # calls config.rope_scaling.get("mrope_section") — but rope_scaling is None.
-        # The fix: set rope_scaling on BOTH the top-level config AND the text_config
-        # sub-config, THEN load the model with the fixed config.
+        # FIX (v5.52): The Qwen3VL text encoder crashes because
+        # config.rope_scaling is None in the text_config sub-config.
+        # The crash is at modeling_qwen3_vl.py:297:
+        #   self.mrope_section = config.rope_scaling.get("mrope_section", [24, 20, 20])
+        # Previous fixes (v5.49-v5.50) tried to fix the config IN MEMORY,
+        # but AutoModel.from_pretrained() re-reads config from the HF cache
+        # files, ignoring the in-memory fix.
         #
-        # Previous attempts failed because:
-        # - v5.49: passed a config object instead of a model → "should be PreTrainedModel"
-        # - The config fix only set top-level rope_scaling, but the crash is in
-        #   Qwen3VLTextModel which reads config.rope_scaling from text_config
-        text_encoder_config = AutoConfig.from_pretrained(MODEL_ID, subfolder="text_encoder", trust_remote_code=True)
+        # CORRECT FIX: Patch the config.json file ON DISK in the HF cache
+        # before loading. This way Krea2Pipeline.from_pretrained() reads the
+        # FIXED config and the crash doesn't happen.
+        print("Patching text_encoder config.json (rope_scaling fix)...")
+        try:
+            # Download the model snapshot (or find it in cache)
+            model_path = snapshot_download(
+                MODEL_ID,
+                cache_dir=HF_CACHE_DIR,
+                allow_patterns=["text_encoder/config.json"],
+            )
+            te_config_path = os.path.join(model_path, "text_encoder", "config.json")
+            if os.path.exists(te_config_path):
+                with open(te_config_path, "r") as f:
+                    te_config = json.load(f)
 
-        # Fix top-level rope_scaling
-        if not hasattr(text_encoder_config, "rope_scaling") or text_encoder_config.rope_scaling is None:
-            text_encoder_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                # Fix top-level rope_scaling
+                patched = False
+                if not te_config.get("rope_scaling"):
+                    te_config["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                    patched = True
 
-        # Fix text_config.rope_scaling (this is where the actual crash happens)
-        if hasattr(text_encoder_config, "text_config"):
-            if not hasattr(text_encoder_config.text_config, "rope_scaling") or text_encoder_config.text_config.rope_scaling is None:
-                text_encoder_config.text_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                # Fix text_config.rope_scaling (where the actual crash happens)
+                tc = te_config.get("text_config", {})
+                if not tc.get("rope_scaling"):
+                    tc["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                    te_config["text_config"] = tc
+                    patched = True
 
-        # Load the text encoder MODEL with the fixed config
-        print("Loading Qwen3VL text encoder model (with rope_scaling fix)...")
-        text_encoder = AutoModel.from_pretrained(
-            MODEL_ID,
-            subfolder="text_encoder",
-            config=text_encoder_config,
-            torch_dtype=torch.bfloat16,
-            cache_dir=HF_CACHE_DIR,
-            trust_remote_code=True,
-        )
+                if patched:
+                    with open(te_config_path, "w") as f:
+                        json.dump(te_config, f, indent=2)
+                    print(f"PATCHED {te_config_path} — added rope_scaling to top-level + text_config")
+                else:
+                    print(f"Config already has rope_scaling — no patch needed")
+            else:
+                print(f"WARNING: {te_config_path} not found — will try loading without patch")
+        except Exception as e:
+            print(f"WARNING: Config patch failed: {e} — will try loading anyway")
 
-        # Pass the loaded MODEL to the pipeline
+        # Now load the pipeline — it will read the FIXED config from disk
+        # No need to pass text_encoder separately; Krea2Pipeline loads it
         self.pipe = Krea2Pipeline.from_pretrained(
             MODEL_ID,
-            text_encoder=text_encoder,
             torch_dtype=torch.bfloat16,
             cache_dir=HF_CACHE_DIR,
         )

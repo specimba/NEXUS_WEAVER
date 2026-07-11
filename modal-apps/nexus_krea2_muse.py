@@ -76,8 +76,8 @@ class NexusKrea2MuseGenerator:
 
     @modal.enter()
     def enter(self) -> None:
-        import torch
-        from transformers import AutoConfig, AutoModel
+        import torch, json, os
+        from transformers import AutoConfig
         from diffusers import Krea2Pipeline
         from safetensors.torch import load_file
 
@@ -111,32 +111,37 @@ class NexusKrea2MuseGenerator:
             self.use_muse = True
 
         # 2. Load the base Krea 2 Turbo pipeline (for structure + text encoder + VAE)
-        # v5.50: Fix rope_scaling on BOTH top-level and text_config sub-config
+        # v5.52: Patch config.json ON DISK (in-memory fixes were ignored by from_pretrained)
         print(f"[muse] Loading base {BASE_MODEL_ID}...")
-        text_encoder_config = AutoConfig.from_pretrained(BASE_MODEL_ID, subfolder="text_encoder", trust_remote_code=True)
-
-        # Fix top-level rope_scaling
-        if not hasattr(text_encoder_config, "rope_scaling") or text_encoder_config.rope_scaling is None:
-            text_encoder_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
-
-        # Fix text_config.rope_scaling (this is where the actual crash happens)
-        if hasattr(text_encoder_config, "text_config"):
-            if not hasattr(text_encoder_config.text_config, "rope_scaling") or text_encoder_config.text_config.rope_scaling is None:
-                text_encoder_config.text_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
-
-        print("[muse] Loading Qwen3VL text encoder model (with rope_scaling fix)...")
-        text_encoder = AutoModel.from_pretrained(
-            BASE_MODEL_ID,
-            subfolder="text_encoder",
-            config=text_encoder_config,
-            torch_dtype=torch.bfloat16,
-            cache_dir=HF_CACHE_DIR,
-            trust_remote_code=True,
-        )
+        try:
+            from huggingface_hub import snapshot_download
+            model_path = snapshot_download(
+                BASE_MODEL_ID,
+                cache_dir=HF_CACHE_DIR,
+                allow_patterns=["text_encoder/config.json"],
+            )
+            te_config_path = os.path.join(model_path, "text_encoder", "config.json")
+            if os.path.exists(te_config_path):
+                with open(te_config_path, "r") as f:
+                    te_config = json.load(f)
+                patched = False
+                if not te_config.get("rope_scaling"):
+                    te_config["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                    patched = True
+                tc = te_config.get("text_config", {})
+                if not tc.get("rope_scaling"):
+                    tc["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                    te_config["text_config"] = tc
+                    patched = True
+                if patched:
+                    with open(te_config_path, "w") as f:
+                        json.dump(te_config, f, indent=2)
+                    print(f"[muse] PATCHED {te_config_path} — rope_scaling fix applied")
+        except Exception as e:
+            print(f"[muse] Config patch warning: {e}")
 
         self.pipe = Krea2Pipeline.from_pretrained(
             BASE_MODEL_ID,
-            text_encoder=text_encoder,
             torch_dtype=torch.bfloat16,
             cache_dir=HF_CACHE_DIR,
         )
