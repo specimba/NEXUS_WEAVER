@@ -34,7 +34,7 @@ image = (
 # This is the critical fix: the new apps were using empty volumes, causing 10-min cold starts.
 hf_cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 volumes = {HF_CACHE_DIR: hf_cache_vol}
-secrets = [modal.Secret.from_name("huggingface-secret")]
+secrets = [modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("civitai-secret")]
 
 with image.imports():
     import torch

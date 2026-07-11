@@ -37,6 +37,10 @@ export const HF_TOKEN =
 // Browserless token — for headless browser scraping (Civitai, Civitai.red)
 export const BROWSERLESS_TOKEN = process.env.BROWSERLESS_TOKEN || "";
 
+// Civitai API token — for downloading .safetensors LoRA files from civitai.com/red.
+// Create free at civitai.com → Account → API Keys. Passed to Modal apps for LoRA downloads.
+export const CIVITAI_API_TOKEN = process.env.CIVITAI_API_TOKEN || "";
+
 // ── Modal Endpoint URLs (public, NOT secrets — safe as fallbacks) ────────────
 
 // FLUX.2 Klein 9B — image generation endpoint (L40S GPU, public, no auth)

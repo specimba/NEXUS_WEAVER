@@ -41,7 +41,7 @@ image = (
 # REUSE the existing hf-hub-cache volume — Krea 2 weights cache alongside FLUX
 hf_cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 volumes = {HF_CACHE_DIR: hf_cache_vol}
-secrets = [modal.Secret.from_name("huggingface-secret")]
+secrets = [modal.Secret.from_name("huggingface-secret"), modal.Secret.from_name("civitai-secret")]
 
 
 @app.cls(

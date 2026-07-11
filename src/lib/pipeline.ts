@@ -161,13 +161,13 @@ export async function stageFlux(
   let effectiveEngineId: string | undefined = engineId;
 
   // Build the LoRA array for Modal: map our library IDs to HF repo IDs + weights
-  // v5.44: Handle BOTH HuggingFace URLs (extract repo ID) AND Civitai URLs
-  // (pass the full URL — the Modal app downloads .safetensors directly).
-  // Previously, Civitai URLs were silently filtered out (the regex only matched
-  // huggingface.co), so ALL Stable Yogi LoRAs were dropped. Now they're passed
-  // through and the backend downloads them.
-  const modalLoras: Array<{ repo: string; adapter: string; weight: number; weightName?: string } | null> = loraIds
-    .map((id) => {
+  // v5.44: Handle BOTH HuggingFace URLs (extract repo ID) AND Civitai URLs.
+  // Civitai URLs are resolved HERE (in the Next.js backend) because Modal's IP
+  // is blocked by Civitai (403). We call the Civitai API from the backend to
+  // get the direct CDN download URL, then pass that to the Modal app.
+  const { resolveCivitaiLoraUrl } = await import("@/lib/civitai-resolver");
+  const modalLoras: Array<{ repo: string; adapter: string; weight: number; weightName?: string } | null> = (await Promise.all(
+    loraIds.map(async (id) => {
       const lora = getLora(id);
       if (!lora) return null;
       const weight = loraWeights[id] ?? lora.recommendedWeight;
@@ -184,30 +184,31 @@ export async function stageFlux(
         return entry;
       }
 
-      // Civitai URL: https://civitai.red/models/1098033/realism-lora-by-stable-yogi-pony
-      // or https://civitai.com/models/1098033?modelVersionId=2074888
-      // Pass the full URL as `repo` — the Modal app will resolve it via the
-      // Civitai API (GET /api/v1/models/{id} → downloadUrl) and download the
-      // .safetensors file directly. The `adapter` is our library ID.
+      // Civitai URL: resolve to direct CDN download URL from the Next.js backend
+      // (Modal's IP is blocked by Civitai — we must resolve here, not in the Modal app)
       if (lora.url.includes("civitai")) {
-        // Extract the model ID from the URL
-        const civMatch = lora.url.match(/models\/(\d+)/);
-        if (civMatch) {
-          return {
-            repo: lora.url, // full URL — backend resolves it
-            adapter: lora.id,
-            weight,
-            // Flag for the backend: this is a Civitai URL, not an HF repo
-            weightName: lora.weightName || "__civitai_url__",
-          };
+        try {
+          const resolved = await resolveCivitaiLoraUrl(lora.url);
+          if (resolved) {
+            console.log(`[pipeline] Resolved Civitai LoRA "${lora.id}" → ${resolved.downloadUrl.slice(0, 60)}... (${resolved.sizeMb}MB)`);
+            return {
+              repo: resolved.downloadUrl, // direct CDN URL (with token) — Modal downloads this
+              adapter: lora.id,
+              weight,
+              weightName: "__civitai_resolved__", // flag: this is a pre-resolved CDN URL
+            };
+          }
+        } catch (err) {
+          console.warn(`[pipeline] Failed to resolve Civitai LoRA "${lora.id}": ${err instanceof Error ? err.message : String(err)}`);
         }
+        return null;
       }
 
-      // Unknown URL scheme — log and skip (don't silently filter)
+      // Unknown URL scheme — log and skip
       console.warn(`[pipeline] LoRA "${lora.id}" has unresolvable URL: ${lora.url} — skipping`);
       return null;
-    });
-  const validModalLoras = modalLoras.filter((l): l is { repo: string; adapter: string; weight: number; weightName?: string } => l !== null);
+    })
+  )).filter((l): l is { repo: string; adapter: string; weight: number; weightName?: string } => l !== null);
 
   // Modal is the PRIMARY and ONLY image generation path.
   // Each engine has its own Modal app. FLUX.2 (L40S) is always-on.
@@ -265,7 +266,7 @@ export async function stageFlux(
         steps: calibration.steps,
         cfg: calibration.cfg,
         seed: effectiveSeed,
-        loras: validModalLoras,
+        loras: modalLoras,
         isFirstCall: true, // allow long cold-start timeout (300s)
         engineId: effectiveEngineId, // route to the correct Modal backend (may be FLUX.2 fallback)
         variationStrength: (calibration as any).variationStrength ?? 0.1, // P1: latent noise injection for creative variation
@@ -276,7 +277,7 @@ export async function stageFlux(
       usedSeed = effectiveSeed;
       await logEvent(
         "stage_complete",
-        `Modal /generate ok — ${result.ms}ms (round-trip ${result.latencyMs}ms) · engine=${selectedEngine.shortName} steps=${calibration.steps} cfg=${calibration.cfg} loras=${validModalLoras.length}`,
+        `Modal /generate ok — ${result.ms}ms (round-trip ${result.latencyMs}ms) · engine=${selectedEngine.shortName} steps=${calibration.steps} cfg=${calibration.cfg} loras=${modalLoras.length}`,
         "success",
         generationId
       );

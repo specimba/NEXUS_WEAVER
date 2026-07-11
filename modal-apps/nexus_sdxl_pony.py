@@ -51,7 +51,11 @@ image = (
 # REUSE the existing hf-hub-cache volume — SDXL weights cache alongside FLUX/Krea
 hf_cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 volumes = {HF_CACHE_DIR: hf_cache_vol}
-secrets = [modal.Secret.from_name("huggingface-secret")]
+# Both HuggingFace (gated SDXL) + Civitai (LoRA downloads) tokens
+secrets = [
+    modal.Secret.from_name("huggingface-secret"),
+    modal.Secret.from_name("civitai-secret"),
+]
 
 
 @app.cls(
@@ -157,40 +161,72 @@ class NexusSDXLPonyGenerator:
                     if not repo:
                         continue
                     try:
-                        # Check if this is a Civitai URL (flagged by the pipeline)
-                        if weight_name == "__civitai_url__" or "civitai" in repo:
-                            # Resolve Civitai URL → direct download URL via the free API
-                            import re, urllib.request, tempfile, os
+                        # Check if this is a pre-resolved Civitai CDN URL (resolved by the Next.js backend)
+                        if weight_name == "__civitai_resolved__":
+                            # The repo field is already a direct CDN download URL with token.
+                            # Just download the .safetensors file — no API call needed.
+                            import tempfile, os, subprocess
+                            print(f"[civitai] Downloading pre-resolved CDN URL ({repo[:80]}...)...")
+                            tmp_dir = tempfile.mkdtemp()
+                            tmp_file = os.path.join(tmp_dir, f"civitai_lora_{int(time.time())}.safetensors")
+                            dl_result = subprocess.run(
+                                ["curl", "-sS", "-L", "--max-time", "120", "-o", tmp_file, repo],
+                                capture_output=True, text=True, timeout=180
+                            )
+                            if dl_result.returncode != 0 or not os.path.exists(tmp_file) or os.path.getsize(tmp_file) < 1000:
+                                raise ValueError(f"curl download failed (rc={dl_result.returncode}): {dl_result.stderr[:200]}")
+                            file_size_mb = os.path.getsize(tmp_file) / (1024 * 1024)
+                            print(f"[civitai] Downloaded {file_size_mb:.1f}MB — loading as LoRA...")
+                            load_kwargs = {}
+                            if adapter:
+                                load_kwargs["adapter_name"] = adapter
+                            self.pipe.load_lora_weights(tmp_file, **load_kwargs)
+                            active_adapters.append(adapter or "civitai_lora")
+                            active_weights.append(weight)
+                            lora_status.append({"repo": repo[:80], "status": "loaded", "weight": weight, "source": "civitai_cdn", "size_mb": round(file_size_mb, 1)})
+                        elif weight_name == "__civitai_url__" or "civitai" in repo:
+                            # Fallback: resolve inside the Modal app (may fail if Civitai blocks Modal's IP)
+                            import re, urllib.request, tempfile, os, subprocess
+                            import json as _json
                             model_id_match = re.search(r"models/(\d+)", repo)
                             if not model_id_match:
                                 raise ValueError(f"Could not extract model ID from Civitai URL: {repo}")
                             model_id = model_id_match.group(1)
-                            # Call the Civitai REST API (free, no auth for public models)
-                            api_url = f"https://civitai.com/api/v1/models/{model_id}"
+                            token = os.environ.get("CIVITAI_API_TOKEN", "")
+                            api_url = f"https://civitai.com/api/v1/models/{model_id}?token={token}" if token else f"https://civitai.com/api/v1/models/{model_id}"
                             print(f"[civitai] Resolving model {model_id} via API...")
-                            with urllib.request.urlopen(api_url, timeout=15) as resp:
-                                model_data = __import__("json").loads(resp.read())
-                            # Get the latest version's first .safetensors file
+                            api_req = urllib.request.Request(api_url, headers={"Authorization": f"Bearer {token}"} if token else {})
+                            with urllib.request.urlopen(api_req, timeout=15) as resp:
+                                model_data = _json.loads(resp.read())
                             versions = model_data.get("modelVersions", [])
                             if not versions:
                                 raise ValueError(f"No versions found for Civitai model {model_id}")
                             latest = versions[0]
                             download_url = latest.get("downloadUrl", "")
                             if not download_url:
-                                raise ValueError(f"No download URL for Civitai model {model_id} v{latest.get('name','?')}")
-                            print(f"[civitai] Downloading {download_url}...")
-                            # Download to a temp file
+                                raise ValueError(f"No download URL for Civitai model {model_id}")
+                            if token and "?" not in download_url:
+                                download_url = f"{download_url}?token={token}"
+                            elif token:
+                                download_url = f"{download_url}&token={token}"
+                            print(f"[civitai] Downloading {download_url[:80]}...")
                             tmp_dir = tempfile.mkdtemp()
                             tmp_file = os.path.join(tmp_dir, f"civitai_{model_id}.safetensors")
-                            urllib.request.urlretrieve(download_url, tmp_file)
-                            # Load from the local file
+                            dl_result = subprocess.run(
+                                ["curl", "-sS", "-L", "--max-time", "120", "-o", tmp_file, download_url],
+                                capture_output=True, text=True, timeout=180
+                            )
+                            if dl_result.returncode != 0 or not os.path.exists(tmp_file) or os.path.getsize(tmp_file) < 1000:
+                                raise ValueError(f"curl download failed (rc={dl_result.returncode}): {dl_result.stderr[:200]}")
+                            file_size_mb = os.path.getsize(tmp_file) / (1024 * 1024)
+                            print(f"[civitai] Downloaded {file_size_mb:.1f}MB — loading as LoRA...")
                             load_kwargs = {}
                             if adapter:
                                 load_kwargs["adapter_name"] = adapter
                             self.pipe.load_lora_weights(tmp_file, **load_kwargs)
                             active_adapters.append(adapter or f"civitai_{model_id}")
                             active_weights.append(weight)
-                            lora_status.append({"repo": repo, "status": "loaded", "weight": weight, "source": "civitai", "model_name": model_data.get("name", "?")})
+                            lora_status.append({"repo": repo[:80], "status": "loaded", "weight": weight, "source": "civitai", "model_name": model_data.get("name", "?"), "size_mb": round(file_size_mb, 1)})
                         else:
                             # HuggingFace repo ID — load directly
                             load_kwargs = {}
@@ -203,7 +239,7 @@ class NexusSDXLPonyGenerator:
                             active_weights.append(weight)
                             lora_status.append({"repo": repo, "status": "loaded", "weight": weight, "source": "huggingface"})
                     except Exception as exc:
-                        lora_status.append({"repo": repo, "status": "failed", "error": str(exc)[:300]})
+                        lora_status.append({"repo": repo[:80] if len(repo) > 80 else repo, "status": "failed", "error": str(exc)[:300]})
 
                 # Set all active adapters (Pony V6 + user LoRAs)
                 if len(active_adapters) > 1:
