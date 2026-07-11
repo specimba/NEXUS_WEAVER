@@ -976,8 +976,7 @@ export function StudioView() {
           </div>
 
           {/* Run button + Warm up Modal */}
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
+          <div className="flex gap-2">
               <button
                 onClick={run}
                 disabled={running || !prompt.trim()}
@@ -1032,21 +1031,20 @@ export function StudioView() {
                 <RotateCcw className="h-4 w-4" />
               </button>
             ) : null}
-            </div>
-
-            {/* v5.42: Degraded mode toggle — skip brain when endpoints unavailable */}
-            <label className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 font-mono text-[10px] text-amber-300 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={skipBrain}
-                onChange={(e) => setSkipBrain(e.target.checked)}
-                className="h-3 w-3 accent-amber-500"
-              />
-              <span className="flex-1">
-                {skipBrain ? "⚠ Degraded mode ON — skip ST3GG + Judge (image only, UNCHECKED)" : "Brain endpoints unavailable? Enable degraded mode (skip safety + judge)"}
-              </span>
-            </label>
           </div>
+
+          {/* v5.42: Degraded mode toggle — skip brain when endpoints unavailable */}
+          <label className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 font-mono text-[10px] text-amber-300 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={skipBrain}
+              onChange={(e) => setSkipBrain(e.target.checked)}
+              className="h-3 w-3 accent-amber-500"
+            />
+            <span className="flex-1">
+              {skipBrain ? "⚠ Degraded mode ON — skip ST3GG + Judge (image only, UNCHECKED)" : "Brain endpoints unavailable? Enable degraded mode (skip safety + judge)"}
+            </span>
+          </label>
 
           {/* Modal warm-up status strip */}
           {modalWarm !== null && !running ? (

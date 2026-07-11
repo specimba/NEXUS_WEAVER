@@ -23,6 +23,7 @@ import {
   MODAL_FLUX2_HEALTH_URL,
   MODAL_KREA2_URL,
   MODAL_ZIMAGE_URL,
+  MODAL_SDXL_URL,
   MODAL_BRAIN_URL,
   MODAL_BRAIN_MODEL,
   MODAL_JUDGE_URL,
@@ -221,6 +222,14 @@ function resolveBackend(engineId?: string): BackendConfig {
         maxSteps: 8,   // Z-Image Turbo: 4-8 steps
         defaultCfg: 3.0, // Z-Image uses moderate CFG
         gpu: "H100",
+      };
+    case "sdxl-pony":
+      return {
+        url: MODAL_SDXL_URL,
+        format: "asgi_json",
+        maxSteps: 50,  // SDXL: 20-50 steps (30 default for Pony realism)
+        defaultCfg: 7.0, // Pony V6 community standard
+        gpu: "L40S",
       };
     case "flux2-klein-9b":
     case "flux2-dev":

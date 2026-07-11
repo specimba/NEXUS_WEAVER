@@ -124,6 +124,13 @@ export const MODAL_INPAINT_URL =
   process.env.MODAL_INPAINT_URL ||
   "https://specimba--nexus-kontext-inpaint-nexuskontextinpaint-web-app.modal.run";
 
+// ── SDXL Pony backend (Stable Yogi partnership) ──────────────────────────────
+// SDXL + Pony V6 on L40S — the community-standard engine for Stable Yogi's
+// realism LoRAs. All 15 sy-* LoRAs in the library target this engine.
+export const MODAL_SDXL_URL =
+  process.env.MODAL_SDXL_URL ||
+  "https://specimba--nexus-sdxl-pony-nexussdxlponygenerator-web-app.modal.run";
+
 // ── Validation helper ────────────────────────────────────────────────────────
 /** Returns true if all required tokens are present (for health checks). */
 export function areTokensConfigured(): boolean {

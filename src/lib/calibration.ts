@@ -35,7 +35,8 @@ export type FluxModel =
   | "Ideogram-4"
   | "Qwen-Image-Edit-2511"
   | "Wan-2.2"
-  | "LTX-2.3";
+  | "LTX-2.3"
+  | "SDXL-Pony";
 
 export type FluxSampler =
   | "dpmpp_2m"
@@ -298,6 +299,28 @@ export const CALIBRATION_PRESETS: CalibrationPreset[] = [
     qualityTokens: ["ultra detailed", "sharp focus", "professional composition"],
     estWarmMs: 1200,
     tag: "⚡ fastest",
+  },
+  // ── SDXL Pony presets (Stable Yogi partnership) ─────────────────
+  {
+    id: "sdxl-pony-realism",
+    name: "SDXL Pony · Stable Yogi Realism",
+    category: "portrait",
+    description:
+      "SDXL Pony V6 with Stable Yogi's realism LoRAs. 30 steps, CFG 7.0, DPM++ 2M — the community-standard settings for Pony realism. Pairs with sy-realism-pony, sy-ultra-realistic-pony, and all SDXL-compatible Stable Yogi LoRAs.",
+    engineId: "sdxl-pony",
+    model: "SDXL-Pony",
+    steps: 30,
+    cfg: 7.0,
+    sampler: "dpmpp_2m",
+    scheduler: "karras",
+    denoise: 0.85,
+    resolution: "1024x1024",
+    loraWeight: 0.5,
+    refinerPass: false,
+    variationStrength: 0.10,
+    qualityTokens: ["score_9", "score_8_up", "score_7_up", "photorealistic", "ultra detailed", "natural skin texture"],
+    estWarmMs: 1800,
+    tag: "🤝 partnership",
   },
   // ── Video presets (Wan 2.2 / LTX 2.3) ───────────────────────────
   {

@@ -18,6 +18,9 @@ import { MODAL_TOKEN_ID, MODAL_TOKEN_SECRET } from "@/lib/secrets";
 
 const execFileAsync = promisify(execFile);
 
+// The modal CLI path. Installed via `pip install modal` at /home/z/.venv/bin/modal.
+// Can be overridden via MODAL_BIN env var. The sandbox may wipe the venv on reset,
+// so we also check if the file exists and fall back to a `python3 -m modal` invocation.
 const MODAL_BIN = process.env.MODAL_BIN || "/home/z/.venv/bin/modal";
 const PROJECT_ROOT = process.cwd();
 
@@ -80,6 +83,14 @@ export const ENGINE_APPS: EngineApp[] = [
     gpu: "H100",
     alwaysOn: false,
     family: "Krea 2",
+  },
+  {
+    engineId: "sdxl-pony",
+    appName: "nexus-sdxl-pony",
+    appFile: "modal-apps/nexus_sdxl_pony.py",
+    gpu: "L40S",
+    alwaysOn: false,
+    family: "SDXL",
   },
   {
     engineId: "wan-2.2",

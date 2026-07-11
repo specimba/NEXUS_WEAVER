@@ -508,10 +508,10 @@ export const LORA_PACKS: LoraPack[] = [
     id: "sy-sdxl-realism-partnership",
     name: "Stable Yogi · SDXL Realism (Partnership)",
     description:
-      "Stable Yogi's all-in-one Realism LoRA + Ultra Realistic skin booster on SDXL. The flagship collaboration pack — 47K+ downloads on the realism LoRA alone. Performs well with weights 0.4-1.5 (we use 0.5 for stacking safety). Best for: photorealistic portraits, skin texture, commercial photography. PARTNERSHIP READINESS: requires SDXL engine deployment.",
+      "Stable Yogi's all-in-one Realism LoRA + Ultra Realistic skin booster on SDXL Pony. The flagship collaboration pack — 47K+ downloads on the realism LoRA alone. Performs well with weights 0.4-1.5 (we use 0.5 for stacking safety). Best for: photorealistic portraits, skin texture, commercial photography. NOW DEPLOYED on the SDXL Pony engine.",
     source: "civitai",
-    engineId: "krea-2-turbo",
-    calibrationId: "krea2-turbo-fast",
+    engineId: "sdxl-pony",
+    calibrationId: "sdxl-pony-realism",
     loras: [
       {
         loraId: "sy-realism-pony",
@@ -527,11 +527,69 @@ export const LORA_PACKS: LoraPack[] = [
       },
     ],
     promptTemplate:
-      "Professional portrait of a woman, natural skin texture with visible pores, soft studio lighting, shallow depth of field, shot on Canon EOS R5 with 85mm lens, editorial photography quality.",
+      "score_9, score_8_up, score_7_up, Professional portrait of a woman, natural skin texture with visible pores, soft studio lighting, shallow depth of field, shot on Canon EOS R5 with 85mm lens, editorial photography quality.",
     bestFor: ["photorealistic portraits", "skin texture", "commercial photography", "editorial work"],
     avoidFor: ["artistic styles", "anime/illustration", "non-SDXL engines"],
     mature: true,
     thumbnailEmoji: "🤝",
+  },
+  {
+    id: "sy-sdxl-influencer-identity",
+    name: "Stable Yogi · AI Influencer Identity",
+    description:
+      "Stable Yogi's Demo AI Influencer 004 + Realism LoRA for consistent character generation. The influencer LoRA locks facial identity across generations — essential for social media content series. Best for: AI influencer content, consistent character series, brand mascots.",
+    source: "civitai",
+    engineId: "sdxl-pony",
+    calibrationId: "sdxl-pony-realism",
+    loras: [
+      {
+        loraId: "sy-demo-influencer-004",
+        role: "identity",
+        weight: 0.5,
+        notes: "AI influencer face/identity — locks character consistency across generations.",
+      },
+      {
+        loraId: "sy-realism-pony",
+        role: "realism",
+        weight: 0.3,
+        notes: "Realism boost — kept lower to not overpower the identity LoRA.",
+      },
+    ],
+    promptTemplate:
+      "score_9, score_8_up, score_7_up, AI influencer woman in a sunlit cafe, holding a coffee cup, natural candid moment, bokeh background, lifestyle photography, consistent facial features.",
+    bestFor: ["AI influencer content", "consistent character series", "social media content", "brand mascots"],
+    avoidFor: ["variety/anonymous portraits", "landscape scenes"],
+    mature: true,
+    thumbnailEmoji: "📱",
+  },
+  {
+    id: "sy-sdxl-cinematic-moody",
+    name: "Stable Yogi · Cinematic Moody",
+    description:
+      "Event Horizon + LUT Color Grading for cinematic dark/moody aesthetics. Dramatic lighting + atmospheric depth + professional color grading. Best for: film stills, dark atmospheric scenes, dramatic portraits. Avoid: bright cheerful content.",
+    source: "civitai",
+    engineId: "sdxl-pony",
+    calibrationId: "sdxl-pony-realism",
+    loras: [
+      {
+        loraId: "sy-event-horizon",
+        role: "style",
+        weight: 0.5,
+        notes: "Cinematic dark/moody aesthetic — dramatic lighting + atmospheric depth.",
+      },
+      {
+        loraId: "sy-lut-color-grading",
+        role: "color",
+        weight: 0.3,
+        notes: "LUT-style color grading — cinematic teal/orange or desaturated looks.",
+      },
+    ],
+    promptTemplate:
+      "score_9, score_8_up, score_7_up, A lone figure standing in rain-soaked neon-lit alley at night, dramatic chiaroscuro lighting, cinematic film still, moody atmosphere, teal and orange color grade, anamorphic lens flare.",
+    bestFor: ["film stills", "dark atmospheric scenes", "dramatic portraits", "noir photography"],
+    avoidFor: ["bright cheerful content", "product photography", "high-key lighting"],
+    mature: false,
+    thumbnailEmoji: "🎬",
   },
 ];
 
