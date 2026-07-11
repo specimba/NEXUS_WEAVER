@@ -85,6 +85,14 @@ export const ENGINE_APPS: EngineApp[] = [
     family: "Krea 2",
   },
   {
+    engineId: "krea-2-muse",
+    appName: "nexus-krea2-muse",
+    appFile: "modal-apps/nexus_krea2_muse.py",
+    gpu: "H100",
+    alwaysOn: false,
+    family: "Krea 2",
+  },
+  {
     engineId: "sdxl-pony",
     appName: "nexus-sdxl-pony",
     appFile: "modal-apps/nexus_sdxl_pony.py",

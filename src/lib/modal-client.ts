@@ -24,6 +24,7 @@ import {
   MODAL_KREA2_URL,
   MODAL_ZIMAGE_URL,
   MODAL_SDXL_URL,
+  MODAL_MUSE_URL,
   MODAL_BRAIN_URL,
   MODAL_BRAIN_MODEL,
   MODAL_JUDGE_URL,
@@ -208,6 +209,7 @@ function resolveBackend(engineId?: string): BackendConfig {
   switch (engineId) {
     case "krea-2-turbo":
     case "krea-2-raw":
+    case "krea-2-muse":
       return {
         url: MODAL_KREA2_URL,
         format: "asgi_json",
@@ -226,6 +228,7 @@ function resolveBackend(engineId?: string): BackendConfig {
     case "sdxl-pony":
       return {
         url: MODAL_SDXL_URL,
+  MODAL_MUSE_URL,
         format: "asgi_json",
         maxSteps: 50,  // SDXL: 20-50 steps (30 default for Pony realism)
         defaultCfg: 7.0, // Pony V6 community standard

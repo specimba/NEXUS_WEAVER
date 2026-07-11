@@ -139,6 +139,11 @@ export const MODAL_SDXL_URL =
   process.env.MODAL_SDXL_URL ||
   "https://specimba--nexus-sdxl-pony-nexussdxlponygenerator-web-app.modal.run";
 
+// ── Krea 2 Muse backend (Stable Yogi partnership flagship) ───────────────────
+export const MODAL_MUSE_URL =
+  process.env.MODAL_MUSE_URL ||
+  "https://specimba--nexus-krea2-muse-nexuskrea2musegenerator-web-app.modal.run";
+
 // ── Validation helper ────────────────────────────────────────────────────────
 /** Returns true if all required tokens are present (for health checks). */
 export function areTokensConfigured(): boolean {
