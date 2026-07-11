@@ -131,14 +131,28 @@ class NexusKrea2Generator:
         except Exception as e:
             print(f"WARNING: Config patch failed: {e} — will try loading anyway")
 
-        # v5.57: Copy tokenizer files from tokenizer/ subfolder to root (not symlinks
-        # — HF cache uses symlinks internally, so symlinks-to-symlinks don't resolve)
-        print("Copying tokenizer files to root...")
+        # v5.58: Fix tokenizer loading — the repo uses Qwen2Tokenizer (slow) which
+        # needs vocab.json+merges.txt (NOT in the repo), but only has tokenizer.json
+        # (for the FAST tokenizer). Fix: patch model_index.json to use Qwen2TokenizerFast
+        # and patch tokenizer_config.json to fix tokenizer_class + extra_special_tokens.
+        print("Patching model_index.json + tokenizer_config.json...")
         try:
             import shutil
             from huggingface_hub import snapshot_download as _sd
             mp = _sd(MODEL_ID, cache_dir=HF_CACHE_DIR,
-                     allow_patterns=["tokenizer/*", "*.json"])
+                     allow_patterns=["*.json", "tokenizer/*"])
+
+            # 1. Patch model_index.json: Qwen2Tokenizer → Qwen2TokenizerFast
+            mi_path = os.path.join(mp, "model_index.json")
+            with open(mi_path, "r") as f:
+                mi = json.load(f)
+            if mi.get("tokenizer", ["", ""])[1] == "Qwen2Tokenizer":
+                mi["tokenizer"] = ["transformers", "Qwen2TokenizerFast"]
+                with open(mi_path, "w") as f:
+                    json.dump(mi, f, indent=2)
+                print("  PATCHED model_index.json: Qwen2Tokenizer → Qwen2TokenizerFast")
+
+            # 2. Copy tokenizer files to root + patch tokenizer_config.json
             tok_dir = os.path.join(mp, "tokenizer")
             if os.path.isdir(tok_dir):
                 for f in os.listdir(tok_dir):
@@ -147,10 +161,32 @@ class NexusKrea2Generator:
                     if not os.path.exists(dst) and os.path.isfile(src):
                         shutil.copy2(src, dst)
                         print(f"  copied: {f}")
+
+                # Patch tokenizer_config.json: fix tokenizer_class + extra_special_tokens
+                tc_path = os.path.join(mp, "tokenizer_config.json")
+                if os.path.exists(tc_path):
+                    with open(tc_path, "r") as f:
+                        tc = json.load(f)
+                    changed = False
+                    if tc.get("tokenizer_class") == "Qwen2Tokenizer":
+                        tc["tokenizer_class"] = "Qwen2TokenizerFast"
+                        changed = True
+                    # Convert extra_special_tokens from list to additional_special_tokens
+                    # (Qwen2TokenizerFast handles it correctly, but some versions choke)
+                    est = tc.get("extra_special_tokens")
+                    if isinstance(est, list):
+                        # Move to additional_special_tokens (correct field) and remove
+                        tc["additional_special_tokens"] = est
+                        del tc["extra_special_tokens"]
+                        changed = True
+                    if changed:
+                        with open(tc_path, "w") as f:
+                            json.dump(tc, f, indent=2)
+                        print("  PATCHED tokenizer_config.json: Qwen2TokenizerFast + extra_special_tokens→additional_special_tokens")
             else:
                 print(f"  WARNING: tokenizer/ dir not found at {tok_dir}")
         except Exception as e:
-            print(f"  copy warning: {e}")
+            print(f"  patch warning: {e}")
 
         self.pipe = Krea2Pipeline.from_pretrained(
             MODEL_ID,
