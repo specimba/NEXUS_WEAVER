@@ -126,11 +126,18 @@ class NexusKrea2MuseGenerator:
                     te_config = json.load(f)
                 patched = False
                 if not te_config.get("rope_scaling"):
-                    te_config["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                    te_config["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "default"}
+                    patched = True
+                elif te_config["rope_scaling"].get("rope_type") == "mrope":
+                    te_config["rope_scaling"]["rope_type"] = "default"
                     patched = True
                 tc = te_config.get("text_config", {})
                 if not tc.get("rope_scaling"):
-                    tc["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                    tc["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "default"}
+                    te_config["text_config"] = tc
+                    patched = True
+                elif tc["rope_scaling"].get("rope_type") == "mrope":
+                    tc["rope_scaling"]["rope_type"] = "default"
                     te_config["text_config"] = tc
                     patched = True
                 if patched:

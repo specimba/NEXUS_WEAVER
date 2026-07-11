@@ -93,15 +93,26 @@ class NexusKrea2Generator:
                     te_config = json.load(f)
 
                 # Fix top-level rope_scaling
+                # v5.53: rope_type must be "default" (not "mrope") — "mrope" is not
+                # in ROPE_INIT_FUNCTIONS. The mrope behavior comes from mrope_section.
                 patched = False
+                needs_fix = False
                 if not te_config.get("rope_scaling"):
-                    te_config["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                    te_config["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "default"}
+                    patched = True
+                elif te_config["rope_scaling"].get("rope_type") == "mrope":
+                    # Fix previous incorrect patch (rope_type was "mrope" → KeyError)
+                    te_config["rope_scaling"]["rope_type"] = "default"
                     patched = True
 
                 # Fix text_config.rope_scaling (where the actual crash happens)
                 tc = te_config.get("text_config", {})
                 if not tc.get("rope_scaling"):
-                    tc["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+                    tc["rope_scaling"] = {"mrope_section": [24, 20, 20], "rope_type": "default"}
+                    te_config["text_config"] = tc
+                    patched = True
+                elif tc["rope_scaling"].get("rope_type") == "mrope":
+                    tc["rope_scaling"]["rope_type"] = "default"
                     te_config["text_config"] = tc
                     patched = True
 
