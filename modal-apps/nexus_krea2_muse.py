@@ -111,16 +111,16 @@ class NexusKrea2MuseGenerator:
             self.use_muse = True
 
         # 2. Load the base Krea 2 Turbo pipeline (for structure + text encoder + VAE)
-        # v5.52: Patch config.json ON DISK (in-memory fixes were ignored by from_pretrained)
+        # v5.58: Patch config.json + model_index.json + tokenizer (same fix as Krea 2 Turbo)
         print(f"[muse] Loading base {BASE_MODEL_ID}...")
         try:
-            from huggingface_hub import snapshot_download
-            model_path = snapshot_download(
-                BASE_MODEL_ID,
-                cache_dir=HF_CACHE_DIR,
-                allow_patterns=["text_encoder/config.json"],
-            )
-            te_config_path = os.path.join(model_path, "text_encoder", "config.json")
+            import shutil
+            from huggingface_hub import snapshot_download as _sd
+            mp = _sd(BASE_MODEL_ID, cache_dir=HF_CACHE_DIR,
+                     allow_patterns=["*.json", "tokenizer/*"])
+
+            # 1. Patch text_encoder config.json (rope_scaling)
+            te_config_path = os.path.join(mp, "text_encoder", "config.json")
             if os.path.exists(te_config_path):
                 with open(te_config_path, "r") as f:
                     te_config = json.load(f)
@@ -143,7 +143,43 @@ class NexusKrea2MuseGenerator:
                 if patched:
                     with open(te_config_path, "w") as f:
                         json.dump(te_config, f, indent=2)
-                    print(f"[muse] PATCHED {te_config_path} — rope_scaling fix applied")
+                    print(f"[muse] PATCHED text_encoder config.json")
+
+            # 2. Patch model_index.json: Qwen2Tokenizer → Qwen2TokenizerFast
+            mi_path = os.path.join(mp, "model_index.json")
+            with open(mi_path, "r") as f:
+                mi = json.load(f)
+            if mi.get("tokenizer", ["", ""])[1] == "Qwen2Tokenizer":
+                mi["tokenizer"] = ["transformers", "Qwen2TokenizerFast"]
+                with open(mi_path, "w") as f:
+                    json.dump(mi, f, indent=2)
+                print("[muse] PATCHED model_index.json: Qwen2Tokenizer → Qwen2TokenizerFast")
+
+            # 3. Copy tokenizer files to root + patch tokenizer_config.json
+            tok_dir = os.path.join(mp, "tokenizer")
+            if os.path.isdir(tok_dir):
+                for f in os.listdir(tok_dir):
+                    src = os.path.join(tok_dir, f)
+                    dst = os.path.join(mp, f)
+                    if not os.path.exists(dst) and os.path.isfile(src):
+                        shutil.copy2(src, dst)
+                tc_path = os.path.join(mp, "tokenizer_config.json")
+                if os.path.exists(tc_path):
+                    with open(tc_path, "r") as f:
+                        tcfg = json.load(f)
+                    changed = False
+                    if tcfg.get("tokenizer_class") == "Qwen2Tokenizer":
+                        tcfg["tokenizer_class"] = "Qwen2TokenizerFast"
+                        changed = True
+                    est = tcfg.get("extra_special_tokens")
+                    if isinstance(est, list):
+                        tcfg["additional_special_tokens"] = est
+                        del tcfg["extra_special_tokens"]
+                        changed = True
+                    if changed:
+                        with open(tc_path, "w") as f:
+                            json.dump(tcfg, f, indent=2)
+                        print("[muse] PATCHED tokenizer_config.json")
         except Exception as e:
             print(f"[muse] Config patch warning: {e}")
 
