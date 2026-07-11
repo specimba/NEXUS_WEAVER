@@ -111,13 +111,20 @@ class NexusKrea2MuseGenerator:
             self.use_muse = True
 
         # 2. Load the base Krea 2 Turbo pipeline (for structure + text encoder + VAE)
-        # v5.49: Load text encoder as a MODEL (not config) — fixes the crash
+        # v5.50: Fix rope_scaling on BOTH top-level and text_config sub-config
         print(f"[muse] Loading base {BASE_MODEL_ID}...")
         text_encoder_config = AutoConfig.from_pretrained(BASE_MODEL_ID, subfolder="text_encoder", trust_remote_code=True)
+
+        # Fix top-level rope_scaling
         if not hasattr(text_encoder_config, "rope_scaling") or text_encoder_config.rope_scaling is None:
             text_encoder_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
 
-        print("[muse] Loading Qwen3VL text encoder model...")
+        # Fix text_config.rope_scaling (this is where the actual crash happens)
+        if hasattr(text_encoder_config, "text_config"):
+            if not hasattr(text_encoder_config.text_config, "rope_scaling") or text_encoder_config.text_config.rope_scaling is None:
+                text_encoder_config.text_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+
+        print("[muse] Loading Qwen3VL text encoder model (with rope_scaling fix)...")
         text_encoder = AutoModel.from_pretrained(
             BASE_MODEL_ID,
             subfolder="text_encoder",

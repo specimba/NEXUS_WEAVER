@@ -68,21 +68,29 @@ class NexusKrea2Generator:
         print(f"Loading {MODEL_ID}...")
         t0 = time.time()
 
-        # FIX (v5.49): The previous code passed text_encoder=text_encoder_config
-        # (a CONFIG object) to Krea2Pipeline.from_pretrained(). Diffusers expects
-        # a PreTrainedModel, not a config — this caused:
-        #   ValueError: Qwen3VLConfig is of type Qwen3VLConfig, but should be PreTrainedModel
+        # FIX (v5.50): The Qwen3VL text encoder crashes because config.rope_scaling
+        # is None at the TOP LEVEL. The transformers code at modeling_qwen3_vl.py:297
+        # calls config.rope_scaling.get("mrope_section") — but rope_scaling is None.
+        # The fix: set rope_scaling on BOTH the top-level config AND the text_config
+        # sub-config, THEN load the model with the fixed config.
         #
-        # Correct approach: Load the text encoder MODEL separately with the fixed
-        # config, then pass the model to the pipeline. This is what Stable Yogi's
-        # Forge extension does — it loads Qwen3VLModel from the text_encoder
-        # subfolder with the rope_scaling fix applied, then passes the loaded model.
+        # Previous attempts failed because:
+        # - v5.49: passed a config object instead of a model → "should be PreTrainedModel"
+        # - The config fix only set top-level rope_scaling, but the crash is in
+        #   Qwen3VLTextModel which reads config.rope_scaling from text_config
         text_encoder_config = AutoConfig.from_pretrained(MODEL_ID, subfolder="text_encoder", trust_remote_code=True)
+
+        # Fix top-level rope_scaling
         if not hasattr(text_encoder_config, "rope_scaling") or text_encoder_config.rope_scaling is None:
             text_encoder_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
 
-        # Load the text encoder as a MODEL (not just config)
-        print("Loading Qwen3VL text encoder model...")
+        # Fix text_config.rope_scaling (this is where the actual crash happens)
+        if hasattr(text_encoder_config, "text_config"):
+            if not hasattr(text_encoder_config.text_config, "rope_scaling") or text_encoder_config.text_config.rope_scaling is None:
+                text_encoder_config.text_config.rope_scaling = {"mrope_section": [24, 20, 20], "rope_type": "mrope"}
+
+        # Load the text encoder MODEL with the fixed config
+        print("Loading Qwen3VL text encoder model (with rope_scaling fix)...")
         text_encoder = AutoModel.from_pretrained(
             MODEL_ID,
             subfolder="text_encoder",
@@ -92,7 +100,7 @@ class NexusKrea2Generator:
             trust_remote_code=True,
         )
 
-        # Now pass the loaded MODEL (not config) to the pipeline
+        # Pass the loaded MODEL to the pipeline
         self.pipe = Krea2Pipeline.from_pretrained(
             MODEL_ID,
             text_encoder=text_encoder,

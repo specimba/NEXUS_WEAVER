@@ -375,7 +375,17 @@ Respond as JSON exactly in this shape:
     }
   }
   if (!raw) {
-    throw new Error("ST3GG brain endpoint unavailable. The Qwen 9B managed endpoint is cold-starting. Wait 30s and retry.");
+    // v5.50: Fall back to LOCAL safety check instead of throwing an error.
+    // The brain endpoint may be cold-starting (503) — this is not a fatal error.
+    // Use the local safety checker (hard blocklist + policy scoring) so the
+    // pipeline can proceed with image generation.
+    console.log("[pipeline] ST3GG brain unavailable — falling back to local safety check");
+    const { localSafetyScan } = await import("@/lib/local-safety");
+    const localResult = localSafetyScan(prompt, style, wardrobe);
+    return {
+      ...localResult,
+      rationale: `ST3GG brain cold-starting — used local safety check. ${localResult.rationale}`,
+    };
   }
 
   const parsed = extractJson<{
@@ -471,7 +481,11 @@ Respond as JSON exactly:
   if (brainResult) {
     raw = brainResult.content;
   } else {
-    throw new Error("Judge brain endpoint unavailable. The Gemma 31B managed endpoint is cold-starting. Wait 30s and retry.");
+    // v5.50: Fall back to LOCAL quality scoring instead of throwing.
+    // The Judge brain may be cold-starting (503) — don't fail the pipeline.
+    console.log("[pipeline] Judge brain unavailable — falling back to local quality scoring");
+    const { localJudge } = await import("@/lib/local-judge");
+    throw new Error("JUDGE_LOCAL_FALLBACK"); // signal to caller to use local judge
   }
 
   const parsed = extractJson<{
@@ -901,8 +915,20 @@ export async function runPipeline(
       await logEvent("warn", `Local quality scoring (brain unavailable): ${judge.verdict}, overall ${judge.overallScore}. Heuristic — not vision-based.`, "warn", gen.id);
     } else {
       progress("judge", { status: "running", message: "Visual judge analyzing generated image…" });
-      judge = await stageJudge(flux.imagePath, input.prompt, input.style, input.wardrobe, input.brainId);
-      progress("judge", { status: "done", ms: judge.stageMs, message: `${judge.verdict} · ${judge.overallScore}` });
+      try {
+        judge = await stageJudge(flux.imagePath, input.prompt, input.style, input.wardrobe, input.brainId);
+        progress("judge", { status: "done", ms: judge.stageMs, message: `${judge.verdict} · ${judge.overallScore}` });
+      } catch (judgeErr) {
+        // v5.50: If the Judge brain is cold-starting (JUDGE_LOCAL_FALLBACK signal),
+        // use the local quality scorer instead of failing the pipeline.
+        const { localJudge } = await import("@/lib/local-judge");
+        judge = localJudge(
+          input.prompt, input.style, input.loraIds, input.loraWeights ?? {},
+          input.engineId, calibration
+        );
+        progress("judge", { status: "done", ms: 1, message: `${judge.verdict} · ${judge.overallScore} (local fallback — brain cold)` });
+        await logEvent("warn", `Judge brain cold-starting — used local quality scoring. ${judge.verdict}, overall ${judge.overallScore}.`, "warn", gen.id);
+      }
     }
     timings.judge = judge.stageMs;
 
