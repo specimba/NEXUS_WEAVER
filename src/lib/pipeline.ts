@@ -526,7 +526,8 @@ export async function stageEvidence(
   wardrobe: string | null,
   safety: SafetyResult,
   judge: JudgeResult,
-  _brainId?: string
+  _brainId?: string,
+  engineId?: string
 ): Promise<{ evidence: Record<string, unknown>; ms: number }> {
   const start = nowMs();
 
@@ -566,7 +567,10 @@ export async function stageEvidence(
     summary: `${judge.verdict} generation — overall ${judge.overallScore}/100, safety ${safety.score}/100, prompt adherence ${judge.promptAdherence}/100`,
     modelChain: ["FLUX.2", "ST3GG", "Visual Judge", "Evidence"],
     provenance: {
-      generator: "FLUX.2 Klein 9B (via Modal L40S GPU)",
+      generator: engineId === "sdxl-pony" ? "SDXL Pony V6 (via Modal L40S GPU)"
+        : engineId === "krea-2-turbo" || engineId === "krea-2-raw" ? "Krea 2 (via Modal H100 GPU)"
+        : engineId === "z-image-turbo" ? "Z-Image Turbo (via Modal H100 GPU)"
+        : "FLUX.2 Klein 9B (via Modal L40S GPU)",
       safetyModel: "ST3GG (via Qwen 9B managed endpoint)",
       judgeModel: "Visual Judge (via Gemma 31B heretic)",
       aggregator: "Evidence (local TypeScript aggregation — v5.40 credit optimization)",
@@ -945,7 +949,7 @@ export async function runPipeline(
 
     // Stage: Evidence aggregation
     progress("evidence", { status: "running", message: "Evidence structuring evidence…" });
-    const nem = await stageEvidence(input.prompt, input.style, input.aspect, input.wardrobe, safety, judge, input.brainId);
+    const nem = await stageEvidence(input.prompt, input.style, input.aspect, input.wardrobe, safety, judge, input.brainId, input.engineId);
     progress("evidence", { status: "done", ms: nem.ms, message: "Evidence structured" });
     timings.evidence = nem.ms;
     await logEvent("stage_complete", `Evidence structured evidence parsed (${nem.ms}ms)`, "success", gen.id);

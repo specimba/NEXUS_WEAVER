@@ -49,8 +49,12 @@ image = (
 )
 
 # REUSE the existing hf-hub-cache volume — SDXL weights cache alongside FLUX/Krea
+# v5.45: Also use a lora-cache volume for Civitai LoRAs (prevents re-downloading
+# 649MB on every generation — the #1 performance bottleneck from the audit).
 hf_cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
-volumes = {HF_CACHE_DIR: hf_cache_vol}
+lora_cache_vol = modal.Volume.from_name("lora-cache", create_if_missing=True)
+LORA_CACHE_DIR = "/root/.cache/loras"
+volumes = {HF_CACHE_DIR: hf_cache_vol, LORA_CACHE_DIR: lora_cache_vol}
 # Both HuggingFace (gated SDXL) + Civitai (LoRA downloads) tokens
 secrets = [
     modal.Secret.from_name("huggingface-secret"),
@@ -164,26 +168,35 @@ class NexusSDXLPonyGenerator:
                         # Check if this is a pre-resolved Civitai CDN URL (resolved by the Next.js backend)
                         if weight_name == "__civitai_resolved__":
                             # The repo field is already a direct CDN download URL with token.
-                            # Just download the .safetensors file — no API call needed.
-                            import tempfile, os, subprocess
-                            print(f"[civitai] Downloading pre-resolved CDN URL ({repo[:80]}...)...")
-                            tmp_dir = tempfile.mkdtemp()
-                            tmp_file = os.path.join(tmp_dir, f"civitai_lora_{int(time.time())}.safetensors")
-                            dl_result = subprocess.run(
-                                ["curl", "-sS", "-L", "--max-time", "120", "-o", tmp_file, repo],
-                                capture_output=True, text=True, timeout=180
-                            )
-                            if dl_result.returncode != 0 or not os.path.exists(tmp_file) or os.path.getsize(tmp_file) < 1000:
-                                raise ValueError(f"curl download failed (rc={dl_result.returncode}): {dl_result.stderr[:200]}")
-                            file_size_mb = os.path.getsize(tmp_file) / (1024 * 1024)
-                            print(f"[civitai] Downloaded {file_size_mb:.1f}MB — loading as LoRA...")
+                            # v5.45: Cache on the lora-cache VOLUME (not /tmp) so the LoRA
+                            # persists across container restarts. Cache key = URL hash.
+                            import tempfile, os, subprocess, hashlib
+                            # Extract model ID from the URL for a readable cache filename
+                            url_hash = hashlib.md5(repo.encode()).hexdigest()[:12]
+                            cache_file = os.path.join(LORA_CACHE_DIR, f"civitai_{url_hash}.safetensors")
+
+                            if os.path.exists(cache_file) and os.path.getsize(cache_file) > 1000:
+                                file_size_mb = os.path.getsize(cache_file) / (1024 * 1024)
+                                print(f"[civitai] CACHE HIT — {cache_file} ({file_size_mb:.1f}MB)")
+                            else:
+                                print(f"[civitai] CACHE MISS — downloading from CDN...")
+                                os.makedirs(LORA_CACHE_DIR, exist_ok=True)
+                                dl_result = subprocess.run(
+                                    ["curl", "-sS", "-L", "--max-time", "120", "-o", cache_file, repo],
+                                    capture_output=True, text=True, timeout=180
+                                )
+                                if dl_result.returncode != 0 or not os.path.exists(cache_file) or os.path.getsize(cache_file) < 1000:
+                                    raise ValueError(f"curl download failed (rc={dl_result.returncode}): {dl_result.stderr[:200]}")
+                                file_size_mb = os.path.getsize(cache_file) / (1024 * 1024)
+                                print(f"[civitai] Downloaded {file_size_mb:.1f}MB — cached at {cache_file}")
+
                             load_kwargs = {}
                             if adapter:
                                 load_kwargs["adapter_name"] = adapter
-                            self.pipe.load_lora_weights(tmp_file, **load_kwargs)
+                            self.pipe.load_lora_weights(cache_file, **load_kwargs)
                             active_adapters.append(adapter or "civitai_lora")
                             active_weights.append(weight)
-                            lora_status.append({"repo": repo[:80], "status": "loaded", "weight": weight, "source": "civitai_cdn", "size_mb": round(file_size_mb, 1)})
+                            lora_status.append({"repo": repo[:80], "status": "loaded", "weight": weight, "source": "civitai_cdn", "size_mb": round(file_size_mb, 1), "cached": True})
                         elif weight_name == "__civitai_url__" or "civitai" in repo:
                             # Fallback: resolve inside the Modal app (may fail if Civitai blocks Modal's IP)
                             import re, urllib.request, tempfile, os, subprocess
