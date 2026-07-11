@@ -414,11 +414,10 @@ export function getModalBaseUrl(): string {
 // through to z-ai — so the pipeline always works, even before the brain is ready.
 
 export function isBrainEndpointConfigured(): boolean {
-  // Brain endpoint is "configured" if we have the URL AND proxy auth tokens.
-  // Proxy tokens (wk-/ws-) are created via `modal workspace proxy-tokens create`
-  // and are DIFFERENT from API tokens (ak-/as-). API tokens don't work for
-  // endpoint proxy auth.
-  return MODAL_BRAIN_URL.length > 0 && MODAL_PROXY_KEY.length > 0 && MODAL_PROXY_SECRET.length > 0;
+  // v5.47: Brain endpoints are now unauthenticated (--unauthenticated flag).
+  // Proxy tokens are optional — we only need the URL. If proxy tokens are
+  // present, they're sent as headers (ignored by unauthenticated endpoints).
+  return MODAL_BRAIN_URL.length > 0;
 }
 
 export function getModalBrainUrl(): string {

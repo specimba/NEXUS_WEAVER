@@ -158,8 +158,19 @@ export async function callEndpointWithRetry(
   maxRetries = 3
 ): Promise<{ ok: boolean; data?: any; error?: string; warm: boolean }> {
   const url = getEndpointUrl(name);
-  if (!url || !MODAL_PROXY_KEY || !MODAL_PROXY_SECRET) {
+  if (!url) {
     return { ok: false, error: "endpoint not configured", warm: false };
+  }
+
+  // v5.47: Proxy auth is now OPTIONAL. The brain endpoints were recreated with
+  // --unauthenticated flag (the old proxy-auth endpoints returned 503 due to
+  // a Modal workspace pause issue). If proxy tokens are present, we send them
+  // (the unauthenticated endpoints will ignore them). If absent, we proceed
+  // without auth headers.
+  const authHeaders: Record<string, string> = {};
+  if (MODAL_PROXY_KEY && MODAL_PROXY_SECRET) {
+    authHeaders["Modal-Key"] = MODAL_PROXY_KEY;
+    authHeaders["Modal-Secret"] = MODAL_PROXY_SECRET;
   }
 
   const retryDelays = [5000, 10000, 15000]; // 5s, 10s, 15s
@@ -171,8 +182,7 @@ export async function callEndpointWithRetry(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Modal-Key": MODAL_PROXY_KEY,
-          "Modal-Secret": MODAL_PROXY_SECRET,
+          ...authHeaders,
         },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(60_000),
