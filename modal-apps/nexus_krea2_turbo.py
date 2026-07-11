@@ -82,10 +82,14 @@ class NexusKrea2Generator:
         print("Patching text_encoder config.json (rope_scaling fix)...")
         try:
             # Download the model snapshot (or find it in cache)
+            # v5.54: Download ALL config + tokenizer files (not just text_encoder/config.json)
+            # Previous version only downloaded text_encoder/config.json, so the tokenizer
+            # files (vocab.json, merges.txt, tokenizer_config.json) were missing from
+            # the cache → TypeError: expected str, bytes or os.PathLike object, not NoneType
             model_path = snapshot_download(
                 MODEL_ID,
                 cache_dir=HF_CACHE_DIR,
-                allow_patterns=["text_encoder/config.json"],
+                allow_patterns=["*.json", "tokenizer*", "vocab*", "merges*", "special_tokens*"],
             )
             te_config_path = os.path.join(model_path, "text_encoder", "config.json")
             if os.path.exists(te_config_path):
