@@ -217,23 +217,29 @@ export async function stageFlux(
   if (isModalEnabled()) {
     try {
       // Auto-deploy the selected engine if it's stopped (H100 engines only).
-      // This is the "smart rotator" — the user selects an engine and the
-      // system ensures its Modal app is deployed before generating.
+      // v5.51: Do NOT silently fall back to FLUX.2 when the user selects a
+      // different engine. If the selected engine can't be deployed, throw a
+      // CLEAR error so the user knows to either fix the engine or switch to
+      // FLUX.2 manually. Silent fallback was the root cause of "why is FLUX
+      // still working when we're not choosing it" — every Krea 2/SDXL failure
+      // silently used FLUX.2, making it look like the engine selection didn't
+      // work, while burning credits on failed Krea 2 cold starts.
       const { ensureEngineDeployed } = await import("@/lib/engine-manager");
       const deployCheck = await ensureEngineDeployed(selectedEngine.id);
 
-      // If the engine fell back to FLUX.2, switch the backend to FLUX.2
-      // so we don't hit a 404 on the stopped H100 app.
       if (deployCheck.message.startsWith("FALLBACK_TO_FLUX2")) {
+        // v5.51: NO MORE SILENT FALLBACK. Tell the user the engine failed.
         await logEvent(
-          "stage_complete",
-          `Engine fallback: ${deployCheck.message}`,
-          "warn",
+          "error",
+          `Engine deploy failed (would have fallen back to FLUX.2): ${deployCheck.message}`,
+          "error",
           generationId
         );
-        // Force the backend to FLUX.2 by overriding the engineId for this run
-        // (the user selected Z-Image/Krea, but we're using FLUX.2 instead)
-        effectiveEngineId = "flux2-klein-9b";
+        throw new Error(
+          `Engine "${selectedEngine.name}" could not be deployed: ${deployCheck.message.slice(100, 250)}. ` +
+          `This engine may be crash-looping or not yet configured. ` +
+          `Switch to FLUX.2 9B (the reliable primary engine) and try again.`
+        );
       } else if (!deployCheck.ready) {
         await logEvent(
           "error",

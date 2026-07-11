@@ -5,6 +5,39 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 /**
+ * Local prompt enhancer — used as fallback when the brain is cold.
+ * Adds structure (subject → action → setting → style) without an LLM.
+ */
+function enhancePromptLocally(idea: string, extraRules?: string): string {
+  const parts: string[] = [idea.trim()];
+
+  // Add style keywords based on the idea content
+  const lower = idea.toLowerCase();
+  if (lower.match(/\b(portrait|person|woman|man|girl|boy|face)\b/)) {
+    parts.push("natural skin texture, visible pores, subsurface scattering");
+  }
+  if (lower.match(/\b(fashion|editorial|magazine|runway)\b/)) {
+    parts.push("high-fashion editorial photography, professional studio lighting, sharp focus");
+  }
+  if (lower.match(/\b(cyberpunk|neon|futuristic|sci-fi)\b/)) {
+    parts.push("dramatic neon lighting, high contrast, cinematic atmosphere");
+  }
+  if (lower.match(/\b(landscape|nature|outdoor|scene)\b/)) {
+    parts.push("golden hour lighting, atmospheric depth, wide-angle composition");
+  }
+
+  // Add quality tokens
+  parts.push("ultra detailed, professional composition, high dynamic range");
+
+  // Add extra rules if provided
+  if (extraRules) {
+    parts.push(extraRules.trim());
+  }
+
+  return parts.join(". ");
+}
+
+/**
  * POST /api/prompt/enhance
  *
  * NO8D Prompt+ "Expand" mode — uses the Creative brain (Brisk Evolution 4B,
@@ -60,13 +93,15 @@ Return ONLY the enhanced prompt text, nothing else.`;
   );
 
   if (!result) {
-    return NextResponse.json(
-      {
-        error:
-          "Creative brain endpoint unavailable (cold or not configured). It may be warming up — retry in 30s, or check /api/modal/status.",
-      },
-      { status: 503 }
-    );
+    // v5.51: Fall back to LOCAL prompt enhancement when the brain is cold.
+    // Don't return a 503 error — the user clicked "Enhance" and expects a result.
+    // Use a template-based enhancer that adds structure to the prompt.
+    const enhanced = enhancePromptLocally(idea, extraRules);
+    return NextResponse.json({
+      enhanced,
+      ms: 0,
+      model: "local-template (brain cold)",
+    });
   }
 
   const enhanced = result.content.trim();
