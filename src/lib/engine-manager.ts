@@ -74,6 +74,14 @@ export const ENGINE_APPS: EngineApp[] = [
     family: "Krea 2",
   },
   {
+    engineId: "krea-2-raw",
+    appName: "nexus-krea2-turbo", // same app — the app loads krea/Krea-2-Turbo; RAW mode is selected via calibration (28 steps, CFG 4.5)
+    appFile: "modal-apps/nexus_krea2_turbo.py",
+    gpu: "H100",
+    alwaysOn: false,
+    family: "Krea 2",
+  },
+  {
     engineId: "wan-2.2",
     appName: "nexus-wan22-i2v",
     appFile: "modal-apps/nexus_wan22_i2v.py",

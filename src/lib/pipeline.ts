@@ -587,6 +587,12 @@ export interface PipelineRunInput {
   // field is carried through for provenance/logging only — stageFlux reads
   // isModalEnabled() (which reads the env var) at call time.
   modalBoost?: boolean;
+  // v5.42: Degraded mode — when the brain endpoints are unavailable (budget
+  // exhausted, capacity unavailable), skip ST3GG safety scan + Judge quality
+  // scoring and generate the image directly. The generation is marked
+  // "unchecked" in the DB. This is NOT a z-ai fallback (rule #1) — no model
+  // substitution happens. The user explicitly opts in via the UI.
+  skipBrain?: boolean;
 }
 
 // v5: async job progress reporting. The pipeline worker passes an onProgress
@@ -676,9 +682,26 @@ export async function runPipeline(
 
   try {
     // Stage: ST3GG safety scan — RUN FIRST so blocked prompts never reach the GPU.
-    progress("st3gg", { status: "running", message: "ST3GG scanning prompt for safety…" });
-    const safety = await stageSt3gg(input.prompt, input.style, input.wardrobe, input.brainId);
-    progress("st3gg", { status: "done", ms: safety.stageMs, message: `${safety.riskLevel} risk · score ${safety.score}` });
+    // v5.42: Degraded mode — if skipBrain is set (brain endpoints unavailable due
+    // to budget/capacity), skip ST3GG + Judge and generate the image directly.
+    // The generation is marked "unchecked" — NOT a z-ai fallback (rule #1).
+    let safety: SafetyResult;
+    if (input.skipBrain) {
+      progress("st3gg", { status: "skipped", message: "Skipped — brain unavailable (degraded mode)" });
+      safety = {
+        passed: true,
+        score: 50,
+        riskLevel: "safe" as SafetyResult["riskLevel"],
+        flags: [],
+        rationale: "ST3GG skipped — brain endpoints unavailable (budget/capacity). Generation is UNCHECKED.",
+        stageMs: 0,
+      };
+      await logEvent("warn", "ST3GG skipped — degraded mode (brain unavailable). Generation will be UNCHECKED.", "warn", gen.id);
+    } else {
+      progress("st3gg", { status: "running", message: "ST3GG scanning prompt for safety…" });
+      safety = await stageSt3gg(input.prompt, input.style, input.wardrobe, input.brainId);
+      progress("st3gg", { status: "done", ms: safety.stageMs, message: `${safety.riskLevel} risk · score ${safety.score}` });
+    }
     timings.st3gg = safety.stageMs;
     await db.safetyScan.create({
       data: {
@@ -828,10 +851,30 @@ export async function runPipeline(
       gen.id
     );
 
-    // Stage: Visual judge (z-ai vision on generated image)
-    progress("judge", { status: "running", message: "Visual judge analyzing generated image…" });
-    const judge = await stageJudge(flux.imagePath, input.prompt, input.style, input.wardrobe, input.brainId);
-    progress("judge", { status: "done", ms: judge.stageMs, message: `${judge.verdict} · ${judge.overallScore}` });
+    // Stage: Visual judge (Gemma 31B vision on generated image)
+    // v5.42: In degraded mode (skipBrain), skip the judge — no quality scoring.
+    let judge: JudgeResult;
+    if (input.skipBrain) {
+      progress("judge", { status: "skipped", message: "Skipped — brain unavailable (degraded mode)" });
+      judge = {
+        promptAdherence: 0,
+        visualQuality: 0,
+        aestheticScore: 0,
+        safetyScore: 0,
+        wardrobeMatch: 0,
+        overallScore: 0,
+        verdict: "needs_review" as JudgeResult["verdict"],
+        observations: ["Judge skipped — brain endpoints unavailable (degraded mode). Manual review required."],
+        strengths: [],
+        weaknesses: ["Quality not assessed — brain unavailable."],
+        stageMs: 0,
+      };
+      await logEvent("warn", "Judge skipped — degraded mode. Image quality UNCHECKED. Manual review required.", "warn", gen.id);
+    } else {
+      progress("judge", { status: "running", message: "Visual judge analyzing generated image…" });
+      judge = await stageJudge(flux.imagePath, input.prompt, input.style, input.wardrobe, input.brainId);
+      progress("judge", { status: "done", ms: judge.stageMs, message: `${judge.verdict} · ${judge.overallScore}` });
+    }
     timings.judge = judge.stageMs;
 
     // Wardrobe intelligence: parse the prompt for structured garment data,

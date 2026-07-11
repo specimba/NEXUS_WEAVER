@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     calibrationId?: unknown; calibrationOverrides?: unknown;
     loraIds?: unknown; loraWeights?: unknown; consentFingerprint?: unknown;
     engineId?: unknown; brainId?: unknown; videoEnabled?: unknown;
-    artisticOverride?: unknown; modalBoost?: unknown;
+    artisticOverride?: unknown; modalBoost?: unknown; skipBrain?: unknown;
   };
   try {
     body = await req.json();
@@ -54,11 +54,12 @@ export async function POST(req: NextRequest) {
   const videoEnabled = typeof body.videoEnabled === "boolean" ? body.videoEnabled : false;
   const artisticOverride = typeof body.artisticOverride === "boolean" ? body.artisticOverride : false;
   const modalBoost = typeof body.modalBoost === "boolean" ? body.modalBoost : false;
+  const skipBrain = typeof body.skipBrain === "boolean" ? body.skipBrain : false;
 
   const input: PipelineRunInput = {
     prompt, style, aspect, wardrobe, calibrationId, calibrationOverrides,
     loraIds, loraWeights, consentFingerprint, engineId, brainId, videoEnabled,
-    artisticOverride, modalBoost,
+    artisticOverride, modalBoost, skipBrain,
   };
 
   const createdAtMs = Date.now();

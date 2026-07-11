@@ -165,6 +165,7 @@ export async function callEndpointWithRetry(
   const retryDelays = [5000, 10000, 15000]; // 5s, 10s, 15s
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const callStart = Date.now();
     try {
       const res = await fetch(`${url}/v1/chat/completions`, {
         method: "POST",
@@ -176,6 +177,7 @@ export async function callEndpointWithRetry(
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(60_000),
       });
+      const elapsedMs = Date.now() - callStart;
 
       if (res.ok) {
         const data = await res.json();
@@ -184,9 +186,28 @@ export async function callEndpointWithRetry(
       }
 
       if (res.status === 503) {
-        // Cold-starting — update status and retry
+        // Distinguish COLD START (slow 503, >3s) from BUDGET/CAPACITY REFUSAL
+        // (fast 503, <3s). A real cold start takes 60-120s — the 503 comes
+        // AFTER the container fails to spin up in time. A fast 503 (<3s) means
+        // Modal is immediately refusing to start a container — this happens
+        // when the workspace budget is exhausted or GPU capacity is unavailable.
+        // Retrying a fast-503 is futile — return immediately with a clear error.
+        const isFast503 = elapsedMs < 3000;
+
+        if (isFast503) {
+          const text = await res.text().catch(() => "");
+          endpointStates[name] = { status: "error", lastChecked: Date.now(), lastError: `503 refused (${elapsedMs}ms): budget/capacity` };
+          console.log(`[warmup:${name}] Fast 503 in ${elapsedMs}ms — budget/capacity refusal, NOT cold start. Stopping retries.`);
+          return {
+            ok: false,
+            error: `Modal endpoint refused (503 in ${elapsedMs}ms). This is NOT a cold start — Modal cannot start a container right now. Likely causes: (1) workspace budget exhausted (check modal.com → Settings → Budget), (2) GPU capacity unavailable, (3) endpoint deactivated. Increase your workspace budget or wait for the billing cycle to reset. ${text.slice(0, 100)}`,
+            warm: false,
+          };
+        }
+
+        // Slow 503 = genuine cold start — retry with backoff
         endpointStates[name] = { status: "warming", lastChecked: Date.now(), lastError: null };
-        console.log(`[warmup:${name}] 503 cold-starting, attempt ${attempt + 1}/${maxRetries + 1}`);
+        console.log(`[warmup:${name}] 503 cold-starting (${elapsedMs}ms), attempt ${attempt + 1}/${maxRetries + 1}`);
 
         if (attempt < maxRetries) {
           const delay = retryDelays[attempt] || 15000;
@@ -209,7 +230,8 @@ export async function callEndpointWithRetry(
       return { ok: false, error: `HTTP ${res.status}: ${text.slice(0, 200)}`, warm: false };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.log(`[warmup:${name}] attempt ${attempt + 1} failed: ${msg}`);
+      const elapsedMs = Date.now() - callStart;
+      console.log(`[warmup:${name}] attempt ${attempt + 1} failed (${elapsedMs}ms): ${msg}`);
 
       if (attempt < maxRetries) {
         const delay = retryDelays[attempt] || 15000;

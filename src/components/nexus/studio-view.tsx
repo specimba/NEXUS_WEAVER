@@ -202,6 +202,10 @@ export function StudioView() {
   // M3: artistic-override flag — when true, the next run sends artisticOverride=true
   // to lower the minSafetyScore threshold (hard blocklist still enforced).
   const [artisticOverride, setArtisticOverride] = useState(false);
+  // v5.42: Degraded mode — when brain endpoints are unavailable (budget/capacity),
+  // skip ST3GG + Judge and generate the image directly. The generation is marked
+  // "unchecked". NOT a z-ai fallback (rule #1) — no model substitution.
+  const [skipBrain, setSkipBrain] = useState(false);
   // Modal is the PRIMARY generation path (always on). No boost toggle needed.
 
   // v4: engine-aware pipeline stages — reflect the selected engine + brain,
@@ -266,6 +270,7 @@ export function StudioView() {
         artisticOverride?: boolean;
         loraWeights?: Record<string, number>;
         modalBoost?: boolean;
+        skipBrain?: boolean;
       } = {
         prompt: p,
         style,
@@ -282,6 +287,7 @@ export function StudioView() {
         artisticOverride,
         loraWeights:
           Object.keys(loraWeightsMap).length > 0 ? loraWeightsMap : undefined,
+        skipBrain,
       };
       if (artisticOverride) setArtisticOverride(false);
 
@@ -494,7 +500,7 @@ export function StudioView() {
     prompt, style, aspect, wardrobe, running,
     calibrationId, calibrationOverrides, loraIds, loraWeights, loraEnabled,
     fingerprint, matureUnlocked,
-    engineId, brainId, videoEnabled, artisticOverride,
+    engineId, brainId, videoEnabled, artisticOverride, skipBrain,
     startRun, setStage, finishRun, failRun, pushHistory,
   ]);
 
@@ -970,32 +976,33 @@ export function StudioView() {
           </div>
 
           {/* Run button + Warm up Modal */}
-          <div className="flex gap-2">
-            <button
-              onClick={run}
-              disabled={running || !prompt.trim()}
-              className="nexus-btn-primary flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 font-mono text-sm font-semibold text-primary-foreground"
-            >
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <button
+                onClick={run}
+                disabled={running || !prompt.trim()}
+                className="nexus-btn-primary flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 font-mono text-sm font-semibold text-primary-foreground"
+              >
+                {running ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Weaving…
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="h-4 w-4" />
+                    Run Pipeline
+                  </>
+                )}
+              </button>
               {running ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Weaving…
-                </>
-              ) : (
-                <>
-                  <Wand2 className="h-4 w-4" />
-                  Run Pipeline
-                </>
-              )}
-            </button>
-            {running ? (
-              <div className="flex items-center gap-2 font-mono text-[10px] text-cyan-400/80">
-                <span className="nexus-pulse inline-block h-1.5 w-1.5 rounded-full bg-cyan-400" />
-                <span>ST3GG → FLUX.2 → Judge → Evidence · ~30-60s · {(elapsed / 1000).toFixed(1)}s elapsed</span>
-              </div>
-            ) : null}
-            <button
-              onClick={warmupModal}
+                <div className="flex items-center gap-2 font-mono text-[10px] text-cyan-400/80">
+                  <span className="nexus-pulse inline-block h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                  <span>{skipBrain ? "FLUX.2 only · degraded" : "ST3GG → FLUX.2 → Judge → Evidence"} · ~30-60s · {(elapsed / 1000).toFixed(1)}s elapsed</span>
+                </div>
+              ) : null}
+              <button
+                onClick={warmupModal}
               disabled={warming || running}
               title="Pre-warm the Modal GPU container so the first generation doesn't pay cold-start latency"
               className={cn(
@@ -1025,6 +1032,20 @@ export function StudioView() {
                 <RotateCcw className="h-4 w-4" />
               </button>
             ) : null}
+            </div>
+
+            {/* v5.42: Degraded mode toggle — skip brain when endpoints unavailable */}
+            <label className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 font-mono text-[10px] text-amber-300 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={skipBrain}
+                onChange={(e) => setSkipBrain(e.target.checked)}
+                className="h-3 w-3 accent-amber-500"
+              />
+              <span className="flex-1">
+                {skipBrain ? "⚠ Degraded mode ON — skip ST3GG + Judge (image only, UNCHECKED)" : "Brain endpoints unavailable? Enable degraded mode (skip safety + judge)"}
+              </span>
+            </label>
           </div>
 
           {/* Modal warm-up status strip */}
