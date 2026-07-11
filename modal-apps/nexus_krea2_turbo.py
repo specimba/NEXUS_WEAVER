@@ -131,12 +131,11 @@ class NexusKrea2Generator:
         except Exception as e:
             print(f"WARNING: Config patch failed: {e} — will try loading anyway")
 
-        # v5.56: The tokenizer files are in a tokenizer/ subfolder, but the pipeline
-        # looks for them at the root. Create symlinks from root → tokenizer/ subfolder
-        # so the pipeline can find them natively (avoids the extra_special_tokens
-        # compatibility issue that occurs when loading the tokenizer separately).
-        print("Creating tokenizer symlinks (root → tokenizer/ subfolder)...")
+        # v5.57: Copy tokenizer files from tokenizer/ subfolder to root (not symlinks
+        # — HF cache uses symlinks internally, so symlinks-to-symlinks don't resolve)
+        print("Copying tokenizer files to root...")
         try:
+            import shutil
             from huggingface_hub import snapshot_download as _sd
             mp = _sd(MODEL_ID, cache_dir=HF_CACHE_DIR,
                      allow_patterns=["tokenizer/*", "*.json"])
@@ -146,10 +145,12 @@ class NexusKrea2Generator:
                     src = os.path.join(tok_dir, f)
                     dst = os.path.join(mp, f)
                     if not os.path.exists(dst) and os.path.isfile(src):
-                        os.symlink(src, dst)
-                        print(f"  symlinked: {f}")
+                        shutil.copy2(src, dst)
+                        print(f"  copied: {f}")
+            else:
+                print(f"  WARNING: tokenizer/ dir not found at {tok_dir}")
         except Exception as e:
-            print(f"  symlink warning: {e}")
+            print(f"  copy warning: {e}")
 
         self.pipe = Krea2Pipeline.from_pretrained(
             MODEL_ID,
