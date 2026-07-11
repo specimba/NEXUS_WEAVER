@@ -131,22 +131,28 @@ class NexusKrea2Generator:
         except Exception as e:
             print(f"WARNING: Config patch failed: {e} — will try loading anyway")
 
-        # Now load the pipeline — it will read the FIXED config from disk
-        # v5.55: Load the tokenizer SEPARATELY from the "tokenizer/" subfolder.
-        # The Krea-2-Turbo repo stores tokenizer files in tokenizer/ subfolder,
-        # but Krea2Pipeline looks for them at the root → vocab_file is None → crash.
-        from transformers import Qwen2TokenizerFast
-        print("Loading tokenizer from tokenizer/ subfolder...")
-        tokenizer = Qwen2TokenizerFast.from_pretrained(
-            MODEL_ID,
-            subfolder="tokenizer",
-            cache_dir=HF_CACHE_DIR,
-        )
-        print(f"Tokenizer loaded: {tokenizer.__class__.__name__}, vocab_size={tokenizer.vocab_size}")
+        # v5.56: The tokenizer files are in a tokenizer/ subfolder, but the pipeline
+        # looks for them at the root. Create symlinks from root → tokenizer/ subfolder
+        # so the pipeline can find them natively (avoids the extra_special_tokens
+        # compatibility issue that occurs when loading the tokenizer separately).
+        print("Creating tokenizer symlinks (root → tokenizer/ subfolder)...")
+        try:
+            from huggingface_hub import snapshot_download as _sd
+            mp = _sd(MODEL_ID, cache_dir=HF_CACHE_DIR,
+                     allow_patterns=["tokenizer/*", "*.json"])
+            tok_dir = os.path.join(mp, "tokenizer")
+            if os.path.isdir(tok_dir):
+                for f in os.listdir(tok_dir):
+                    src = os.path.join(tok_dir, f)
+                    dst = os.path.join(mp, f)
+                    if not os.path.exists(dst) and os.path.isfile(src):
+                        os.symlink(src, dst)
+                        print(f"  symlinked: {f}")
+        except Exception as e:
+            print(f"  symlink warning: {e}")
 
         self.pipe = Krea2Pipeline.from_pretrained(
             MODEL_ID,
-            tokenizer=tokenizer,  # pass pre-loaded tokenizer (fixes vocab_file=None)
             torch_dtype=torch.bfloat16,
             cache_dir=HF_CACHE_DIR,
         )
