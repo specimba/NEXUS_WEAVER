@@ -132,9 +132,21 @@ class NexusKrea2Generator:
             print(f"WARNING: Config patch failed: {e} — will try loading anyway")
 
         # Now load the pipeline — it will read the FIXED config from disk
-        # No need to pass text_encoder separately; Krea2Pipeline loads it
+        # v5.55: Load the tokenizer SEPARATELY from the "tokenizer/" subfolder.
+        # The Krea-2-Turbo repo stores tokenizer files in tokenizer/ subfolder,
+        # but Krea2Pipeline looks for them at the root → vocab_file is None → crash.
+        from transformers import Qwen2TokenizerFast
+        print("Loading tokenizer from tokenizer/ subfolder...")
+        tokenizer = Qwen2TokenizerFast.from_pretrained(
+            MODEL_ID,
+            subfolder="tokenizer",
+            cache_dir=HF_CACHE_DIR,
+        )
+        print(f"Tokenizer loaded: {tokenizer.__class__.__name__}, vocab_size={tokenizer.vocab_size}")
+
         self.pipe = Krea2Pipeline.from_pretrained(
             MODEL_ID,
+            tokenizer=tokenizer,  # pass pre-loaded tokenizer (fixes vocab_file=None)
             torch_dtype=torch.bfloat16,
             cache_dir=HF_CACHE_DIR,
         )
