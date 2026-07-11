@@ -161,22 +161,51 @@ export async function stageFlux(
   let effectiveEngineId: string | undefined = engineId;
 
   // Build the LoRA array for Modal: map our library IDs to HF repo IDs + weights
+  // v5.44: Handle BOTH HuggingFace URLs (extract repo ID) AND Civitai URLs
+  // (pass the full URL — the Modal app downloads .safetensors directly).
+  // Previously, Civitai URLs were silently filtered out (the regex only matched
+  // huggingface.co), so ALL Stable Yogi LoRAs were dropped. Now they're passed
+  // through and the backend downloads them.
   const modalLoras: Array<{ repo: string; adapter: string; weight: number; weightName?: string } | null> = loraIds
     .map((id) => {
       const lora = getLora(id);
       if (!lora) return null;
-      // Extract HF repo ID from the URL: https://huggingface.co/NO8D/BodyControl → NO8D/BodyControl
-      const repoMatch = lora.url.match(/huggingface\.co\/([^\/]+\/[^\/\?#]+)/);
-      if (!repoMatch) return null;
-      const entry: { repo: string; adapter: string; weight: number; weightName?: string } = {
-        repo: repoMatch[1],
-        adapter: lora.id, // use our id as the adapter name
-        weight: loraWeights[id] ?? lora.recommendedWeight,
-      };
-      // Pass weight_name for repos with multiple .safetensors files — prevents
-      // diffusers from loading the wrong weights (quality bug).
-      if (lora.weightName) entry.weightName = lora.weightName;
-      return entry;
+      const weight = loraWeights[id] ?? lora.recommendedWeight;
+
+      // Try HuggingFace URL first: https://huggingface.co/NO8D/BodyControl → NO8D/BodyControl
+      const hfMatch = lora.url.match(/huggingface\.co\/([^\/]+\/[^\/\?#]+)/);
+      if (hfMatch) {
+        const entry: { repo: string; adapter: string; weight: number; weightName?: string } = {
+          repo: hfMatch[1],
+          adapter: lora.id,
+          weight,
+        };
+        if (lora.weightName) entry.weightName = lora.weightName;
+        return entry;
+      }
+
+      // Civitai URL: https://civitai.red/models/1098033/realism-lora-by-stable-yogi-pony
+      // or https://civitai.com/models/1098033?modelVersionId=2074888
+      // Pass the full URL as `repo` — the Modal app will resolve it via the
+      // Civitai API (GET /api/v1/models/{id} → downloadUrl) and download the
+      // .safetensors file directly. The `adapter` is our library ID.
+      if (lora.url.includes("civitai")) {
+        // Extract the model ID from the URL
+        const civMatch = lora.url.match(/models\/(\d+)/);
+        if (civMatch) {
+          return {
+            repo: lora.url, // full URL — backend resolves it
+            adapter: lora.id,
+            weight,
+            // Flag for the backend: this is a Civitai URL, not an HF repo
+            weightName: lora.weightName || "__civitai_url__",
+          };
+        }
+      }
+
+      // Unknown URL scheme — log and skip (don't silently filter)
+      console.warn(`[pipeline] LoRA "${lora.id}" has unresolvable URL: ${lora.url} — skipping`);
+      return null;
     });
   const validModalLoras = modalLoras.filter((l): l is { repo: string; adapter: string; weight: number; weightName?: string } => l !== null);
 

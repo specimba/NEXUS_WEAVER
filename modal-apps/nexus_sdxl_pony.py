@@ -144,6 +144,10 @@ class NexusSDXLPonyGenerator:
             active_weights = [1.0]
 
             # Load user-selected LoRAs (Stable Yogi realism, etc.)
+            # v5.44: Handle BOTH HuggingFace repo IDs AND Civitai URLs.
+            # Civitai URLs are flagged with weight_name="__civitai_url__".
+            # The app resolves them via the Civitai API (free, no auth) and
+            # downloads the .safetensors file to a temp path, then loads it.
             if loras:
                 for lora in loras:
                     repo = lora.get("repo", "")
@@ -153,15 +157,51 @@ class NexusSDXLPonyGenerator:
                     if not repo:
                         continue
                     try:
-                        load_kwargs = {}
-                        if adapter:
-                            load_kwargs["adapter_name"] = adapter
-                        if weight_name:
-                            load_kwargs["weight_name"] = weight_name
-                        self.pipe.load_lora_weights(repo, **load_kwargs)
-                        active_adapters.append(adapter or repo.split("/")[-1])
-                        active_weights.append(weight)
-                        lora_status.append({"repo": repo, "status": "loaded", "weight": weight})
+                        # Check if this is a Civitai URL (flagged by the pipeline)
+                        if weight_name == "__civitai_url__" or "civitai" in repo:
+                            # Resolve Civitai URL → direct download URL via the free API
+                            import re, urllib.request, tempfile, os
+                            model_id_match = re.search(r"models/(\d+)", repo)
+                            if not model_id_match:
+                                raise ValueError(f"Could not extract model ID from Civitai URL: {repo}")
+                            model_id = model_id_match.group(1)
+                            # Call the Civitai REST API (free, no auth for public models)
+                            api_url = f"https://civitai.com/api/v1/models/{model_id}"
+                            print(f"[civitai] Resolving model {model_id} via API...")
+                            with urllib.request.urlopen(api_url, timeout=15) as resp:
+                                model_data = __import__("json").loads(resp.read())
+                            # Get the latest version's first .safetensors file
+                            versions = model_data.get("modelVersions", [])
+                            if not versions:
+                                raise ValueError(f"No versions found for Civitai model {model_id}")
+                            latest = versions[0]
+                            download_url = latest.get("downloadUrl", "")
+                            if not download_url:
+                                raise ValueError(f"No download URL for Civitai model {model_id} v{latest.get('name','?')}")
+                            print(f"[civitai] Downloading {download_url}...")
+                            # Download to a temp file
+                            tmp_dir = tempfile.mkdtemp()
+                            tmp_file = os.path.join(tmp_dir, f"civitai_{model_id}.safetensors")
+                            urllib.request.urlretrieve(download_url, tmp_file)
+                            # Load from the local file
+                            load_kwargs = {}
+                            if adapter:
+                                load_kwargs["adapter_name"] = adapter
+                            self.pipe.load_lora_weights(tmp_file, **load_kwargs)
+                            active_adapters.append(adapter or f"civitai_{model_id}")
+                            active_weights.append(weight)
+                            lora_status.append({"repo": repo, "status": "loaded", "weight": weight, "source": "civitai", "model_name": model_data.get("name", "?")})
+                        else:
+                            # HuggingFace repo ID — load directly
+                            load_kwargs = {}
+                            if adapter:
+                                load_kwargs["adapter_name"] = adapter
+                            if weight_name:
+                                load_kwargs["weight_name"] = weight_name
+                            self.pipe.load_lora_weights(repo, **load_kwargs)
+                            active_adapters.append(adapter or repo.split("/")[-1])
+                            active_weights.append(weight)
+                            lora_status.append({"repo": repo, "status": "loaded", "weight": weight, "source": "huggingface"})
                     except Exception as exc:
                         lora_status.append({"repo": repo, "status": "failed", "error": str(exc)[:300]})
 

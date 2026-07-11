@@ -271,6 +271,13 @@ export async function stopEngine(engineId: string): Promise<{ success: boolean; 
  * If it's already deployed, return immediately. This is the "auto-deploy on
  * select" mechanism — called by the pipeline before calling /generate.
  *
+ * CRITICAL (v5.44): If the status check itself FAILS (modal CLI missing,
+ * timeout, etc.), we return "unknown" — in that case we do NOT fall back to
+ * FLUX.2. We proceed optimistically with the selected engine. The apps are
+ * already deployed (we deployed them). Falling back on CLI errors was the
+ * root cause of "only FLUX.2 works" — every non-FLUX engine silently fell
+ * back because the dev server process doesn't have modal CLI in PATH.
+ *
  * Returns true if the engine is ready (or is FLUX.2 which is always ready).
  */
 export async function ensureEngineDeployed(engineId: string): Promise<{ ready: boolean; message: string }> {
@@ -280,8 +287,6 @@ export async function ensureEngineDeployed(engineId: string): Promise<{ ready: b
   }
 
   // Check current status for ALL engines (including always-on).
-  // An always-on app can still be STOPPED if someone manually stopped it
-  // (or if it crashed). If it's stopped, redeploy it.
   const statuses = await getEngineStatuses();
   const current = statuses[engineId];
 
@@ -289,8 +294,16 @@ export async function ensureEngineDeployed(engineId: string): Promise<{ ready: b
     return { ready: true, message: `${app.appName} already deployed` };
   }
 
-  // If the app is stopped (or unknown), deploy it.
-  // This covers both H100 engines AND the always-on FLUX.2 engine.
+  // v5.44: If status is "unknown" (CLI error — modal not in PATH, timeout, etc.),
+  // do NOT fall back to FLUX.2. Proceed optimistically with the selected engine.
+  // The apps are already deployed. Falling back here was the root cause of
+  // "only FLUX.2 works" — every SDXL/Krea 2/Z-Image selection silently fell back.
+  if (current?.status === "unknown") {
+    console.log(`[engine-manager] Status unknown for ${app.appName} (CLI error?) — proceeding optimistically (no fallback)`);
+    return { ready: true, message: `${app.appName} status unknown — proceeding (app likely already deployed)` };
+  }
+
+  // If the app is definitively STOPPED, try to deploy it.
   if (app.alwaysOn && current?.status === "stopped") {
     console.log(`[engine-manager] Always-on app ${app.appName} is STOPPED — auto-redeploying...`);
   } else if (!app.alwaysOn) {
