@@ -269,13 +269,18 @@ export async function generateImageViaModal(params: {
     );
   }
 
-  // Cap steps/cfg to the engine's tuned values.
+  // Cap steps to the engine's max (e.g. FLUX.2 max 4 per rule #4).
+  // v5.44: Use the user/calibration CFG, NOT the backend default. The previous
+  // code (effectiveCfg = backend.defaultCfg) silently overrode the calibration
+  // preset's CFG — e.g. Krea 2 Turbo calibration says CFG 1.0 (per Stable Yogi's
+  // guide) but backend.defaultCfg was 3.5, so the pipeline always sent 3.5.
+  // Now: use the provided cfg, fall back to backend default only if not provided.
   const effectiveSteps = Math.min(steps ?? backend.maxSteps, backend.maxSteps);
-  const effectiveCfg = backend.defaultCfg;
+  const effectiveCfg = cfg ?? backend.defaultCfg;
   if (steps && steps > backend.maxSteps) {
     console.log(
-      `[modal-client] Capping steps ${steps}→${effectiveSteps} and forcing cfg ${cfg}→${effectiveCfg} ` +
-      `(engine=${engineId ?? "flux2-klein-9b"} is tuned for ${backend.maxSteps} steps / cfg ${backend.defaultCfg})`
+      `[modal-client] Capping steps ${steps}→${effectiveSteps} ` +
+      `(engine=${engineId ?? "flux2-klein-9b"} max=${backend.maxSteps})`
     );
   }
 
